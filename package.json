@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
-    "predeploy": "next build && touch out/.nojekyll",
-    "deploy": "gh-pages -d out -b gh-pages"
+    "predeploy": "next build",
+    "deploy": "gh-pages -d out -b gh-pages --dotfiles"
   },
   "dependencies": {
     "lucide-react": "^0.545.0",
