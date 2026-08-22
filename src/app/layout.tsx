@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'
 
+import { LanguageProvider } from '@/i18n/LanguageContext'
 import '@/styles/tailwind.css'
 
 const fontSans = Inter({
@@ -23,7 +24,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="de" className="h-full scroll-smooth antialiased">
       <body className={`${fontSans.variable} flex min-h-full flex-col font-[var(--font-sans)]`}>
-        {children}
+        <LanguageProvider>{children}</LanguageProvider>
       </body>
       {gcCode && (
         <Script

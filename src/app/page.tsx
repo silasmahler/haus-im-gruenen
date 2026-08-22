@@ -1,3 +1,5 @@
+'use client'
+
 import {
   Wifi,
   Clock,
@@ -19,14 +21,14 @@ import {
   CalendarDays,
   Bike,
   Waves,
-  TreePine,
   Baby,
-  MapPin,
 } from 'lucide-react'
 
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { RulesAcceptance } from '@/components/RulesAcceptance'
 import { SiteQrCode } from '@/components/SiteQrCode'
 import { WifiCard } from '@/components/WifiCard'
+import { useLanguage } from '@/i18n/LanguageContext'
 
 const AIRBNB_URL = 'https://www.airbnb.de/rooms/1697314718712995655'
 const SITE_URL = 'https://haus-im-gruenen.com'
@@ -62,7 +64,30 @@ const PHOTOS = [
   },
 ]
 
+const AUSFLUGSZIELE_ICONS = [
+  { icon: <Utensils />, color: 'rose' as const },
+  { icon: <Baby />, color: 'amber' as const },
+  { icon: <Waves />, color: 'blue' as const },
+  { icon: <Bike />, color: 'green' as const },
+]
+
+const HAUSREGELN_ICONS: React.ReactNode[][] = [
+  [<Clock key="ci" />, <Clock key="co" />],
+  [
+    <Users key="guests" />,
+    <PawPrint key="pets" />,
+    <PartyPopper key="party" />,
+    <Camera key="photo" />,
+    <CigaretteOff key="smoke" />,
+  ],
+  [<Trash2 key="waste" />, <Utensils key="dishes" />, <Car key="park" />, <CigaretteOff key="smoke2" />],
+  [<Trash2 key="waste2" />, <Zap key="power" />, <Key key="key" />, <Utensils key="dishes2" />],
+  [<AlarmCheck key="co2" />, <Flame key="smoke3" />],
+]
+
 export default function Page() {
+  const { t } = useLanguage()
+
   return (
     <>
       <RulesAcceptance />
@@ -76,19 +101,20 @@ export default function Page() {
             <p className="text-sm font-semibold leading-none text-[var(--brand-ink)]">
               Haus im Grünen
             </p>
-            <p className="text-xs text-[var(--brand-ink-soft)]">
-              Rendswühren, Schleswig-Holstein
-            </p>
+            <p className="text-xs text-[var(--brand-ink-soft)]">{t.header.subtitle}</p>
           </div>
-          <a
-            href={AIRBNB_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ml-auto flex items-center gap-1 rounded-full bg-[var(--color-brand-500)] px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90"
-          >
-            Jetzt buchen
-            <ExternalLink className="h-3 w-3" />
-          </a>
+          <div className="ml-auto flex items-center gap-2">
+            <LanguageSwitcher />
+            <a
+              href={AIRBNB_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 rounded-full bg-[var(--color-brand-500)] px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              {t.header.bookNow}
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
         </div>
       </header>
 
@@ -96,25 +122,16 @@ export default function Page() {
         {/* Hero */}
         <section className="text-center">
           <span className="brand-pill mb-4 inline-flex">
-            <span>🌿</span> Ferienhaus
+            <span>🌿</span> {t.hero.pill}
           </span>
           <h1 className="text-3xl font-bold text-[var(--brand-ink)]">
-            Willkommen im<br />
-            <span className="text-[var(--color-brand-600)]">Haus im Grünen</span>
+            {t.hero.title1}
+            <br />
+            <span className="text-[var(--color-brand-600)]">{t.hero.title2}</span>
           </h1>
-          <p className="mt-3 text-base text-[var(--brand-ink-soft)]">
-            Genieße die Ruhe, frische Landluft und den Blick übers Feld in
-            Rendswühren, Schleswig-Holstein.
-          </p>
+          <p className="mt-3 text-base text-[var(--brand-ink-soft)]">{t.hero.subtitle}</p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
-            {[
-              '104 m²',
-              '5 Gäste',
-              '3 Schlafzimmer',
-              'Garten',
-              'Kamin',
-              'WLAN 200 Mbit/s',
-            ].map((tag) => (
+            {t.hero.tags.map((tag) => (
               <span
                 key={tag}
                 className="rounded-full border border-[var(--color-brand-200)] bg-[var(--color-brand-50)] px-3 py-1 text-xs font-medium text-[var(--color-brand-700)]"
@@ -156,7 +173,7 @@ export default function Page() {
               rel="noopener noreferrer"
               className="underline underline-offset-2 hover:text-[var(--color-brand-600)]"
             >
-              Alle Fotos auf Airbnb ansehen →
+              {t.gallery.viewAll}
             </a>
           </p>
         </section>
@@ -165,311 +182,107 @@ export default function Page() {
         <section id="wlan">
           <h2 className="mb-3 text-xl font-bold text-[var(--brand-ink)]">
             <Wifi className="mr-2 inline-block h-5 w-5 text-[var(--color-brand-500)]" />
-            WLAN
+            {t.wlan.heading}
           </h2>
           <WifiCard />
         </section>
 
         {/* Hausregeln */}
         <section id="hausregeln">
-          <h2 className="mb-3 text-xl font-bold text-[var(--brand-ink)]">Hausregeln</h2>
+          <h2 className="mb-3 text-xl font-bold text-[var(--brand-ink)]">
+            {t.hausregeln.heading}
+          </h2>
           <div className="brand-card divide-y divide-[var(--color-brand-100)]">
-            <RuleGroup title="Check-in & Check-out">
-              <RuleItem icon={<Clock />} label="Check-in ab 15:00 Uhr" />
-              <RuleItem icon={<Clock />} label="Check-out vor 10:00 Uhr" />
-            </RuleGroup>
-
-            <RuleGroup title="Während deines Aufenthalts">
-              <RuleItem icon={<Users />} label="Höchstens 5 Gäste" />
-              <RuleItem icon={<PawPrint />} label="Keine Haustiere" />
-              <RuleItem icon={<PartyPopper />} label="Keine Partys oder Veranstaltungen" />
-              <RuleItem icon={<Camera />} label="Kein kommerzielles Fotografieren" />
-              <RuleItem icon={<CigaretteOff />} label="Rauchen verboten (nur auf den Terrassen)" />
-            </RuleGroup>
-
-            <RuleGroup title="Zusätzliche Regeln">
-              <RuleItem
-                icon={<Trash2 />}
-                label="Mülltrennung"
-                detail="Gekennzeichnete Behälter in der Unterkunft — bitte nach Aufenthalt in die Mülltonnen vor dem Haus entsorgen."
-              />
-              <RuleItem
-                icon={<Utensils />}
-                label="Geschirr vor Auszug abwaschen"
-                detail="Bitte trocken und sauber zurück in die Schränke stellen. Geschirrspüler nicht erst bei Auszug anstellen."
-              />
-              <RuleItem
-                icon={<Car />}
-                label="Parken"
-                detail="Kostenloses Doppelcarport vorhanden. Bitte rücksichtsvoll parken, damit die Auffahrt nicht blockiert wird."
-              />
-              <RuleItem
-                icon={<CigaretteOff />}
-                label="Rauchverbot drinnen — 500 € Ozonreinigung"
-                detail="Im Außenbereich stehen auf den Terrassen Aschenbecher und Sitzgelegenheiten bereit."
-              />
-            </RuleGroup>
-
-            <RuleGroup title="Vor der Abreise">
-              <RuleItem icon={<Trash2 />} label="Müll entsorgen" />
-              <RuleItem icon={<Zap />} label="Alle Geräte ausschalten" />
-              <RuleItem icon={<Key />} label="Schlüssel zurückgeben" />
-              <RuleItem
-                icon={<Utensils />}
-                label="Abwasch erledigen & Geschirrspüler ausräumen"
-              />
-            </RuleGroup>
-
-            <RuleGroup title="Sicherheit">
-              <RuleItem icon={<AlarmCheck />} label="Kohlenmonoxidmelder vorhanden" />
-              <RuleItem icon={<Flame />} label="Rauchmelder vorhanden" />
-            </RuleGroup>
+            {t.hausregeln.groups.map((group, groupIndex) => (
+              <RuleGroup key={group.title} title={group.title}>
+                {group.items.map((item, itemIndex) => (
+                  <RuleItem
+                    key={item.label}
+                    icon={HAUSREGELN_ICONS[groupIndex]?.[itemIndex]}
+                    label={item.label}
+                    detail={item.detail}
+                  />
+                ))}
+              </RuleGroup>
+            ))}
           </div>
         </section>
 
         {/* Preise */}
         <section id="preise">
-          <h2 className="mb-3 text-xl font-bold text-[var(--brand-ink)]">Preise & Extras</h2>
+          <h2 className="mb-3 text-xl font-bold text-[var(--brand-ink)]">{t.preise.heading}</h2>
           <div className="brand-card overflow-hidden">
             <div className="bg-[var(--color-brand-600)] px-5 py-4 text-white">
-              <p className="text-sm font-medium opacity-80">Reinigungsgebühr (einmalig)</p>
+              <p className="text-sm font-medium opacity-80">{t.preise.cleaningFee}</p>
               <p className="text-3xl font-bold">45 €</p>
-              <p className="mt-1 text-xs opacity-70">
-                Inkl. Reinigung und 2 Handtücher p. P.
-              </p>
+              <p className="mt-1 text-xs opacity-70">{t.preise.cleaningIncludes}</p>
             </div>
             <div className="divide-y divide-[var(--color-brand-100)] px-5">
               <PriceItem
-                label="Bettwäsche"
-                price="einmalig kostenfrei"
-                detail="Für alle Gäste bereits gestellt — du musst keine eigene mitbringen."
+                label={t.preise.bedding}
+                price={t.preise.beddingPrice}
+                detail={t.preise.beddingDetail}
+              />
+              <PriceItem label={t.preise.extraBedding} price={t.preise.extraBeddingPrice} />
+              <PriceItem
+                label={t.preise.firewood}
+                price={t.preise.firewoodPrice}
+                detail={t.preise.firewoodDetail}
               />
               <PriceItem
-                label="Ersatzbettwäsche"
-                price="20 € / Person"
-              />
-              <PriceItem
-                label="Kaminholz"
-                price="15 €"
-                detail="Erster Korb kostenlos, jeder weitere 15 €"
-              />
-              <PriceItem
-                label="Grillpaket"
-                price="20 €"
-                detail="Grill, Grillkohle & Anzünder"
+                label={t.preise.grillPackage}
+                price={t.preise.grillPrice}
+                detail={t.preise.grillDetail}
               />
             </div>
           </div>
-          <p className="mt-3 text-xs text-[var(--brand-ink-soft)]">
-            Alle Preise zzgl. der Airbnb-Nächtepreise. Zusätzliche Buchungen bitte über Airbnb
-            anfragen.
-          </p>
+          <p className="mt-3 text-xs text-[var(--brand-ink-soft)]">{t.preise.note}</p>
         </section>
 
         {/* Ausstattung */}
         <section id="ausstattung">
-          <h2 className="mb-3 text-xl font-bold text-[var(--brand-ink)]">Ausstattung</h2>
+          <h2 className="mb-3 text-xl font-bold text-[var(--brand-ink)]">
+            {t.ausstattung.heading}
+          </h2>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {[
-              { icon: <Wifi />, label: 'Schnelles WLAN (200 Mbit/s)' },
-              { icon: <Utensils />, label: 'Voll ausgestattete Küche' },
-              { icon: <Flame />, label: 'Kaminofen (Holz)' },
-              { icon: <ShowerHead />, label: 'Badewanne' },
-              { icon: <Car />, label: 'Kostenloses Carport' },
-              { icon: <Users />, label: 'Hochstuhl & Reisebett' },
-            ].map(({ icon, label }) => (
+              <Wifi key="wifi" />,
+              <Utensils key="kitchen" />,
+              <Flame key="stove" />,
+              <ShowerHead key="tub" />,
+              <Car key="carport" />,
+              <Users key="highchair" />,
+            ].map((icon, index) => (
               <div
-                key={label}
+                key={t.ausstattung.items[index]}
                 className="brand-card-green flex items-center gap-2.5 px-3 py-2.5"
               >
-                <span className="shrink-0 text-[var(--color-brand-600)]">
-                  {icon}
+                <span className="shrink-0 text-[var(--color-brand-600)]">{icon}</span>
+                <span className="text-xs font-medium text-[var(--brand-ink)]">
+                  {t.ausstattung.items[index]}
                 </span>
-                <span className="text-xs font-medium text-[var(--brand-ink)]">{label}</span>
               </div>
             ))}
           </div>
         </section>
+
         {/* Ausflugsziele & persönliche Empfehlungen */}
         <section id="ausflugsziele">
           <h2 className="mb-1 text-xl font-bold text-[var(--brand-ink)]">
-            Ausflugsziele & persönliche Empfehlungen
+            {t.ausflugsziele.heading}
           </h2>
-          <p className="mb-4 text-sm text-[var(--brand-ink-soft)]">
-            Ihr seid mitten in der{' '}
-            <strong>Holsteinischen Schweiz</strong> — Seen, Wälder und die
-            Ostseeküste liegen vor der Tür. Die Ortsnamen sind mit Google Maps
-            verlinkt.
-          </p>
+          <p className="mb-4 text-sm text-[var(--brand-ink-soft)]">{t.ausflugsziele.intro}</p>
 
           <div className="space-y-6">
-            <ActivityGroup
-              icon={<Utensils />}
-              title="Restaurants — unsere Empfehlungen"
-              color="rose"
-              items={[
-                {
-                  name: 'Stahlwerk Neumünster',
-                  distance: 'Buffet',
-                  detail: 'Großzügiges Buffet-Restaurant, ideal für Gruppen mit unterschiedlichen Vorlieben.',
-                  mapsQuery: 'Stahlwerk Neumünster',
-                  website: 'https://www.altes-stahlwerk.com/gastro',
-                },
-                {
-                  name: 'ICHI Kiel',
-                  distance: 'Japanisch',
-                  detail: 'Japanische Küche in Kiel — Sushi und mehr.',
-                  mapsQuery: 'ICHI Kiel Japanisches Restaurant',
-                  website: 'https://www.ichi-finedining.de/',
-                },
-                {
-                  name: 'Antikhof Bissee',
-                  distance: 'Gehoben',
-                  detail: 'Restaurant der gehobenen Klasse, kombiniert mit Antikmarkt-Ausstellung — auch ein schöner Spaziergang vor oder nach dem Essen.',
-                  mapsQuery: 'Antikhof Bissee',
-                  website: 'https://hofbissee.de/restaurant/',
-                },
-                {
-                  name: 'Gasthof Voß, Schmalensee',
-                  distance: 'Gutbürgerlich',
-                  detail: 'Traditionelle, gutbürgerliche Küche am Schmalensee.',
-                  mapsQuery: 'Gasthof Voß Schmalensee',
-                },
-                {
-                  name: 'Hofmarkt & Restaurant Kirschenholz',
-                  distance: 'Sehr nah',
-                  detail: 'Lokale Spezialitäten direkt vom Hof — Hofmarkt und Restaurant nur wenige Minuten entfernt.',
-                  mapsQuery: 'Kirschenholz Hofmarkt Restaurant',
-                  website: 'https://kirschenholz.de/',
-                },
-                {
-                  name: 'Gasthof Schlüter',
-                  distance: 'Regional',
-                  detail: 'Regionale Küche in gemütlicher Gasthof-Atmosphäre.',
-                  mapsQuery: 'Gasthof Schlüter',
-                  website: 'https://schlueter-wankendorf.de/',
-                },
-              ]}
-            />
-
-            <ActivityGroup
-              icon={<Baby />}
-              title="Mit Kindern"
-              color="amber"
-              items={[
-                {
-                  name: 'Tierpark Neumünster',
-                  distance: '~30 km',
-                  detail:
-                    'Kleiner Zoo direkt in Neumünster — hier kommt Eisbär Knut ursprünglich her.',
-                  mapsQuery: 'Tierpark Neumünster',
-                  website: 'https://www.tierparkneumuenster.de/',
-                },
-                {
-                  name: 'Tierpark Gettorf',
-                  distance: '~35 km',
-                  detail:
-                    'Familienfreundlicher Zoo mit Streichelgehege, perfekt für kleine Kinder.',
-                  mapsQuery: 'Tierpark Gettorf',
-                  website: 'https://tierparkgettorf.de/',
-                },
-                {
-                  name: 'Kartbahn Büsum',
-                  distance: '~90 km',
-                  detail:
-                    'Kartbahn direkt an der Nordseeküste — Fahrspaß für die ganze Familie, gut mit einem Ausflug nach Büsum kombinierbar.',
-                  mapsQuery: 'Kartbahn Büsum',
-                  website: 'https://www.nordseering.de/',
-                },
-                {
-                  name: 'Hansa-Park Sierksdorf',
-                  distance: '~85 km',
-                  detail:
-                    'Erlebnispark an der Ostsee mit Achterbahnen, Wasserattraktionen und Kinderwelt.',
-                  mapsQuery: 'Hansa-Park Sierksdorf',
-                  website: 'https://www.hansapark.de/index',
-                },
-                {
-                  name: 'Plöner See — Badestrand',
-                  distance: '~15 km',
-                  detail:
-                    'Sauberer Badesee mit flachem Ufer, ideal für Familien. Bootsverleih vor Ort.',
-                  mapsQuery: 'Plöner See Badestrand',
-                  website: 'https://ploenersee.de/',
-                },
-              ]}
-            />
-
-            <ActivityGroup
-              icon={<Waves />}
-              title="Seen & Wasser"
-              color="blue"
-              items={[
-                {
-                  name: 'Plöner See',
-                  distance: '~15 km',
-                  detail:
-                    'Einer der größten Seen Schleswig-Holsteins — Schwimmen, Paddeln, Segeln, Strandbad.',
-                  mapsQuery: 'Plöner See',
-                  website: 'https://ploenersee.de/',
-                },
-                {
-                  name: 'Schwentine-Kanuweg',
-                  distance: '~10 km',
-                  detail:
-                    'Mehrtägige Kanutour durch die Holsteinische Schweiz, von See zu See.',
-                  mapsQuery: 'Schwentine Kanuweg',
-                },
-                {
-                  name: 'Ostseeküste Eckernförde',
-                  distance: '~40 km',
-                  detail:
-                    'Historische Hafenstadt, Raucheraal-Delikatessen und schöne Sandstrände.',
-                  mapsQuery: 'Eckernförde',
-                  website: 'https://www.ostseebad-eckernfoerde.de/',
-                },
-                {
-                  name: 'Insel Fehmarn',
-                  distance: '~90 km',
-                  detail:
-                    'Sonneninsel der Ostsee mit langen Stränden, Kitesurf-Spots und Rad-Rundweg.',
-                  mapsQuery: 'Insel Fehmarn',
-                  website: 'https://www.fehmarn.de/',
-                },
-              ]}
-            />
-
-            <ActivityGroup
-              icon={<Bike />}
-              title="Radfahren & Wandern"
-              color="green"
-              items={[
-                {
-                  name: 'Holsteinische Schweiz Rundweg',
-                  distance: 'direkt vor der Tür',
-                  detail:
-                    'Ausgeschilderte Radwege durch Hügel und an Seen entlang — auch für E-Bikes geeignet.',
-                  mapsQuery: 'Holsteinische Schweiz',
-                  website: 'https://www.holsteinischeschweiz.de/',
-                },
-                {
-                  name: 'Bungsberg',
-                  distance: '~30 km',
-                  detail:
-                    'Mit 168 m höchster Berg Schleswig-Holsteins — Wanderpfade, Aussichtsturm, Loipe.',
-                  mapsQuery: 'Bungsberg',
-                  website: 'https://www.naturpark-holsteinische-schweiz.de/poi/elisabethturm-am-bungsberg',
-                },
-                {
-                  name: 'Naturpark Westensee',
-                  distance: '~15 km',
-                  detail:
-                    'Ruhige Radwege und Wanderpfade rund um den Westensee, kaum Autoverkehr.',
-                  mapsQuery: 'Naturpark Westensee',
-                  website: 'https://www.tourismus-naturpark-westensee.de/',
-                },
-              ]}
-            />
+            {t.ausflugsziele.groups.map((group, index) => (
+              <ActivityGroup
+                key={group.title}
+                icon={AUSFLUGSZIELE_ICONS[index].icon}
+                title={group.title}
+                color={AUSFLUGSZIELE_ICONS[index].color}
+                items={group.items}
+              />
+            ))}
           </div>
         </section>
 
@@ -478,18 +291,15 @@ export default function Page() {
           <div className="flex items-start gap-4">
             <CalendarDays className="mt-0.5 h-6 w-6 shrink-0 opacity-80" />
             <div>
-              <h2 className="text-lg font-bold">Nächsten Urlaub planen?</h2>
-              <p className="mt-1 text-sm opacity-80">
-                Freie Termine und Preise findest du auf Airbnb — dort kannst du auch
-                direkt buchen.
-              </p>
+              <h2 className="text-lg font-bold">{t.cta.heading}</h2>
+              <p className="mt-1 text-sm opacity-80">{t.cta.text}</p>
               <a
                 href={AIRBNB_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-[var(--color-brand-700)] transition-opacity hover:opacity-90"
               >
-                Auf Airbnb buchen
+                {t.cta.button}
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
             </div>
@@ -501,7 +311,9 @@ export default function Page() {
         <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 px-4 text-center text-xs text-[var(--brand-ink-soft)]">
           <SiteQrCode url={SITE_URL} />
           <p>
-            Gastgeberin: <strong>Susanne</strong> · Rendswühren, Schleswig-Holstein
+            {t.footer.hostPrefix}
+            <strong>{t.footer.hostName}</strong>
+            {t.footer.hostSuffix}
           </p>
           <p className="mt-1">
             <a
@@ -510,14 +322,14 @@ export default function Page() {
               rel="noopener noreferrer"
               className="underline underline-offset-2 hover:text-[var(--color-brand-600)]"
             >
-              Inserat auf Airbnb ansehen
+              {t.footer.listing}
             </a>
             {' · '}
             <a
               href="/datenschutz"
               className="underline underline-offset-2 hover:text-[var(--color-brand-600)]"
             >
-              Datenschutz
+              {t.footer.privacy}
             </a>
           </p>
         </div>

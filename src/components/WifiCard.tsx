@@ -3,10 +3,13 @@
 import { useEffect, useState } from 'react'
 import { Wifi, Lock, MapPin } from 'lucide-react'
 
+import { useLanguage } from '@/i18n/LanguageContext'
+
 const STORAGE_KEY = 'hig-rules-v1'
 
 export function WifiCard() {
   const [accepted, setAccepted] = useState(false)
+  const { t } = useLanguage()
 
   useEffect(() => {
     setAccepted(!!localStorage.getItem(STORAGE_KEY))
@@ -22,10 +25,7 @@ export function WifiCard() {
     return (
       <div className="flex items-center gap-3 rounded-2xl border border-[var(--color-brand-200)] bg-[var(--color-brand-50)] px-5 py-5">
         <Lock className="h-5 w-5 shrink-0 text-[var(--color-brand-400)]" />
-        <p className="text-sm text-[var(--brand-ink-soft)]">
-          Bitte lies und akzeptiere zuerst die Hausregeln — dann erfährst du, wo
-          das WLAN-Passwort zu finden ist.
-        </p>
+        <p className="text-sm text-[var(--brand-ink-soft)]">{t.wlan.locked}</p>
       </div>
     )
   }
@@ -36,12 +36,14 @@ export function WifiCard() {
         <Wifi className="mt-0.5 h-5 w-5 shrink-0 opacity-80" />
         <div>
           <p className="text-sm font-semibold opacity-90">
-            WLAN-Passwort <span className="font-normal opacity-70">· 200 Mbit/s</span>
+            {t.wlan.passwordLabel} <span className="font-normal opacity-70">· {t.wlan.speedSuffix}</span>
           </p>
           <div className="mt-2 flex items-start gap-2">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 opacity-70" />
             <p className="text-sm leading-relaxed">
-              Das WLAN-Passwort findest du auf einem <strong>Aufsteller in der Küche</strong>.
+              {t.wlan.passwordPrefix}
+              <strong>{t.wlan.passwordBold}</strong>
+              {t.wlan.passwordSuffix}
             </p>
           </div>
         </div>
