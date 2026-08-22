@@ -35,12 +35,13 @@ export function WifiCard() {
       <div className="flex items-start gap-4 px-5 py-5">
         <Wifi className="mt-0.5 h-5 w-5 shrink-0 opacity-80" />
         <div>
-          <p className="text-sm font-semibold opacity-90">WLAN-Passwort</p>
+          <p className="text-sm font-semibold opacity-90">
+            WLAN-Passwort <span className="font-normal opacity-70">· 200 Mbit/s</span>
+          </p>
           <div className="mt-2 flex items-start gap-2">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 opacity-70" />
             <p className="text-sm leading-relaxed">
-              Das WLAN-Passwort findest du auf der{' '}
-              <strong>Innenseite der Schranktür im Zebrazimmer</strong>.
+              Das WLAN-Passwort findest du auf einem <strong>Aufsteller in der Küche</strong>.
             </p>
           </div>
         </div>
