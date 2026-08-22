@@ -93,23 +93,23 @@ export default function Page() {
       <RulesAcceptance />
 
       <header className="sticky top-0 z-40 border-b border-[var(--color-brand-200)] bg-[var(--brand-foam)]/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-brand-500)] text-white">
+        <div className="mx-auto flex max-w-2xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-brand-500)] text-white">
             <Home className="h-4 w-4" />
           </div>
-          <div>
-            <p className="text-sm font-semibold leading-none text-[var(--brand-ink)]">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold leading-none text-[var(--brand-ink)]">
               Haus im Grünen
             </p>
-            <p className="text-xs text-[var(--brand-ink-soft)]">{t.header.subtitle}</p>
+            <p className="truncate text-xs text-[var(--brand-ink-soft)]">{t.header.subtitle}</p>
           </div>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex shrink-0 basis-full items-center justify-end gap-2 sm:basis-auto sm:justify-normal">
             <LanguageSwitcher />
             <a
               href={AIRBNB_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 rounded-full bg-[var(--color-brand-500)] px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+              className="flex items-center gap-1 whitespace-nowrap rounded-full bg-[var(--color-brand-500)] px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90"
             >
               {t.header.bookNow}
               <ExternalLink className="h-3 w-3" />
