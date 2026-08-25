@@ -382,8 +382,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
     },
     rules: {
       title: 'Bitte lies die Hausregeln',
-      subtitle:
-        'Bestätige einmalig, dass du die Regeln gelesen hast — dann siehst du das WLAN-Passwort.',
+      subtitle: 'Bestätige einmalig, dass du die Regeln gelesen hast.',
       sections: [
         {
           title: 'Check-in & Check-out',
@@ -719,7 +718,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
     },
     rules: {
       title: 'Please read the house rules',
-      subtitle: 'Confirm once that you\u2019ve read the rules — then you\u2019ll see the WiFi password.',
+      subtitle: 'Confirm once that you\u2019ve read the rules.',
       sections: [
         {
           title: 'Check-in & check-out',
