@@ -13,6 +13,7 @@ import {
   Zap,
 } from 'lucide-react'
 
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { useLanguage } from '@/i18n/LanguageContext'
 
 export const STORAGE_KEY = 'hig-rules-v1'
@@ -69,7 +70,10 @@ export function RulesAcceptance() {
       <div className="brand-card flex max-h-[90dvh] w-full max-w-lg flex-col rounded-b-none sm:rounded-2xl">
         {/* Header */}
         <div className="shrink-0 border-b border-[var(--color-brand-100)] px-5 py-4">
-          <p className="brand-pill mb-2">🏡 {t.hero.pill}</p>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="brand-pill">🏡 {t.hero.pill}</p>
+            <LanguageSwitcher />
+          </div>
           <h2 className="text-xl font-bold text-[var(--brand-ink)]">{t.rules.title}</h2>
           <p className="mt-1 text-xs text-[var(--brand-ink-soft)]">{t.rules.subtitle}</p>
         </div>
