@@ -22,7 +22,10 @@ import {
   Bike,
   Waves,
   Baby,
+  Box,
 } from 'lucide-react'
+
+import Link from 'next/link'
 
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { RulesAcceptance } from '@/components/RulesAcceptance'
@@ -85,6 +88,9 @@ const HAUSREGELN_ICONS: React.ReactNode[][] = [
   [<AlarmCheck key="co2" />, <Flame key="smoke3" />],
 ]
 
+// Start downloading the (three.js) tour chunk as soon as the teaser is touched/hovered; three stays out of the home bundle.
+const warmTour = () => void import('@/tour/buildScene')
+
 export default function Page() {
   const { t } = useLanguage()
 
@@ -140,6 +146,39 @@ export default function Page() {
               </span>
             ))}
           </div>
+        </section>
+
+        {/* 3D-Rundgang Teaser */}
+        <section aria-labelledby="tour-teaser-heading">
+          <Link
+            href="/tour"
+            onPointerEnter={warmTour}
+            onFocus={warmTour}
+            onTouchStart={warmTour}
+            className="group flex items-center gap-4 overflow-hidden rounded-2xl border border-[var(--color-brand-200)] bg-[var(--color-brand-50)] p-3 transition-shadow hover:shadow-[var(--brand-shadow-medium)] sm:gap-5 sm:p-4"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/tour/grundriss.webp"
+              alt={t.tour.teaser.imageAlt}
+              width={1000}
+              height={911}
+              loading="lazy"
+              className="h-24 w-24 shrink-0 rounded-xl bg-white object-contain sm:h-28 sm:w-28"
+            />
+            <div className="min-w-0">
+              <span className="brand-pill mb-1 inline-flex">
+                <Box className="h-3 w-3" aria-hidden /> {t.tour.teaser.pill}
+              </span>
+              <h2 id="tour-teaser-heading" className="text-lg font-bold text-[var(--brand-ink)]">
+                {t.tour.teaser.heading}
+              </h2>
+              <p className="mt-0.5 text-sm text-[var(--brand-ink-soft)]">{t.tour.teaser.text}</p>
+              <span className="mt-2 inline-block text-sm font-semibold text-[var(--color-brand-600)] group-hover:underline">
+                {t.tour.teaser.button} →
+              </span>
+            </div>
+          </Link>
         </section>
 
         {/* Fotogalerie */}

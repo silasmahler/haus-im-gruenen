@@ -26,6 +26,32 @@ interface ActivityGroupDict {
   items: ActivityItem[]
 }
 
+export interface TourUiDict {
+  back: string
+  modes: string
+  modeWalk: string
+  modeDollhouse: string
+  modeTop: string
+  modeChanged: { walk: string; dollhouse: string; top: string }
+  rooms: string
+  currentRoom: string
+  map: string
+  mapShow: string
+  mapHide: string
+  help: string
+  helpTitle: string
+  helpClose: string
+  helpItems: { keys: string; text: string }[]
+  helpTouch: string
+  bob: string
+  hintMouse: string
+  hintTouch: string
+  stick: string
+  /** graphics quality button label per level: high, medium, low */
+  qualityNames: [string, string, string]
+  canvasDescription: string
+}
+
 export interface Dictionary {
   meta: { title: string; description: string }
   header: { subtitle: string; bookNow: string }
@@ -71,6 +97,26 @@ export interface Dictionary {
     groups: ActivityGroupDict[]
   }
   cta: { heading: string; text: string; button: string }
+  tour: {
+    page: {
+      title: string
+      description: string
+      back: string
+      canvasLabel: string
+      loading: string
+      start: string
+      startHint: string
+      loadingSteps: { download: string; textures: string; geometry: string; furniture: string; lighting: string }
+      noWebglTitle: string
+      noWebglText: string
+      planAlt: string
+      planCaption: string
+      retry: string
+      error: string
+    }
+    teaser: { pill: string; heading: string; text: string; button: string; imageAlt: string }
+    ui: TourUiDict
+  }
   footer: {
     hostPrefix: string
     hostName: string
@@ -371,6 +417,80 @@ export const dictionaries: Record<Locale, Dictionary> = {
       heading: 'Nächsten Urlaub planen?',
       text: 'Freie Termine und Preise findest du auf Airbnb — dort kannst du auch direkt buchen.',
       button: 'Auf Airbnb buchen',
+    },
+    tour: {
+      page: {
+        title: 'Rundgang – Haus im Grünen',
+        description: '3D-Rundgang durch das Ferienhaus Haus im Grünen: Zimmer für Zimmer im Browser erkunden.',
+        back: 'Zurück zur Übersicht',
+        canvasLabel: '3D-Rundgang durch das Haus. Mit Pfeiltasten oder WASD bewegen, Maus oder Wischen zum Umsehen.',
+        loading: 'Rundgang wird geladen',
+        start: 'Rundgang starten',
+        startHint: 'Ein 3D-Rundgang durch alle Zimmer, direkt im Browser. Der Aufbau dauert wenige Sekunden.',
+        loadingSteps: {
+          download: 'Lade 3D-Engine …',
+          textures: 'Erzeuge Oberflächen …',
+          geometry: 'Baue Wände und Böden …',
+          furniture: 'Richte Möbel ein …',
+          lighting: 'Setze Licht …',
+        },
+        noWebglTitle: '3D wird von diesem Browser nicht unterstützt',
+        noWebglText:
+          'Für den Rundgang braucht dein Browser WebGL. Hier siehst du stattdessen den Grundriss des Hauses.',
+        planAlt:
+          'Grundriss des Hauses: Wohnen, Küche, Schlafzimmer, zwei Kinderzimmer, Bad, WC, Abstellraum und Diele',
+        planCaption: 'Grundriss (ca. 106 m²)',
+        retry: 'Erneut versuchen',
+        error: 'Der Rundgang konnte nicht geladen werden.',
+      },
+      teaser: {
+        pill: 'Neu',
+        heading: '3D-Rundgang',
+        text: 'Erkunde das Haus vorab Zimmer für Zimmer im Browser – vom Wohnzimmer bis zum Kinderzimmer, am Handy oder am Rechner.',
+        button: 'Rundgang starten',
+        imageAlt: 'Grundriss des Hauses',
+      },
+      ui: {
+        back: 'Zurück',
+        modes: 'Ansicht',
+        modeWalk: 'Rundgang',
+        modeDollhouse: 'Puppenhaus',
+        modeTop: 'Grundriss',
+        modeChanged: {
+          walk: 'Ansicht: Rundgang in Augenhöhe',
+          dollhouse: 'Ansicht: Puppenhaus, Decke ausgeblendet',
+          top: 'Ansicht: Grundriss von oben',
+        },
+        rooms: 'Zimmer',
+        currentRoom: 'Aktueller Raum: {room}',
+        map: 'Grundriss-Karte, Zimmer antippen zum Springen',
+        mapShow: 'Karte',
+        mapHide: 'Karte ausblenden',
+        help: 'Hilfe zur Steuerung',
+        helpTitle: 'Steuerung',
+        helpClose: 'Schließen',
+        helpItems: [
+          { keys: 'W A S D / Pfeiltasten', text: 'Gehen bzw. mit links und rechts umsehen' },
+          { keys: 'Q / E', text: 'Nach links / rechts drehen' },
+          { keys: 'R / F', text: 'Nach oben / unten schauen' },
+          { keys: 'Shift', text: 'Schneller gehen' },
+          { keys: 'Maus', text: 'Ziehen zum Umsehen, Doppelklick fängt die Maus ein (Esc gibt sie frei)' },
+          { keys: 'Bild auf/ab · P / N', text: 'Zum vorigen bzw. nächsten Zimmer springen' },
+          { keys: 'Tab', text: 'Zimmer-Schaltflächen: Pfeiltasten wechseln das Zimmer, Enter oder Esc führt zurück zum Rundgang' },
+          { keys: '1 2 3', text: 'Rundgang, Puppenhaus, Grundriss' },
+          { keys: 'M', text: 'Karte ein- oder ausblenden' },
+          { keys: 'H / ?', text: 'Diese Hilfe öffnen' },
+          { keys: 'Esc', text: 'Hilfe schließen' },
+        ],
+        helpTouch: 'Am Handy: Kreis unten links zum Gehen, mit dem Finger über das Bild wischen zum Umsehen, im Puppenhaus zwei Finger zum Zoomen.',
+        bob: 'Leichtes Wippen beim Gehen',
+        hintMouse: 'Ziehen zum Umsehen · Doppelklick fängt die Maus ein (Esc gibt sie frei) · W A S D zum Gehen',
+        hintTouch: 'Kreis zum Gehen, wischen zum Umsehen',
+        stick: 'Steuerkreis zum Gehen',
+        qualityNames: ['Grafik: hoch', 'Grafik: mittel', 'Grafik: niedrig'],
+        canvasDescription:
+          'Interaktiver 3D-Rundgang durch das eingeschossige Ferienhaus: Diele, Küche mit Essplatz, Wohnzimmer mit Kaminanschluss, Schlafzimmer, zwei Kinderzimmer, Bad, WC und Abstellraum. Bedienung mit Pfeiltasten oder WASD, Zimmerwechsel über die Schaltflächen am unteren Rand oder mit den Tasten Bild auf und Bild ab.',
+      },
     },
     footer: {
       hostPrefix: 'Gastgeberin: ',
@@ -707,6 +827,79 @@ export const dictionaries: Record<Locale, Dictionary> = {
       heading: 'Planning your next getaway?',
       text: 'You can find availability and prices on Airbnb — and book directly there too.',
       button: 'Book on Airbnb',
+    },
+    tour: {
+      page: {
+        title: 'Virtual tour – Haus im Grünen',
+        description: '3D walkthrough of the holiday home Haus im Grünen: explore it room by room in your browser.',
+        back: 'Back to overview',
+        canvasLabel: '3D walkthrough of the house. Move with arrow keys or WASD, look around with the mouse or by swiping.',
+        loading: 'Loading the tour',
+        start: 'Start tour',
+        startHint: 'A 3D walkthrough of every room, right in your browser. Setting it up takes a few seconds.',
+        loadingSteps: {
+          download: 'Loading 3D engine …',
+          textures: 'Creating surfaces …',
+          geometry: 'Building walls and floors …',
+          furniture: 'Furnishing rooms …',
+          lighting: 'Setting up light …',
+        },
+        noWebglTitle: '3D is not supported by this browser',
+        noWebglText: 'The tour needs WebGL. Here is the floor plan of the house instead.',
+        planAlt:
+          'Floor plan of the house: living room, kitchen, master bedroom, two children rooms, bathroom, WC, storage room and hallway',
+        planCaption: 'Floor plan (approx. 106 m², room names in German)',
+        retry: 'Try again',
+        error: 'The tour could not be loaded.',
+      },
+      teaser: {
+        pill: 'New',
+        heading: '3D virtual tour',
+        text: 'Explore the house room by room in your browser before you arrive – from the living room to the children rooms, on your phone or computer.',
+        button: 'Start the tour',
+        imageAlt: 'Floor plan of the house',
+      },
+      ui: {
+        back: 'Back',
+        modes: 'View',
+        modeWalk: 'Walk',
+        modeDollhouse: 'Dollhouse',
+        modeTop: 'Floor plan',
+        modeChanged: {
+          walk: 'View: walking at eye level',
+          dollhouse: 'View: dollhouse, ceiling hidden',
+          top: 'View: floor plan from above',
+        },
+        rooms: 'Rooms',
+        currentRoom: 'Current room: {room}',
+        map: 'Floor plan map, tap a room to jump there',
+        mapShow: 'Map',
+        mapHide: 'Hide map',
+        help: 'Controls help',
+        helpTitle: 'Controls',
+        helpClose: 'Close',
+        helpItems: [
+          { keys: 'W A S D / arrow keys', text: 'Walk, or look left and right with the side arrows' },
+          { keys: 'Q / E', text: 'Turn left / right' },
+          { keys: 'R / F', text: 'Look up / down' },
+          { keys: 'Shift', text: 'Walk faster' },
+          { keys: 'Mouse', text: 'Drag to look around, double-click captures the mouse (Esc releases it)' },
+          { keys: 'Page up/down · P / N', text: 'Jump to the previous or next room' },
+          { keys: 'Tab', text: 'Room buttons: arrow keys change the room, Enter or Esc returns to walking' },
+          { keys: '1 2 3', text: 'Walk, dollhouse, floor plan' },
+          { keys: 'M', text: 'Show or hide the map' },
+          { keys: 'H / ?', text: 'Open this help' },
+          { keys: 'Esc', text: 'Close help' },
+        ],
+        helpTouch: 'On a phone: circle at the bottom left to walk, swipe across the picture to look around, two fingers to zoom in dollhouse view.',
+        bob: 'Slight head bob while walking',
+        hintMouse: 'Drag to look around · Double-click captures the mouse (Esc releases it) · W A S D to walk',
+        hintTouch: 'Circle to walk, swipe to look',
+        stick: 'Movement stick',
+        qualityNames: ['Quality: high', 'Quality: medium', 'Quality: low'],
+        canvasDescription:
+          'Interactive 3D walkthrough of the single-storey holiday home: entrance hall, kitchen with dining area, living room with chimney recess, bedroom, two children rooms, bathroom, toilet and storage room. Move with the arrow keys or WASD, switch rooms with the buttons at the bottom or the Page up and Page down keys.',
+      },
     },
     footer: {
       hostPrefix: 'Host: ',
