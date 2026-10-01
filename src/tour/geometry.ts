@@ -3,7 +3,7 @@
  * baseboards, cornices, window + door frames, glass, door leaves, radiators, fireplace flue collar, exterior apron and
  * garden backdrop, plus collision data.
  *
- * Everything is batched per material key (one mesh per material, ~25 draw calls for the whole house).
+ * Everything is batched per material key (one mesh per material, ~35 draw calls / ~9k triangles for the whole shell, logged as window.__tour.shell).
  * UVs are WORLD-SCALE (1 unit = 1 m): floors/ceilings (x,z), walls facing +-z (x,y), walls facing +-x (z,y).
  * Coordinates: see plan.ts (x east, z south, y up, metres).
  *
@@ -221,8 +221,9 @@ function makeLocal(key: string): THREE.Material {
     case 'geo-trim-hi': return tweak('baseboard', 0.18, 0.25) // cornice
     case 'geo-ceiling-panel': return tweak('ceiling', 0.35, 0.22)
     case 'geo-ceiling-flat': return std({ color: 0xf5f2ea, roughness: 0.93, envMapIntensity: 0.3, emissive: 0xf6f2e8, emissiveIntensity: 0.24 })
-    case 'geo-leaf': return std({ color: 0xf7f5ef, roughness: 0.34, envMapIntensity: 0.45, emissive: 0xf6f2e8, emissiveIntensity: 0.26 }) // satin paint, no plaster noise
-    case 'geo-leaf-panel': return std({ color: 0xebe8e0, roughness: 0.38, envMapIntensity: 0.45, emissive: 0xf6f2e8, emissiveIntensity: 0.22 })
+    case 'geo-casing': return tweak('frame', 0.3, 0.34) // door lining + casing: thin end faces must not go dark grey (read as hairline cracks)
+    case 'geo-leaf': return std({ color: 0xf7f5ef, roughness: 0.4, envMapIntensity: 0.3, emissive: 0xf6f2e8, emissiveIntensity: 0.44 }) // satin paint, no plaster noise
+    case 'geo-leaf-panel': return std({ color: 0xebe8e0, roughness: 0.42, envMapIntensity: 0.3, emissive: 0xf6f2e8, emissiveIntensity: 0.38 })
     case 'geo-stove': return std({ color: 0x1d1d1f, roughness: 0.5, metalness: 0.55, envMapIntensity: 0.6 })
     case 'geo-fire': return std({ color: 0x120a06, roughness: 0.2, emissive: 0xff6a1c, emissiveIntensity: 0.85 })
     case 'geo-led': return std({ color: 0xeeeeea, roughness: 0.5, emissive: 0xf2f2ec, emissiveIntensity: 0.42 }) // soft diffuser, not a blown-out slab
@@ -532,7 +533,7 @@ function addDoor(e: WExt, o: Opening, bt: Batch, leafB: Batch, handles: Batch, g
   const H = o.height
   const p = alongOf(e, o)
   const s0 = p - o.width / 2, s1 = p + o.width / 2
-  const F = allFaces('frame')
+  const F = allFaces('geo-casing')
   // lining in the reveal
   wbox(bt, F, e, s0, s0 + LINING, 0, H, -t / 2, t / 2)
   wbox(bt, F, e, s1 - LINING, s1, 0, H, -t / 2, t / 2)

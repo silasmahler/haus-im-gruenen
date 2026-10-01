@@ -88,3 +88,9 @@ Known skeleton limits: walls sampled by room at the segment midpoint only (a lon
 
 ## Geometry budget (round 3)
 `__tour.shell` = `{ drawCalls, triangles }` of the meshes created by `buildGeometry()` only (walls, trim, glass, floors, ceiling, stove, exterior apron), computed once at build time. `__tour.stats()` includes furniture + lighting, so it is much larger. Wall side faces are cut at every opening edge height and the reveal jambs are emitted only opening-tall (no T-junction hairlines).
+
+### Geometry round 2 notes
+- Shell budget is measurable: `window.__tour.shell` = `{ drawCalls: 36, triangles: 9222 }` (geometry.ts group only, no furniture / lighting). Exterior walls are 0.28 m (`EXT_T`).
+- Door lining + casing use the private material `geo-casing` (lit from below like `geo-soffit`), so thin end faces no longer render as dark hairlines; door leaves got more fill/less env reflection to match on shaded sides.
+- Areas now: wohnen 26.30 (-0.8 %), flur-links 6.95 (-0.7 %), kind-mitte 10.82 (-0.2 %); others within 0.2 %.
+- Kamin recess stays 0.84 x 1.26 m (1.06 m2) vs ~1.3 x 1.9 m in photo 10: deepening would take area from the kitchen/Diele/Kind-mitte, all at their label limits. Deliberate deviation.

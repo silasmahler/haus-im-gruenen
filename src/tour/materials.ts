@@ -394,7 +394,7 @@ const registry: Record<string, () => THREE.Material> = {
   'zebra-fabric': () => pbr(zebraTex(), { floor: [0.5, 0.5] }, { color: 0xffffff, roughness: 1 }, 0.4, 0.2),
   // plum curtain: double-sided cloth for pleated meshes
   'curtain-plum': () => {
-    const m = pbr(weaveTex(), { floor: [0.15, 0.15] }, { color: boost(0x6d1a3a, 1.0), roughness: 1, side: THREE.DoubleSide }, 0.45, 0.25)
+    const m = pbr(weaveTex(), { floor: [0.15, 0.15] }, { color: boost(0x7a1f45, 1.0), roughness: 1, side: THREE.DoubleSide }, 0.45, 0.25)
     return m
   },
   // lace net / voile: transparent, printed lace pattern, lit from behind by the window (emissive lift), 0.3 m per repeat
@@ -424,7 +424,7 @@ const registry: Record<string, () => THREE.Material> = {
   bulb: () => flat({ color: 0xfff0d0, roughness: 0.3, emissive: 0xffd9a0, emissiveIntensity: 1.2 }),
   terracotta: () => flat({ color: 0xb5643c, roughness: 0.85 }),
   soil: () => flat({ color: 0x3a2a1e, roughness: 1 }),
-  'paint-green': () => pbr(grainTex(0), { floor: [0.7, 0.18], swap: true }, { color: 0x1b4423, roughness: 0.5 }, 0.22), // painted timber wardrobes (photo 21): muted green, vertical brush grain
+  'paint-green': () => pbr(grainTex(0), { floor: [0.7, 0.18], swap: true }, { color: 0x24572a, roughness: 0.5 }, 0.22), // painted timber wardrobes (photo 21): muted green, vertical brush grain
   'stone-sill': () => pbr(plasterTex(), { floor: [1.2, 1.2] }, { color: 0xb9b3a8, roughness: 1 }, 1.2),
   'plant-dark': () => flat({ color: 0x2f5a2e, roughness: 0.7 }),
 

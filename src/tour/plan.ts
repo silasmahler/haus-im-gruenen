@@ -123,7 +123,7 @@ const ZH = zK; // virtual kitchen | hallway boundary
 const zStubS = STUB.c + STUB.t / 2;
 const KAMIN_W = { c: 5.71, t: 0.143 };
 const kaminW = KAMIN_W.c - KAMIN_W.t / 2, kaminE = KAMIN_W.c + KAMIN_W.t / 2;
-const xkmW = 4.81, xkmE = xkmW + T.kmW; // hall east face / kind-mitte west face
+const xkmW = 4.816, xkmE = xkmW + T.kmW; // hall east face / kind-mitte west face
 const zKmN = 5.794, zKmS = zKmN + T.kmN; // north face of kind-mitte's north wall / kind-mitte north face
 const kmeW = 7.56, kmeE = kmeW + T.kmE; // kind-mitte east face / east wall east face (TV wall)
 // east block

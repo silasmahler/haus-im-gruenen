@@ -348,15 +348,36 @@ export function art(kind: string): THREE.Material {
   return canvasMat('art-' + kind, kind === 'zebra-red' ? 512 : 256, kind === 'zebra' ? 256 : kind === 'zebra-red' ? 232 : 192, draw, { roughness: 0.75 })
 }
 
-/** bright, low-roughness fake reflection for the wall mirror (silver-white, streak, hint of ceiling) */
-export const mirrorFake = (): THREE.Material => canvasMat('mirror-fake', 128, 128, (c, w, h) => {
-  const g = c.createLinearGradient(0, 0, w, h); g.addColorStop(0, '#f3f6f7'); g.addColorStop(0.55, '#c9d3d6'); g.addColorStop(1, '#b3bec3')
-  c.fillStyle = g; c.fillRect(0, 0, w, h)
-  c.fillStyle = 'rgba(255,255,255,0.55)'; c.fillRect(0, 0, w, h * 0.22)
-  c.fillStyle = 'rgba(255,255,255,0.45)'; c.beginPath(); c.moveTo(w * 0.15, h); c.lineTo(w * 0.35, 0); c.lineTo(w * 0.5, 0); c.lineTo(w * 0.3, h); c.fill()
-  c.fillStyle = 'rgba(90,100,105,0.25)'; c.fillRect(w * 0.55, h * 0.55, w * 0.3, h * 0.3)
-}, { roughness: 0.06, metalness: 0.55 })
+/** bright, glossy fake reflection for wall mirrors: warm-tinted room (window light, ceiling, far wall) baked into map + emissive map, so it stays bright with the dim scene environment */
+export const mirrorFake = (): THREE.Material => {
+  const m = canvasMat('mirror-fake2', 256, 256, (c, w, h) => {
+    const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#fff8ea'); g.addColorStop(0.35, '#efe4d2'); g.addColorStop(0.7, '#d9ccba'); g.addColorStop(1, '#bfb3a3')
+    c.fillStyle = g; c.fillRect(0, 0, w, h)
+    // reflected window (bright, mullions) and a dark bed / furniture band at the bottom
+    c.fillStyle = 'rgba(255,255,250,0.95)'; c.fillRect(w * 0.1, h * 0.18, w * 0.34, h * 0.42)
+    c.fillStyle = 'rgba(190,175,150,0.8)'; c.fillRect(w * 0.26, h * 0.18, w * 0.02, h * 0.42); c.fillRect(w * 0.1, h * 0.38, w * 0.34, h * 0.02)
+    c.fillStyle = 'rgba(120,110,100,0.35)'; c.fillRect(0, h * 0.78, w, h * 0.22)
+    c.fillStyle = 'rgba(255,255,255,0.4)'; c.beginPath(); c.moveTo(w * 0.5, h); c.lineTo(w * 0.78, 0); c.lineTo(w * 0.92, 0); c.lineTo(w * 0.64, h); c.fill()
+  }, { roughness: 0.05, metalness: 0, emissive: 0xffffff, emissiveIntensity: 0.4 }) as THREE.MeshStandardMaterial
+  if (!m.emissiveMap) m.emissiveMap = m.map
+  return m
+}
 
+/** pillow / cushion: rounded box whose broad faces bulge by `bulge` (metres) in the middle; normals follow the bulge. bottom-centre (x,y,z) */
+export function puff(p: THREE.Object3D, w: number, h: number, d: number, r: number, m: Mat, x = 0, y = 0, z = 0, ry = 0, bulge = 0.03, seg = 4): THREE.Mesh {
+  const rr = Math.min(r, w / 2 - 0.0005, h / 2 - 0.0005, d / 2 - 0.0005)
+  const g = new RoundedBoxGeometry(w, h, d, seg, rr)
+  const pos = g.attributes.position, nor = g.attributes.normal
+  for (let i = 0; i < pos.count; i++) {
+    const px = pos.getX(i), py = pos.getY(i), pz = pos.getZ(i)
+    const fx = Math.max(0, 1 - (2 * px / w) ** 2), fz = Math.max(0, 1 - (2 * pz / d) ** 2), s = py >= 0 ? 1 : -1
+    const Yx = s * bulge * (-8 * px / (w * w)) * fz, Yz = s * bulge * fx * (-8 * pz / (d * d))
+    pos.setY(i, py + s * bulge * fx * fz)
+    const ny = nor.getY(i), nx = nor.getX(i) - ny * Yx, nz = nor.getZ(i) - ny * Yz, l = Math.hypot(nx, ny, nz)
+    nor.setXYZ(i, nx / l, ny / l, nz / l)
+  }
+  return add(p, g, m, x, y + h / 2, z, ry)
+}
 
 // ------------------------------------------------------------------ plants (no alpha textures: small ellipsoid leaves)
 const rnd = (seed: number) => { let s = seed * 9301 + 49297; return () => ((s = (s * 9301 + 49297) % 233280) / 233280) }
@@ -519,7 +540,7 @@ export function drawerBed(g: THREE.Object3D, w: number, d: number, c: BedCfg): v
   rb(g, w + 0.04, 0.2, 0.035, 0.014, c.cover, 0, cy0 - 0.17, d / 2 + 0.006, 0, 2)
   rb(g, w - 0.02, 0.06, 0.16, 0.028, c.cover, 0, cy0 + 0.03, cz - cl / 2 + 0.05, 0, 3)
   if (c.rug) rb(g, w - 0.04, 0.06, 0.22, 0.026, c.rug, 0, cy0 - 0.01, cz - cl / 2 - 0.1, 0, 3)
-  for (const p of c.pillows) { const m = rb(g, p.w, p.h, p.d, Math.min(0.05, p.h / 2.5), p.m, p.x, cy0 - 0.02, p.z, p.ry ?? 0, 3); m.rotation.x = -(p.tilt ?? 0) }
+  for (const p of c.pillows) { const m = puff(g, p.w, p.h, p.d, Math.min(0.05, p.h / 2.5), p.m, p.x, cy0 - 0.02, p.z, p.ry ?? 0, Math.min(0.035, p.h * 0.35)); m.rotation.x = -(p.tilt ?? 0) }
 }
 /** white bedside table: 4 thin legs, drawer, lower shelf; front +z; top at h */
 export function nightstand(g: THREE.Object3D, w: number, d: number, h: number, m: Mat = 'furn-white'): void {
