@@ -35,7 +35,7 @@ export default function TourCanvas() {
   const ref = useRef<HTMLCanvasElement>(null)
   const [api, setApi] = useState<TourApi | null>(null)
   const [phase, setPhase] = useState<Phase>('idle')
-  // The scene build is heavy (seconds of main-thread work): wait for a click/tap. ?autostart=1 skips the gate (QA harness).
+  // The scene build is heavy (seconds of main-thread work): wait for the button unless ?autostart=1 (teaser link, QA harness).
   const [started, setStarted] = useState(false)
   const [progress, setProgress] = useState<{ label: Label; pct: number }>({ label: 'download', pct: 0.05 })
   const [attempt, setAttempt] = useState(0)
@@ -51,6 +51,8 @@ export default function TourCanvas() {
     return () => mo.disconnect()
   }, [p.title])
 
+  // Arriving from the homepage teaser (?autostart=1) skips the gate; a direct visit keeps the button so the heavy build
+  // does not fight the first paint (Lighthouse TBT).
   useEffect(() => {
     if (new URLSearchParams(location.search).has('autostart')) setStarted(true)
   }, [])
@@ -89,8 +91,8 @@ export default function TourCanvas() {
         handle = await createTour(canvas, async (step, fraction, force) => {
           if (dead) throw new Error('cancelled')
           setProgress({ label: step, pct: fraction })
-          // yield to the browser about every 40 ms of work so the bar animates and the page stays responsive
-          if (force || performance.now() - lastYield > 40) {
+          // yield to the browser about every 16 ms of work so the bar animates and the page stays responsive
+          if (force || performance.now() - lastYield > 16) {
             await paint()
             lastYield = performance.now()
             if (dead) throw new Error('cancelled')

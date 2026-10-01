@@ -62,8 +62,7 @@ const wrap = (d: number) => ((d % 360) + 360) % 360
  * fixtures are in view instead of a blank tile wall / door slab. Keyed by jump-pose id.
  */
 const POSE_FIX: Record<string, Partial<PoseState>> = {
-  'bad-1': { x: 10.42, z: 2.55, yawDeg: 42, pitchDeg: -10 }, // SW corner across tub and basin
-  'kind-mitte-1': { x: 7.15, z: 8.0, yawDeg: 200, pitchDeg: -4 }, // east side, looking SSW: window with sheer curtain + radiator/desk, dresser at the right (the bed is behind; the plant at the SE corner seals it off)
+  // (bad-1 / kind-mitte-1 re-aimed by plan.ts after the photo re-layout - no override needed)
 }
 
 // one entry per distinct room in guided order, for stepRoom

@@ -37,7 +37,7 @@
  * BAKE BUDGET: textures are generated lazily on first getMaterial(); buildScene loops materialKeys() one by one with
  * yields, so the work is spread over frames behind the loader. Measured 2026-09-30 (round 4, machine load 60-90, so
  * an upper bound): window.__tourMatMs = 330-440 ms in Chrome for the whole set. Sizes: wood 256x512 (walnut 512x512, laminate-brown
- * 1024x384, beech 512x384), tile 510^2, plaster 256^2, mural 1024x512 (canvas paths only), roughness maps half size.
+ * 1024x384, beech 512x384), tile 510^2, plaster 256^2, mural 1536x1024 (base at half res) (canvas paths only), roughness maps half size.
  */
 import * as THREE from 'three'
 
@@ -67,7 +67,7 @@ interface UvCfg {
    *  that rectangle (u along z, v = y / y1) instead of the repeating map. Everything else keeps the normal plaster. */
   mural?: { x: number; z0: number; z1: number; y1: number; tex: THREE.Texture; /** second wall (face line z = `z`, normal +z) between x0..x1 */ wall2?: { z: number; x0: number; x1: number } }
   /** tiled wall strip (kitchen backsplash): vertical faces inside any of `rects` ([x0,z0,x1,z1], world metres, the wall face
-   *  line +-4 cm) between y0..y1 show `tex` (1 m per repeat, u = horizontal along the wall) tinted by `tint`. Max 4 rects. */
+   *  line +-4 cm) between y0..y1 show `tex` (0.5 m per repeat, u = horizontal along the wall) tinted by `tint`. Max 4 rects. */
   splash?: { rects: [number, number, number, number][]; y0: number; y1: number; tint: number; tex: THREE.Texture }
 }
 
@@ -165,7 +165,7 @@ function worldUV(m: THREE.MeshStandardMaterial, c: UvCfg): void {
             }
           }
           spm *= step( 0.5, vWall ) * step( uSpY.x, vWY ) * step( vWY, uSpY.y );
-          diffuseColor.rgb = mix( diffuseColor.rgb, texture2D( uSpMap, vec2( vHC, vWY ) ).rgb * uSpTint, spm );`,
+          diffuseColor.rgb = mix( diffuseColor.rgb, texture2D( uSpMap, vec2( vHC, vWY ) * 2.0 ).rgb * uSpTint, spm );`,
         )
         .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor = mix( roughnessFactor, 0.32, spm );')
         .replace(
@@ -243,30 +243,29 @@ const boost = (hex: number, k = 1.22): number => {
 }
 
 // wood floors (photos 20 / 18+45 / 24 / 26). All bake at 256 x 512 (walnut 512 x 512); joints are texel-sized.
-// walnut (photos 09 / 05 / 11, Wohnen): red-brown laminate #6b3a26..#7a4028 with high-contrast tiger-stripe figure, slight gloss (rough ~0.35)
+// walnut (photos 09 / 05 / 20 / 21): dark chocolate-brown laminate (~#4A2416 average, streaks up to #6b3a22), fine grain, SATIN (rough ~0.5)
 const WALNUT: WoodFloor = {
-  seed: 3, rows: 14, boardW: 0.16, segs: 3, plankLen: 0.75, dark: [88, 44, 28], light: [168, 94, 58],
-  tone: 0.75, streak: 0.6, figure: 1.5, jitter: 0.55, lenVar: 0.5, desat: 0.04, rough: [0.26, 0.44], size: [512, 512], groove: 0.2,
+  seed: 3, rows: 14, boardW: 0.16, segs: 3, plankLen: 0.75, dark: [44, 21, 13], light: [104, 56, 33],
+  tone: 0.5, streak: 0.4, figure: 0.9, jitter: 0.15, lenVar: 0.5, desat: 0.1, rough: [0.44, 0.56], size: [512, 512], groove: 0.2, bevel: 0.35,
 }
-// walnut strips (photos 02 / 20 / 21, Schlafen): narrow 10 cm x 1.2 m strips, deep red-brown with dark tiger streaks, clearcoat-like gloss, light seams
+// walnut strips (Schlafen): narrow 10 cm x 1.2 m strips, same dark chocolate walnut, satin
 const WALNUT_STRIP: WoodFloor = {
-  seed: 17, rows: 10, boardW: 0.1, segs: 2, plankLen: 1.2, dark: [78, 38, 24], light: [164, 92, 56],
-  tone: 0.85, streak: 0.6, figure: 1.4, jitter: 0.5, lenVar: 0.45, desat: 0.04, rough: [0.26, 0.42], size: [512, 512], groove: 0.1, joint: 0.6,
+  seed: 17, rows: 10, boardW: 0.1, segs: 2, plankLen: 1.2, dark: [42, 20, 12], light: [100, 54, 32],
+  tone: 0.55, streak: 0.4, figure: 0.9, jitter: 0.15, lenVar: 0.45, desat: 0.1, rough: [0.44, 0.56], size: [512, 512], groove: 0.12, joint: 0.6, bevel: 0.35,
 }
-// hallways (photos 10 / 18): mid red-brown satin wood
-const HALL: WoodFloor = { seed: 21, rows: 12, boardW: 0.19, segs: 2, plankLen: 1.2, dark: [82, 50, 38], light: [122, 82, 58], tone: 0.3, streak: 0.4, jitter: 0.5, lenVar: 0.4, desat: 0.08, rough: [0.3, 0.6] }
+// hallways (photos 10 / 18): mid brown satin wood, a little lighter than the walnut rooms
+const HALL: WoodFloor = { seed: 21, rows: 12, boardW: 0.19, segs: 2, plankLen: 1.2, dark: [56, 32, 22], light: [104, 66, 46], tone: 0.3, streak: 0.35, jitter: 0.15, lenVar: 0.4, desat: 0.12, rough: [0.42, 0.58], bevel: 0.35 }
 const OAK: WoodFloor = { seed: 5, rows: 12, boardW: 0.19, segs: 2, plankLen: 1.2, dark: [142, 78, 38], light: [196, 120, 64], tone: 0.5, streak: 0.5, rough: [0.35, 0.65] }
-// laminates (photos 24 / 26): even figure, per-plank colour jitter instead of bright blotches, capped so they never bleach
-// photo 24: dark, even walnut-brown laminate (#6b4a35 on screen), hairline joints, fine straight grain; 1024 wide so the grain stays sharp
-// round 1 fix: desaturated, low stripe contrast, matte (rough 0.6-0.85)
+// laminates (photos 24 / 26): even figure, per-plank value variation ~8-10 %, capped so they never bleach
+// photo 24 (Kind-links): warm medium brown #7a5e46, 20 cm planks with fine long grain and clearly bevelled seams; 1024 wide so the grain stays sharp
 const LAMINATE: WoodFloor = {
-  seed: 8, rows: 12, boardW: 0.2, segs: 2, plankLen: 1.2, dark: [100, 78, 64], light: [130, 104, 86], tone: 0.1, streak: 0.06, jitter: 0.2,
-  cap: 0.85, groove: 0.15, joint: 0.75, fibre: 0.12, desat: 0.22, lenVar: 0.3, rough: [0.62, 0.85], size: [1024, 384],
+  seed: 8, rows: 12, boardW: 0.2, segs: 2, plankLen: 1.2, dark: [108, 78, 54], light: [144, 106, 76], tone: 0.3, streak: 0.16, jitter: 0.25,
+  cap: 0.9, groove: 0.32, joint: 1, fibre: 0.34, desat: 0.05, lenVar: 0.3, rough: [0.5, 0.72], bevel: 0.6, size: [1024, 384],
 }
-// photo 26: pale, slightly desaturated beech laminate (#D9A26C), joints almost invisible (joint colour = plank colour - 8 %), fine fibre streaks
+// photo 26 / 08 (Kind-mitte): honey-orange beech laminate (#d9a26c / #b98a58), visible fine grain, dark bevelled seams
 const BEECH: WoodFloor = {
-  seed: 13, rows: 12, boardW: 0.19, segs: 2, plankLen: 1.2, dark: [180, 136, 96], light: [222, 174, 126], tone: 0.22, streak: 0.1, jitter: 0.6,
-  cap: 0.8, groove: 0.16, joint: 0.75, fibre: 0.22, desat: 0.1, rough: [0.45, 0.85], size: [512, 384],
+  seed: 13, rows: 12, boardW: 0.19, segs: 2, plankLen: 1.2, dark: [186, 126, 72], light: [236, 172, 106], tone: 0.28, streak: 0.14, jitter: 0.5,
+  cap: 0.85, groove: 0.3, joint: 1, fibre: 0.36, desat: 0.02, rough: [0.45, 0.8], bevel: 0.55, size: [512, 384],
 }
 const wood = (name: string, o: WoodFloor, normal = 0.8, env = 0) => () => pbr(woodFloorTex(name, o), { floor: woodMetres(o), env: env || undefined }, undefined, normal)
 
@@ -300,14 +299,14 @@ const stoneLight = () => pbr(tileTex('floor'), { floor: [1.5, 1.5] }, { color: 0
 const registry: Record<string, () => THREE.Material> = {
   // ---------------------------------------------------------------- floors
   oak: wood('oak', OAK),
-  walnut: wood('walnut', WALNUT, 0.8, 2.2),
-  'walnut-strip': wood('walnut-strip', WALNUT_STRIP, 0.8, 2.2),
-  'laminate-brown': wood('laminate-brown', LAMINATE, 0.7),
-  beech: wood('beech', BEECH, 0.65),
+  walnut: wood('walnut', WALNUT, 0.8, 1.0),
+  'walnut-strip': wood('walnut-strip', WALNUT_STRIP, 0.8, 1.0),
+  'laminate-brown': wood('laminate-brown', LAMINATE, 1.0),
+  beech: wood('beech', BEECH, 1.0),
   'hall-brown': wood('hall-brown', HALL),
   // kitchen: cream-beige #D9D2C3 in the photos (04 / 16), light-grey grout; albedo is warm and bright because the
   // interior light is cool and dim, the on-screen result is what has to match the photo
-  'tile-grey': () => pbr(tileTex('floor'), { floor: [1.65, 1.65], rot: 45 }, { color: 0xcfcdc8, roughness: 0.9 }, 1.0), // cool light grey (photos 16 / 18 / 19) with darker grout (~#8d8a85), slightly glossy; wider grout = crisp at a distance
+  'tile-grey': () => pbr(tileTex('floor'), { floor: [1.65, 1.65], rot: 45 }, { color: 0xd6cebd, roughness: 1 }, 1.0), // cream-beige #D9D2C3 (photo 04), worn glaze; was cool light grey (photos 16 / 18 / 19) with darker grout (~#8d8a85), slightly glossy; wider grout = crisp at a distance
   // bath / WC: floor grey-beige #cfc9c0..#d0cdc6, walls glossy white #eeeeea (cooler than the paint above), sky reflection
   'tile-bath': () =>
     pbr(tileTex('bath'), {
@@ -323,19 +322,19 @@ const registry: Record<string, () => THREE.Material> = {
   // neutral white paint #f3f2ee in the photos; no emissive fake, exposure belongs to lighting
   'plaster-white': () =>
     pbr(plasterTex(), {
-      floor: [1.2, 1.2],
-      // kitchen: grey 20x20 tile backsplash between worktop (0.9) and wall cabinets (photos 13 / 14 / 16 / 18); world-rect based, so the
+      floor: [1.6, 1.6],
+      // kitchen: grey 10x10 tile backsplash between worktop (0.9) and wall cabinets (photos 13 / 14 / 16 / 18); world-rect based, so the
       // other rooms sharing this paint are untouched
-      splash: { rects: splashRects(), y0: 0.9, y1: 1.5, tint: 0xb6bcb8, tex: tileTex('splash').map },
-    }, { color: 0xf5f3ef }, 0.4), // neutral white; slightly warm: the sky-blue ambient in shade turns it neutral, not blue-grey
+      splash: { rects: splashRects(), y0: 0.9, y1: 1.5, tint: 0xa5ada5, tex: tileTex('splash').map },
+    }, { color: 0xf5f3ef }, 1.0), // neutral white; slightly warm: the sky-blue ambient in shade turns it neutral, not blue-grey
   // 'plaster-warm' is the wall key of Wohnen + both children's rooms. World-space rule: the Wohnen west wall face (the TV wall, x = kmeE,
   // z zKmN..south wall, floor to ceiling) shows the branch-photo mural (photos 09 / 11) stretched over that rectangle; nothing else changes.
   'plaster-warm': () =>
     pbr(plasterTex(), {
-      floor: [1.2, 1.2],
+      floor: [1.6, 1.6],
       // TV wall (x = kmeE) + the north wall behind the armchairs / sideboard (z = zWoS, x 8.8..east wall), photos 05 / 09 / 11
-      mural: { x: LAYOUT.kmeE, z0: LAYOUT.zKmN, z1: LAYOUT.IN.z1, y1: WALL_HEIGHT, tex: muralTex().map, wall2: { z: LAYOUT.zWoS, x0: 8.8, x1: LAYOUT.IN.x1 } },
-    }, { color: 0xf1efec }, 0.4), // near-white, very slightly cool (photos 05 / 09 / 24: bright white walls; also the bedroom paint, photo 20)
+      mural: { x: LAYOUT.kmeE, z0: LAYOUT.zKmN, z1: LAYOUT.IN.z1, y1: WALL_HEIGHT, tex: muralTex().map, wall2: { z: LAYOUT.zWoS, x0: 8.85, x1: LAYOUT.IN.x1 } },
+    }, { color: 0xf1efec }, 1.0), // near-white, very slightly cool (photos 05 / 09 / 24: bright white walls; also the bedroom paint, photo 20)
   // the same print as a stand-alone material for custom meshes (UV 0..1 over the mesh, e.g. a PlaneGeometry)
   'mural-branches': () => new THREE.MeshStandardMaterial({ map: muralTex().map, roughness: 0.9, metalness: 0 }),
   exterior: () => pbr(brickTex(), { floor: [1.0, 0.75] }, { color: 0xffffff }, 1),
@@ -367,7 +366,7 @@ const registry: Record<string, () => THREE.Material> = {
   'fabric-armchair': fabricMat(0x4f5257, 0.14, 0.5, 0.1, 1.04), // dark charcoal-grey armchairs (photos 05 / 09 / 11), ~#55585d once lit
   'fabric-linen': fabricMat(0xf2efe8, 0.16, 0.4, 0.3, 1.0), // duvet / white bed linen
   'fabric-sage': fabricMat(0x8fa88f, 0.16, 0.45, 0.25, 1.08), // bedroom blanket (photo 20)
-  'fabric-plum': fabricMat(0x7a1f45, 0.16, 0.45, 0.25, 1.1), // bedroom curtain (photo 20)
+  'fabric-plum': fabricMat(0x6d1a3a, 0.16, 0.45, 0.25, 1.0), // bedroom curtain (photo 20)
   'fabric-cream': fabricMat(0xe8dfc8, 0.16, 0.4, 0.25, 1.05),
   'fabric-bluegrey': fabricMat(0x545d68, 0.15, 0.4), // daybed mattress (photo 24); NOT for the double bed (white duvet 'fabric-linen', sage blanket 'fabric-sage')
   'fabric-floral': () => pbr(floralTex(), { floor: [0.6, 0.6] }, { color: 0xffffff, side: THREE.DoubleSide }, 0.8), // kitchen curtain + cushions
@@ -388,14 +387,14 @@ const registry: Record<string, () => THREE.Material> = {
   sheepskin: () => pbr(furTex(), { floor: [0.3, 0.3] }, { color: 0xf6f3ec, roughness: 1 }, 1, 0.8),
   'rug-cream': () => pbr(rugTex(), { floor: [0.8, 0.8] }, { color: 0xdad4c7, roughness: 1 }, 0.9, 0.3),
   worktop: () => pbr(terrazzoTex(), { floor: [0.5, 0.5] }, { color: 0xffffff, roughness: 0.9 }, 0.6), // fine low-contrast grey-beige pebble laminate, photos 13 / 16
-  'splash-tile': () => pbr(tileTex('splash'), { floor: [1.0, 1.0] }, { color: 0xb6bcb8, roughness: 1 }, 0.9), // grey 20x20 wall tile, light grout
+  'splash-tile': () => pbr(tileTex('splash'), { floor: [0.5, 0.5] }, { color: 0xa5ada5, roughness: 1 }, 0.9), // grey 20x20 wall tile, light grout
   // round 1 additions: kind-links wardrobe / furniture (photos 21 / 24), bedroom window dressing (photos 20 / 23)
   'black-gloss': () => new THREE.MeshPhysicalMaterial({ color: 0x0e0e10, roughness: 0.16, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.06 }),
   'white-mdf': () => new THREE.MeshPhysicalMaterial({ color: 0xf3f2ee, roughness: 0.34, metalness: 0, clearcoat: 0.35, clearcoatRoughness: 0.2 }),
   'zebra-fabric': () => pbr(zebraTex(), { floor: [0.5, 0.5] }, { color: 0xffffff, roughness: 1 }, 0.4, 0.2),
   // plum curtain: double-sided cloth for pleated meshes
   'curtain-plum': () => {
-    const m = pbr(weaveTex(), { floor: [0.15, 0.15] }, { color: boost(0x7a1f45, 1.1), roughness: 1, side: THREE.DoubleSide }, 0.45, 0.25)
+    const m = pbr(weaveTex(), { floor: [0.15, 0.15] }, { color: boost(0x6d1a3a, 1.0), roughness: 1, side: THREE.DoubleSide }, 0.45, 0.25)
     return m
   },
   // lace net / voile: transparent, printed lace pattern, lit from behind by the window (emissive lift), 0.3 m per repeat
@@ -425,7 +424,7 @@ const registry: Record<string, () => THREE.Material> = {
   bulb: () => flat({ color: 0xfff0d0, roughness: 0.3, emissive: 0xffd9a0, emissiveIntensity: 1.2 }),
   terracotta: () => flat({ color: 0xb5643c, roughness: 0.85 }),
   soil: () => flat({ color: 0x3a2a1e, roughness: 1 }),
-  'paint-green': () => flat({ color: 0x1f6a2a, roughness: 0.55 }), // green wardrobes (photo 21)
+  'paint-green': () => pbr(grainTex(0), { floor: [0.7, 0.18], swap: true }, { color: 0x1b4423, roughness: 0.5 }, 0.22), // painted timber wardrobes (photo 21): muted green, vertical brush grain
   'stone-sill': () => pbr(plasterTex(), { floor: [1.2, 1.2] }, { color: 0xb9b3a8, roughness: 1 }, 1.2),
   'plant-dark': () => flat({ color: 0x2f5a2e, roughness: 0.7 }),
 

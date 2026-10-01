@@ -24,6 +24,8 @@ export interface TourApi {
   canvas: HTMLCanvasElement
   /** walk colliders (QA: reachability / pose clearance checks) */
   colliders: Rect[]
+  /** geometry.ts shell only (walls, floors, ceiling, frames, glass, stove, apron): meshes (= draw calls) and triangles, for budget checks */
+  shell: { drawCalls: number; triangles: number }
   rooms: Room[]
   /** graphics quality (button in TourUI): index 0 high, 1 medium, 2 low; cycle() steps to the next and returns it */
   quality: { index(): number; cycle(): number }
@@ -127,6 +129,11 @@ export async function createTour(canvas: HTMLCanvasElement, onProgress?: Progres
     controls,
     canvas,
     colliders,
+    shell: (() => {
+      let n = 0, t = 0
+      house.group.traverse((o) => { if (o instanceof THREE.Mesh) { n++; t += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3 } })
+      return { drawCalls: n, triangles: Math.round(t) }
+    })(),
     rooms,
     quality: { index: () => lighting.qualityIndex, cycle: () => lighting.cycleQuality() },
     goTo: (id, o) => controls.goTo(id, o),
@@ -142,6 +149,7 @@ export async function createTour(canvas: HTMLCanvasElement, onProgress?: Progres
     }),
   }
   window.__tour = api
+  ;(window as unknown as { __scene: unknown }).__scene = { scene, camera } // TMP-DEBUG
   raf = requestAnimationFrame(loop)
   // browsers throttle rAF in background tabs; stop explicitly so nothing renders while hidden
   const onVisibility = () => {

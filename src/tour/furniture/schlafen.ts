@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-import { art, at, bush, buildRooms, bx, canvasMat, cloth, cy, drawerBed, foldMat, lantern, nightstand, orchid, paint, mirrorFake as fakeMirror, panelRadiator, picture, pl, rb, rod, sp, tableLamp, whiteChair, legs4 } from './shared'
+import { art, at, bush, buildRooms, bx, canvasMat, cloth, cy, drawerBed, foldMat, nightstand, orchid, paint, mirrorFake as fakeMirror, panelRadiator, picture, pl, rb, rod, sp, tableLamp, whiteChair, legs4 } from './shared'
 import { fur } from './shared'
 import { getMaterial } from '../materials'
 import type { Furniture } from '../plan'

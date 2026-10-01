@@ -155,7 +155,7 @@ function hob(g: G, f: Furniture): void {
   const hs = paint(0xc2c5c8, 0.35, 1)
   bx(g, 0.6, 0.07, 0.44, hs, 0, 0.6, -0.02)
   const gl = bx(g, 0.58, 0.39, 0.02, paint(0x14181b, 0.1, 0.4), 0, 0.595, 0.09); gl.rotation.x = -0.6
-  bx(g, 0.26, 0.88, 0.2, hs, 0, 0.72, -0.13)
+  bx(g, 0.26, 0.878, 0.2, hs, 0, 0.72, -0.13) // ends 2 mm under the ceiling
 }
 
 function dwarf(g: G): void { void g }

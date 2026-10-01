@@ -151,7 +151,7 @@ export default function Page() {
         {/* 3D-Rundgang Teaser */}
         <section aria-labelledby="tour-teaser-heading">
           <Link
-            href="/tour"
+            href="/tour?autostart=1"
             onPointerEnter={warmTour}
             onFocus={warmTour}
             onTouchStart={warmTour}

@@ -187,6 +187,8 @@ export interface WoodFloor {
   desat?: number
   /** plank-length variation 0..1: joints per row are spread irregularly instead of evenly (0 = all planks equal) */
   lenVar?: number
+  /** depth of the plank-edge bevel in the normal map (default 0.25); also darkens the bevel colour */
+  bevel?: number
   /** default 256 x 512 */
   size?: [number, number]
 }
@@ -199,7 +201,7 @@ export function woodFloorTex(name: string, o: WoodFloor): TexSet {
     const L = new Layers(W, H)
     const { rows, segs } = o
     const fig = o.figure ?? 0, jit = o.jitter ?? 0, cap = o.cap ?? 1, gv = o.groove ?? 0.3
-    const jw = o.joint ?? 1, fib = o.fibre ?? 0, dsat = o.desat ?? 0
+    const jw = o.joint ?? 1, fib = o.fibre ?? 0, dsat = o.desat ?? 0, bvl = o.bevel ?? 0.25
     const off: number[] = []
     for (let r = 0; r < rows; r++) off.push(hash(r, 7, o.seed))
     // per plank: tone + colour jitter, computed once
@@ -257,7 +259,7 @@ export function woodFloorTex(name: string, o: WoodFloor): TexSet {
         const d = Math.min(dAcross, Math.min(fx, 1 - fx) * pxPlank)
         const gr = 1 - sstep(0.3 * jw, 1.0 * jw, d)
         const bev = 1 - sstep(1.0 * jw, 2.6 * jw, d)
-        const k = 1 - gv * gr - 0.04 * bev * jw
+        const k = 1 - gv * gr - 0.04 * (bvl / 0.25) * bev * jw
         let cr = mix(o.dark[0], o.light[0], t) * k * pJr[id], cg = mix(o.dark[1], o.light[1], t) * k, cb = mix(o.dark[2], o.light[2], t) * k * pJb[id]
         if (dsat > 0) {
           const ly = cr * 0.299 + cg * 0.587 + cb * 0.114
@@ -266,7 +268,7 @@ export function woodFloorTex(name: string, o: WoodFloor): TexSet {
         L.put(
           x, y,
           cr, cg, cb,
-          (g2 - 0.5) * 0.3 + (g1 - 0.5) * 0.12 - gr * 1.1 - bev * 0.25,
+          (g2 - 0.5) * 0.3 + (g1 - 0.5) * 0.12 - gr * 1.1 - bev * bvl,
           clamp01(mix(o.rough[0], o.rough[1], clamp01((f2 - 0.5) * 0.9 + 0.5)) + gr * 0.25), // pores only: cloudy gloss patches would read as smudges
         )
       }
@@ -284,7 +286,7 @@ export type TileKind = 'std' | 'floor' | 'splash' | 'bath'
 const TILE_KINDS: Record<TileKind, { g: number; tile: number; grout: number; var: number }> = {
   std: { g: 0.55, tile: 1, grout: 0.86, var: 1 },
   floor: { g: 0.9, tile: 1, grout: 0.7, var: 1 }, // wider, darker grout: stays visible (and crisp) at a distance
-  splash: { g: 0.8, tile: 0.9, grout: 1.02, var: 1.8 }, // grey wall tile with LIGHTER grout, strong tile-to-tile variation
+  splash: { g: 0.8, tile: 0.95, grout: 1.02, var: 0.9 }, // grey wall tile with LIGHTER grout, strong tile-to-tile variation
   bath: { g: 1.05, tile: 1, grout: 0.52, var: 1.5 }, // bathroom / WC: clearly dark grout lines (photos 29 / 30)
 }
 export function tileTex(kind: TileKind = 'std'): TexSet {
@@ -307,8 +309,11 @@ export function tileTex(kind: TileKind = 'std'): TexSet {
         const m = vn(x / S, y / S, 10, 10, 6) // glaze cloud inside a tile
         const bevel = 1 - sstep(g, g + 3.5, d)
         const tone = (0.975 + pt[id] + (n - 0.5) * 0.02 + (m - 0.5) * 0.03 * K.var + bevel * 0.025) * K.tile // edges catch the light
-        const c = mix(tone, K.grout + (n - 0.5) * 0.05, gr) * 255
-        L.put(x, y, c * (1 + pw[id]), c, c * (1 - pw[id]), -gr * 2.4 - bevel * 0.9 + (n - 0.5) * 0.12, mix(0.34 + (m - 0.5) * 0.12, 0.9, gr))
+        // floor / std tiles: patchy wear (glaze rubbed matt) and rare tiny chips, so the highlight is never a uniform hotspot
+        const wear = kind === 'floor' ? sstep(0.55, 0.8, vn(x / S, y / S, 14, 14, 9)) : 0
+        const chip = kind === 'floor' && vn(x / S, y / S, 170, 170, 12) > 0.86 ? 1 : 0
+        const c = mix(tone * (1 - 0.05 * chip), K.grout + (n - 0.5) * 0.05, gr) * 255
+        L.put(x, y, c * (1 + pw[id]), c, c * (1 - pw[id]), -gr * 2.4 - bevel * 0.9 + (n - 0.5) * 0.12 - chip * 0.5, mix(0.34 + (m - 0.5) * 0.12 + wear * 0.22 + chip * 0.3, 0.9, gr))
       }
     })
     return finish(L, 1.3)
@@ -325,13 +330,15 @@ export function plasterTex(): TexSet {
       const v = y / S
       for (let x = 0; x < S; x++) {
         const u = x / S
-        const a = vn(u, v, 100, 100, 1)
-        const b = vn(u, v, 24, 24, 2)
-        const lum = (0.985 + (a - 0.5) * 0.022 + (b - 0.5) * 0.016) * 255
-        L.put(x, y, lum, lum, lum, a * 0.7 + b * 0.6, 0.82 + (b - 0.5) * 0.2)
+        const a = vn(u, v, 100, 100, 1) // fine grit
+        const b = vn(u, v, 24, 24, 2) // Raufaser chips (~5 cm)
+        const c = vn(u, v, 48, 48, 3)
+        const blot = vn(u, v, 5, 5, 4) // broad roller / trowel blotches
+        const lum = (0.985 + (a - 0.5) * 0.03 + (b - 0.5) * 0.03 + (blot - 0.5) * 0.024) * 255
+        L.put(x, y, lum, lum, lum, a * 1.1 + b * 1.6 + c * 0.9, 0.8 + (b - 0.5) * 0.24 + (blot - 0.5) * 0.3)
       }
     })
-    return finish(L, 0.7)
+    return finish(L, 1.0)
   })
 }
 
@@ -604,22 +611,26 @@ export function floralTex(): TexSet {
 // ------------------------------------------------------------------ tree / branch photo mural (living room feature wall)
 /**
  * Feature wall of the Wohnzimmer (Airbnb photos 05 / 09 / 11): weathered grey concrete with a warm orange-rust glow behind the
- * crown, dense fine black twigs hanging from the top edge that fade towards the bottom, strong vignette. 2048 x 1024, NO tiling
+ * crown, dense fine black twigs hanging from the top edge that fade towards the bottom, strong vignette. 1536 x 1024, NO tiling
  * (clamped): map it once over a whole wall rectangle (u along the wall, v = height / wall height). Colour only.
  */
 export function muralTex(): TexSet {
   return memo('mural', () => {
-    const W = 2048, H = 1024
+    const W = 1536, H = 1024 // 3:2 = the TV wall (3.9 x 2.5 m), so strokes are not stretched
     const c = document.createElement('canvas')
     c.width = W; c.height = H
     const g = c.getContext('2d')!
     // ---- grey concrete base + warm glow, per pixel (glow strongest behind the crown, cooler grey towards the edges)
-    const img = g.createImageData(W, H)
+    // base is computed at half resolution (cheap) and upscaled; the crisp twigs are drawn at full resolution on top
+    const BW = W >> 1, BH = H >> 1
+    const base = document.createElement('canvas')
+    base.width = BW; base.height = BH
+    const img = base.getContext('2d')!.createImageData(BW, BH)
     const d = img.data
-    for (let y = 0; y < H; y++) {
-      const v = y / H
-      for (let x = 0; x < W; x++) {
-        const u = x / W
+    for (let y = 0; y < BH; y++) {
+      const v = y / BH
+      for (let x = 0; x < BW; x++) {
+        const u = x / BW
         const n1 = vn(u, v, 6, 3, 31), n2 = vn(u, v, 22, 11, 32), n3 = vn(u, v, 90, 45, 33), n4 = vn(u, v, 380, 190, 34)
         // weathered concrete: broad stains + pitting
         let lum = 148 + (n1 - 0.5) * 46 + (n2 - 0.5) * 30 + (n3 - 0.5) * 18 + (n4 - 0.5) * 16
@@ -630,12 +641,17 @@ export function muralTex(): TexSet {
         const glow = Math.min(1, Math.exp(-d1 * d1 * 3.2) * 0.95 + Math.exp(-d2 * d2 * 5) * 0.45) * (0.78 + (n2 - 0.5) * 0.55)
         r = mix(r, 232, glow * 0.62); gg = mix(gg, 138, glow * 0.6); b = mix(b, 82, glow * 0.66)
         // vignette: strong at the sides and the bottom corners
-        const vg = 1 - 0.5 * Math.pow(Math.abs(u - 0.5) * 2, 2.4) - 0.28 * Math.pow(v, 3)
-        const o = (y * W + x) * 4
-        d[o] = r * vg; d[o + 1] = gg * vg; d[o + 2] = b * vg; d[o + 3] = 255
+const vg = 1 - 0.5 * Math.pow(Math.abs(u - 0.5) * 2, 2.4) - 0.28 * Math.pow(v, 3)
+        // fine film grain (photo print) + soft fade into the white wall paint at the side and bottom edges
+        const gn = 1 + (hash(x, y, 77) - 0.5) * 0.09
+        const eF = sstep(0, 0.035, Math.min(u, 1 - u)) * sstep(0, 0.05, 1 - v)
+        const o = (y * BW + x) * 4
+        d[o] = mix(236, r * vg * gn, eF); d[o + 1] = mix(235, gg * vg * gn, eF); d[o + 2] = mix(231, b * vg * gn, eF); d[o + 3] = 255
       }
     }
-    g.putImageData(img, 0, 0)
+    base.getContext('2d')!.putImageData(img, 0, 0)
+    g.imageSmoothingQuality = 'high'
+    g.drawImage(base, 0, 0, W, H)
     // ---- twigs: seeded, dense, thin, alpha and width fade with depth (distance from the top edge)
     let seed = 9001
     const rnd = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296)
@@ -656,7 +672,7 @@ export function muralTex(): TexSet {
     for (let pass = 0; pass < 2; pass++) {
       seed = 9001 // identical geometry in both passes: soft out-of-focus ghost, then crisp
       for (let i = 0; i < 46; i++) {
-        const x = (i + rnd() * 0.9) * (W / 46), len = 120 + rnd() * 140, w = 3 + rnd() * 3.5
+        const x = (i + rnd() * 0.9) * (W / 46), len = 120 + rnd() * 140, w = 2.2 + rnd() * 2.6
         twig(x, -8, Math.PI / 2 + (rnd() - 0.5) * 0.9, len, w, 7, pass === 0)
       }
     }
@@ -819,7 +835,7 @@ export function voileTex(): [THREE.CanvasTexture, THREE.CanvasTexture] {
       const soft = vn(u, v, 12, 3, 41) - 0.5
       const thread = vn(u, v, 128, 4, 42) - 0.5
       const tone = 236 + band * 14 - (1 - band) * 18 + soft * 14
-      const a = 0.38 + band * 0.2 + soft * 0.16 + thread * 0.08 + sstep(0.9, 1, v) * 0.25
+      const a = (0.38 + band * 0.2 + soft * 0.16 + thread * 0.08 + sstep(0.9, 0.97, v) * 0.25) * (1 - sstep(0.965, 1, v)) // hem fades out over the last rows: no hard alpha edge
       const o = (y * S + x) * 4
       col[o] = tone - 3; col[o + 1] = tone - 1; col[o + 2] = tone; col[o + 3] = 255
       const av = clamp01(a) * 255

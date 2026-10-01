@@ -4,7 +4,6 @@ import { arcLamp, at, bake, bx, buildRooms, curtainRod, cy, lantern, orchid, pai
 import type { Furniture } from '../plan'
 
 type G = THREE.Group
-const F = 'fabric-grey'
 
 /** charcoal diamond-tufted L-sofa (photos 11, 12): local x = along the wall (chaise at -x), +z = front (bbox 2.15 x 1.15) */
 function sofa(g: G): void {

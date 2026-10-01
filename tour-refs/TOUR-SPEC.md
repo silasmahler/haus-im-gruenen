@@ -4,7 +4,7 @@ Single source of truth for geometry: `src/tour/plan.ts`. Everything else reads f
 
 ## Conventions
 - Metres. `x` = east, `z` = south (plan down), `y` = up. Origin = NW OUTER corner. Front / entrance = south. Ceiling 2.5 m (`WALL_HEIGHT`).
-- Outer footprint 12.17 x 10.41 m; inner clear 11.55 x 9.79 m. Exterior walls 0.31 m, interior 0.115-0.16 m (see `walls`).
+- Outer footprint 12.17 x 10.41 m (from the plan image; not verifiable from photos); inner clear 11.61 x 9.85 m. Exterior walls 0.28 m (`EXT_T`), interior 0.10-0.17 m (see `walls`).
 - Source image `tour-refs/grundriss-neu.png` (preview 900x819 px) measured with pixel scans. Scale **70 px = 1 m**, origin px (28,28); rooms/walls re-cut to the labelled areas (see "Areas").
 - Wall `a`/`b` are CENTRE lines. `Room.polygon` = wall FACES (virtual lines at open edges), clockwise seen from above.
 - Furniture: `x,z` = centre, `y` = base elevation, `w` = local x, `d` = local z, `h` = height. `rotationY` radians (three.js: `obj.rotation.y = rotationY`).
@@ -30,24 +30,24 @@ Room ids: schlafen, kueche, wohnen, kind-links, kind-mitte, flur-links, flur-rec
 | `controls.ts`, `TourUI.tsx` | Controls/UI | expose `window.__tour` (`ready, goTo, setPose, setMode, stats, rooms`) |
 | `TourCanvas.tsx`, `buildScene.ts`, route, i18n, teaser | Shell | `buildScene.ts` small additive edits allowed by anyone |
 
-## Areas: labels win (round 2 re-cut)
-The plan image is AI-drawn and not internally consistent, so the labelled NET areas are the target. Scale is now **70 px = 1 m** (labelled rooms + walls then fill the drawn 12.17 x 10.41 m outline). `plan.ts` solves the layout from the labels (section "layout"): every `Room.polygon` sits exactly on wall FACES (or on a virtual line between open rooms); polygons never overlap wall solids and leave no gaps (checked on a 1 cm grid). Exterior walls are 0.31 m (24 cm brick + render), interior 0.115-0.16 m.
+## Areas: photos + labels reconstruction (2026-09-30)
+The AI-drawn plan image contradicts its own m2 labels (drawn vs label: kitchen +13.6 %, hall +20.5 %, bath -22.6 %, WC +92 %, side hall +175 %, kind-mitte -6.6 %), and the old Airbnb plan (`grundriss-alt-airbnb.png`, low-res screenshot, cropped on the right, no dimensions, same labels, own inconsistent proportions) gives no metres. Priority: photos > old plan > new plan. `plan.ts` therefore keeps the TOPOLOGY of the new plan (room order, doors, windows, furniture incl. both rearrangements) and re-solves the PROPORTIONS so every polygon matches its label (<= 2 %).
 
-| Room | Label m2 | polygonArea() |
-|---|---|---|
-| schlafen | 17.50 | 17.50 |
-| kueche | 17.04 | 17.04 |
-| wohnen | 26.52 | 26.71 (+0.7%) |
-| kind-links | 14.85 | 14.85 |
-| kind-mitte | 10.85 | 10.85 |
-| flur-links | 7.00 | 7.01 |
-| flur-rechts | 2.00 | 2.00 (vestibule of the east door; the rest of the drawn strip belongs to the open living room) |
-| bad | 6.44 | 6.44 (re-cut wider: 2.4 x 2.7 m) |
-| wc | 1.23 | 1.24 (1.4 x 0.88 m) |
-| abstell | 2.48 | 2.49 |
-| kamin | - | 1.22 (1.06 x 1.16 m, contains the wood stove built by geometry.ts) |
+| Room | Label m2 | polygonArea() | Dimensions (clear) | Evidence |
+|---|---|---|---|---|
+| schlafen | 17.50 | 17.50 | 3.335 x 5.247 | Schlafen + Kind-links share the west column: 32.35 m2 / 9.70 m net depth => width 3.335 |
+| kind-links | 14.85 | 14.84 | 3.335 x 4.453 | same |
+| kueche | 17.04 | 17.04 | 4.115 x 4.14 (rectangle) | label; table 1.6 x 0.9 + chairs fit (photo 19) |
+| wohnen | 26.52 | 26.30 (-0.8 %) | 4.09 wide east of kind-mitte + strip east of kitchen | label; kind-mitte east wall 0.10 m and WC south wall 0.12 m (round 3) gave back ~0.3 m2 |
+| kind-mitte | 10.85 | 10.85 | 2.60 x 4.17 | label; bed 1.9 crosswise + dresser 0.4 fits |
+| flur-links (Diele) | 7.00 | 6.93 (-1.0 %) | ~1.0 m wide strip + wider junction at the kitchen | label (drawn hall 1.26 m is too wide) |
+| flur-rechts | 2.00 | 2.00 | 2.44 x 0.82 | label; vestibule of the east door |
+| bad | 6.44 | 6.44 | 1.85 x 3.48 | photo 29/30: narrow and long (tub across the far wall under the window, sink on the west wall, WC + 0.8 x 0.8 shower at the door end) |
+| wc | 1.23 | 1.23 | 1.40 x 0.88 | photo 32 (floor = 3 x 4 tiles of 30 cm) |
+| abstell | 2.48 | 2.48 | 1.40 x 1.77 | label |
+| kamin | - | 1.06 | 0.84 x 1.26 | photo 10 suggests ~1.3 x 1.9 - kept smaller: deepening it would take m2 from the Diele/Kind-mitte, which are already at their limit. Deliberate deviation, mention it if the recess is shown as the real fireplace niche (open question) |
 
-Consequences of the re-cut vs. the drawn image: hall 1.0 m wide, kind-mitte 2.67 x 4.07 m, bath/WC/storage block wider, kitchen/hall virtual boundary at z=4.2 (x < 5.11), kitchen east edge x=7.9. Furniture positions from the image were shifted by the minimal amount (<= 15 cm, `fitToRoom()` in plan.ts) to stay inside their room; kitchen run stays against the spine wall; bath/WC fixtures are placed in metres. The `flue` furniture piece was removed: geometry.ts builds a black wood stove + round Ø14 cm stovepipe with ceiling thimble/rosette in the recess (photo 10). `LAYOUT` (exported from plan.ts) exposes the solved edges.
+`Room.knownDeviation` is no longer used. The bath grew to z 3.76 (south wall face) so the side hall is only 0.82 m deep and the east door moved from z 3.82 to z 4.33; WC/Abstell column sits between x 8.05 and 9.45 with an installation shaft (0.59 m wall) towards the bath. The `flue` furniture piece was removed earlier: geometry.ts builds a black wood stove + round stovepipe with ceiling thimble in the recess (photo 10). `LAYOUT` (exported from plan.ts) exposes the solved edges.
 
 ## Rearrangements from `grundriss-neu-mit-pfeilen.png` (applied)
 1. Kitchen dining table (1.50 x 0.75, 4 chairs, plant) moved from centre px (445,295) to px (516,165) = (7.07 m, 1.99 m; footprint x 6.32-7.82, z 1.61-2.36): upper-right kitchen area under the north window. Clearances: east wall face 0.26 m from table end, chairs 0.55 m to north wall face, ~2.6 m free to the L-kitchen.
@@ -58,7 +58,8 @@ Consequences of the re-cut vs. the drawn image: hall 1.0 m wide, kind-mitte 2.67
 - Bed foot end is 0.18 m from the dresser (bed x 5.79-7.69, dresser x 5.21-5.61, same z band 6.4-7.3): no walk-through between them, dresser reachable only from the south. Alternative: shorten the dresser or move it south.
 - "Upper-right corner" of the kitchen: arrow head sits mid-right, not in the literal NE corner (north window at x 6.4-7.4 m; Abstell wall on the east). Table placed under the window, not in the corner.
 - Door hinge sides and swing directions are inferred from the small arcs in the plan (all swing into the smaller/private room except `d-wc` which swings out into the side hall). `d-kind-mitte` has no drawn arc (thin line) - treated as a normal 0.8 m door swinging into the room (north hinge; leaf stays clear of desk chair and bed). Interior door widths drawn 0.70-0.80 m are normalised to 0.80 m; front door 0.87 m, east door 0.78 m.
-- Window sill/height are not on the plan (assumed 0.90/1.25 m; kitchen 1.05/1.15; living-room windows 0.75/1.40). Widths measured (1.0-1.14 m). Check against photos.
+- Window sill/height/width now from photos: kitchen 1.2 x 1.2 sill 1.05 (photo 14), Schlafen 1.2 x 1.2 sill 0.9 (photo 20), Kind 1.1-1.2 x 1.25-1.3 sill 0.9, bath window 0.7 x 0.9 sill 1.1 (photo 29), terrace / French doors floor-length 2.1 m. Living-room windows 0.75/1.40 still assumed.
+- Layout uncertainty (2026-09-30): overall outer size 12.17 x 10.41 m is from the plan image only; Kamin recess depth (photo 10 ~1.9 m vs 0.84 m here); east door moved to z 4.33 because the long bath fills the drawn side-hall zone; WC door now opens into the living-room strip (no separate side hall).
 - Kitchen L: north arm and west arm assumed to meet in the NW corner (plan shows a possible corner gap). Sink and hob are separate top pieces (`sink-unit`, `hob`).
 - Photos (`fotos/`) mention things not in the plan: fireplace / stove (photo 10, "am Feuer" - suits `kamin` recess; geometry.ts now builds the stove + flue), coffee bar + dishwasher (kitchen), extendable single bed (24), roller shutters in one bedroom (26), workspace (33). Furniture agent may add pieces via `plan.ts` requests.
 - Flur-rechts (side hall) is only the vestibule of the east door (x >= 10.05); the part of the drawn strip west of it is open living room. Wall stub `int-wohnen-stub` starts at x=8.8.
@@ -84,3 +85,6 @@ Camera conventions unchanged (see Conventions). Dollhouse = orbit around house c
 
 QA: `node /tmp/tourqa/shoot.mjs --room <id> --yaw <deg> --pitch <deg> --w 1200 --h 750 --out f.png [--mode dollhouse|top] [--mobile] [--pose x,z,yaw,pitch]` (uses installed Chrome via `channel:'chrome'`; the bundled playwright chromium is missing). Prints stats + console errors.
 Known skeleton limits: walls sampled by room at the segment midpoint only (a long wall spanning two rooms gets one material per side); no baseboards/frames/door leaves; ceiling looks flat.
+
+## Geometry budget (round 3)
+`__tour.shell` = `{ drawCalls, triangles }` of the meshes created by `buildGeometry()` only (walls, trim, glass, floors, ceiling, stove, exterior apron), computed once at build time. `__tour.stats()` includes furniture + lighting, so it is much larger. Wall side faces are cut at every opening edge height and the reveal jambs are emitted only opening-tall (no T-junction hairlines).

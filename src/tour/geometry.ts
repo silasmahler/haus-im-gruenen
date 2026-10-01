@@ -56,6 +56,7 @@ export interface HouseGeometry {
 
 // ---------------------------------------------------------------- constants
 const EPS = 0.004
+const r4 = (v: number) => Math.round(v * 1e4) / 1e4
 const SUBFLOOR_Y = -0.004
 const BASE_H = 0.07 // baseboard height
 const BASE_T = 0.012
@@ -133,17 +134,22 @@ class Batch {
     bf.idx.push(base, base + 1, base + 2)
   }
   /** axis aligned box; per face material key, run list (side faces) or null (skip) */
-  box(f: Faces, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number): void {
+  box(f: Faces, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, ys: number[] = []): void {
     if (x1 - x0 < 1e-5 || y1 - y0 < 1e-5 || z1 - z0 < 1e-5) return
     const runs = (s: FaceSpec, lo: number, hi: number): Run[] =>
       s === null ? [] : typeof s === 'string' ? [{ a: lo, b: hi, key: s }]
         : s.map((r) => ({ a: Math.max(r.a, lo), b: Math.min(r.b, hi), key: r.key })).filter((r) => r.b - r.a > 1e-5)
-    for (const r of runs(f.px, z0, z1)) this.quad(r.key, [x1, y0, r.b], [x1, y0, r.a], [x1, y1, r.a], [x1, y1, r.b])
-    for (const r of runs(f.nx, z0, z1)) this.quad(r.key, [x0, y0, r.a], [x0, y0, r.b], [x0, y1, r.b], [x0, y1, r.a])
+    // side faces are cut at the heights in `ys` (shared vertices instead of T-junctions -> no hairline cracks next to openings)
+    const yc = [y0, ...ys.filter((v) => v > y0 + 1e-4 && v < y1 - 1e-4).map((v) => Math.round(v * 1e4) / 1e4).sort((a, b) => a - b), y1]
+    for (let i = 0; i < yc.length - 1; i++) {
+      const ya = yc[i], yb = yc[i + 1]
+      for (const r of runs(f.px, z0, z1)) this.quad(r.key, [x1, ya, r.b], [x1, ya, r.a], [x1, yb, r.a], [x1, yb, r.b])
+      for (const r of runs(f.nx, z0, z1)) this.quad(r.key, [x0, ya, r.a], [x0, ya, r.b], [x0, yb, r.b], [x0, yb, r.a])
+      for (const r of runs(f.pz, x0, x1)) this.quad(r.key, [r.a, ya, z1], [r.b, ya, z1], [r.b, yb, z1], [r.a, yb, z1])
+      for (const r of runs(f.nz, x0, x1)) this.quad(r.key, [r.b, ya, z0], [r.a, ya, z0], [r.a, yb, z0], [r.b, yb, z0])
+    }
     if (typeof f.py === 'string') this.quad(f.py, [x0, y1, z1], [x1, y1, z1], [x1, y1, z0], [x0, y1, z0])
     if (typeof f.ny === 'string') this.quad(f.ny, [x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1])
-    for (const r of runs(f.pz, x0, x1)) this.quad(r.key, [r.a, y0, z1], [r.b, y0, z1], [r.b, y1, z1], [r.a, y1, z1])
-    for (const r of runs(f.nz, x0, x1)) this.quad(r.key, [r.b, y0, z0], [r.a, y0, z0], [r.a, y1, z0], [r.b, y1, z0])
   }
   /** vertical prism over a convex footprint (any orientation), all faces */
   prism(key: string, pts: [number, number][], y0: number, y1: number): void {
@@ -215,8 +221,8 @@ function makeLocal(key: string): THREE.Material {
     case 'geo-trim-hi': return tweak('baseboard', 0.18, 0.25) // cornice
     case 'geo-ceiling-panel': return tweak('ceiling', 0.35, 0.22)
     case 'geo-ceiling-flat': return std({ color: 0xf5f2ea, roughness: 0.93, envMapIntensity: 0.3, emissive: 0xf6f2e8, emissiveIntensity: 0.24 })
-    case 'geo-leaf': return std({ color: 0xf7f5ef, roughness: 0.3 }) // satin paint, no plaster noise
-    case 'geo-leaf-panel': return std({ color: 0xebe8e0, roughness: 0.34 })
+    case 'geo-leaf': return std({ color: 0xf7f5ef, roughness: 0.34, envMapIntensity: 0.45, emissive: 0xf6f2e8, emissiveIntensity: 0.26 }) // satin paint, no plaster noise
+    case 'geo-leaf-panel': return std({ color: 0xebe8e0, roughness: 0.38, envMapIntensity: 0.45, emissive: 0xf6f2e8, emissiveIntensity: 0.22 })
     case 'geo-stove': return std({ color: 0x1d1d1f, roughness: 0.5, metalness: 0.55, envMapIntensity: 0.6 })
     case 'geo-fire': return std({ color: 0x120a06, roughness: 0.2, emissive: 0xff6a1c, emissiveIntensity: 0.85 })
     case 'geo-led': return std({ color: 0xeeeeea, roughness: 0.5, emissive: 0xf2f2ec, emissiveIntensity: 0.42 }) // soft diffuser, not a blown-out slab
@@ -289,9 +295,9 @@ const extOf = (id: string): WExt => extents().find((e) => e.w.id === id)!
 function wpos(e: WExt, s: number, p: number): [number, number] {
   return e.horiz ? [s, e.c + p] : [e.c + p, s]
 }
-function wbox(bt: Batch, f: Faces, e: WExt, s0: number, s1: number, y0: number, y1: number, p0: number, p1: number): void {
+function wbox(bt: Batch, f: Faces, e: WExt, s0: number, s1: number, y0: number, y1: number, p0: number, p1: number, ys: number[] = []): void {
   const [xa, za] = wpos(e, s0, Math.min(p0, p1)), [xb, zb] = wpos(e, s1, Math.max(p0, p1))
-  bt.box(f, Math.min(xa, xb), y0, Math.min(za, zb), Math.max(xa, xb), y1, Math.max(za, zb))
+  bt.box(f, Math.min(xa, xb), y0, Math.min(za, zb), Math.max(xa, xb), y1, Math.max(za, zb), ys)
 }
 /** face of a box at side `sign` (+1: +z / +x) */
 const sideFace = (e: WExt, sign: number): Face => (e.horiz ? (sign > 0 ? 'pz' : 'nz') : (sign > 0 ? 'px' : 'nx'))
@@ -397,6 +403,8 @@ function addWall(e: WExt, bt: Batch): void {
   const ops = openings.filter((o) => o.wall === w.id).sort((a, b) => alongOf(e, a) - alongOf(e, b))
   const half = w.t / 2
 
+  // heights of all opening edges on this wall: every wall piece cuts its side faces there (no T-junction cracks)
+  const cutYs = ops.flatMap((o) => [o.sill, o.sill + o.height])
   const piece = (s0: number, s1: number, y0: number, y1: number, o: { endLo: string | null; endHi: string | null; top: string | null; bottom: string | null }) => {
     if (s1 - s0 < 0.003 || y1 - y0 < 0.003) return
     const f = {} as Faces
@@ -404,20 +412,27 @@ function addWall(e: WExt, bt: Batch): void {
     if (e.horiz) { f.pz = rp; f.nz = rn; f.px = o.endHi; f.nx = o.endLo } else { f.px = rp; f.nx = rn; f.pz = o.endHi; f.nz = o.endLo }
     f.py = o.top
     f.ny = o.bottom
-    wbox(bt, f, e, s0, s1, y0, y1, -half, half)
+    wbox(bt, f, e, s0, s1, y0, y1, -half, half, cutYs)
+  }
+  /** jamb (reveal end face) of a wall piece, only as tall as the opening; the lintel / sill pieces own the rest */
+  const jamb = (s: number, dir: number, o: Opening) => {
+    const ya = Math.max(yBase, o.sill), yb = o.sill + o.height
+    const [xa, za] = wpos(e, s, -half), [xb, zb] = wpos(e, s, half)
+    bt.quad('geo-soffit', [xa, ya, za], [xb, ya, zb], [xb, yb, zb], [xa, yb, za], e.horiz ? [dir, 0, 0] : [0, 0, dir])
   }
   const end = ext ? 'exterior' : 'plaster-white'
   let cur = e.lo
   ops.forEach((o) => {
     const p = alongOf(e, o)
-    const s0 = p - o.width / 2, s1 = p + o.width / 2
-    // full-height piece before the opening (its end face toward the opening is a jamb)
-    piece(cur, s0, yBase, WALL_HEIGHT, { endLo: cur === e.lo ? end : 'geo-soffit', endHi: 'geo-soffit', top: topKey, bottom: null }) // reveals use the lighter soffit shading
+    const s0 = r4(p - o.width / 2), s1 = r4(p + o.width / 2)
+    piece(cur, s0, yBase, WALL_HEIGHT, { endLo: cur === e.lo ? end : null, endHi: null, top: topKey, bottom: null })
+    jamb(s0, 1, o)
+    jamb(s1, -1, o)
     if (o.sill > yBase) piece(s0, s1, yBase, o.sill, { endLo: null, endHi: null, top: null, bottom: null }) // below window; sill board covers the top
     piece(s0, s1, o.sill + o.height, WALL_HEIGHT, { endLo: null, endHi: null, top: topKey, bottom: 'geo-soffit' }) // lintel + soffit
     cur = s1
   })
-  piece(cur, e.hi, yBase, WALL_HEIGHT, { endLo: cur === e.lo ? end : 'geo-soffit', endHi: end, top: topKey, bottom: null })
+  piece(cur, e.hi, yBase, WALL_HEIGHT, { endLo: cur === e.lo ? end : null, endHi: end, top: topKey, bottom: null })
   // sill piece top inside the reveal is closed by the sill boards (windows) - reveal top face for the part beside boards is covered
 }
 
