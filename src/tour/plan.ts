@@ -231,6 +231,8 @@ export const openings: Opening[] = [
   door('d-schlafen', 'int-spine', 4.53, 0.8, ['schlafen', 'flur-links'], { hinge: 'b', toward: 'w', openDeg: 90 }),
   door('d-kind-links', 'int-spine', 8.19, 0.8, ['kind-links', 'flur-links'], { hinge: 'b', toward: 'w', openDeg: 90 }),
   door('d-kind-mitte', 'int-kmitte-w', 8.7, 0.8, ['kind-mitte', 'flur-links'], { hinge: 'a', toward: 'e', openDeg: 90 }),
+  // garden door right of the fridge (photos 04, 19: white door, glazed upper part, lace curtain, handle on the east side); closed leaf
+  { ...door('d-kueche-garten', 'ext-n', 7.3, 0.9, ['kueche', 'outside'], { hinge: 'a', toward: 'n', openDeg: 0 }), type: 'entrance', height: 2.1 },
   door('d-abstell', 'int-abstell-w', 1.05, 0.7, ['abstell', 'kueche'], { hinge: 'a', toward: 'e', openDeg: 90 }),
   door('d-wc', 'int-wc-s', 8.62, 0.66, ['wc', 'wohnen'], { hinge: 'a', toward: 's', openDeg: 90 }),
   door('d-bad', 'int-bad-s', 10.45, 0.66, ['bad', 'flur-rechts'], { hinge: 'b', toward: 'n', openDeg: 90 }),
@@ -239,12 +241,12 @@ export const openings: Opening[] = [
   // terrace door with the burgundy curtain (photo 20); the drawing shows a window here, the photos a floor-length glass door
   win('w-schlafen-w', 'ext-w', 4.11, 0.95, 0, 2.1, 'schlafen'),
   win('w-kueche-n2', 'ext-n', 4.91, 1.2, 1.05, 1.2, 'kueche'), // over the sink (photo 14: 1.2 x 1.2, sill 1.05)
-  win('w-kueche-n', 'ext-n', 6.85, 1.2, 1.05, 1.2, 'kueche'), // over the dining table / fridge (photo 19)
+  // (w-kueche-n removed: Auftraggeber - the glazed opening right of the fridge is the garden door d-kueche-garten, photos 04 / 19)
   win('w-kind-links-w', 'ext-w', 7.5, 1.1, 0.9, 1.25, 'kind-links'),
   win('w-kind-links-s', 'ext-s', 2.3, 1.1, 0.9, 1.25, 'kind-links'),
   win('w-kind-mitte-s', 'ext-s', 6.3, 1.2, 0.9, 1.3, 'kind-mitte'), // photo 25: ~1.2 x 1.3, deep sill
-  win('w-wohnen-s1', 'ext-s', 9.0, 1.1, 0.75, 1.4, 'wohnen'),
-  win('w-wohnen-s2', 'ext-s', 10.39, 1.1, 0.75, 1.4, 'wohnen'),
+  // Auftraggeber: the living room has ONE double window (2 sashes + mullion) opposite the baths; plan: two adjacent panes x 8.5..10.75
+  win('w-wohnen-s', 'ext-s', 9.62, 2.1, 0.75, 1.4, 'wohnen'),
   // French / patio door in the garden (east) wall next to the sofa, grey tile threshold (photos 05, 09, 12); sill 0 = full-height glass
   win('w-wohnen-e', 'ext-e', 6.05, 1.2, 0, 2.1, 'wohnen'),
   // small frosted bath window above the tub, north wall (photo 29); lighting.ts/dressing.ts add the frosted pane + daylight
@@ -267,19 +269,22 @@ const M = (id: string, type: FurnitureType, room: RoomId, x: number, z: number, 
   ({ id, type, room, x, z, y: 0, rotationY: rad(rotDeg), w, d, h, ...extra });
 
 /** Rearrangement 2 (arrow image): child room 2 bed crosswise. Head at east wall (natural) - flip to 'west' to follow the arrow literally. */
-export const KIND_MITTE_BED_HEAD = 'west' as 'east' | 'west'; // arrow curves counter-clockwise -> head at the west end
+export const KIND_MITTE_BED_HEAD = 'west' as 'east' | 'west'; // arrow curves counter-clockwise -> head at the west end (followed literally)
 
 // dining table: rearrangement 1 (arrow image): moved to the upper right (NE) of the kitchen, under the north window (photo 19: ~1.6-1.8 x 0.9)
-const tx = 6.75, tz = 2.05;
+const tx = 6.25, tz = 2.4; // pushed east toward the coffee bar: 0.61 m walkway to it, 0.6 m to the fridge (north), east aisle to the garden door stays open
 
 export const furniture: Furniture[] = [
   // --- Schlafen (x 0.28..3.615, z 0.28..5.527)
   M('bed-schlafen', 'bed-double', 'schlafen', 1.31, 1.96, 1.65, 2.05, 0.55, 90, { note: 'head at west wall; photo 20: 1.65 x 2.05' }),
   M('ns-schlafen-1', 'nightstand', 'schlafen', 0.49, 0.86, 0.5, 0.42, 0.5, 90),
   M('ns-schlafen-2', 'nightstand', 'schlafen', 0.49, 3.06, 0.5, 0.42, 0.5, 90),
-  M('wardrobe-schlafen', 'wardrobe', 'schlafen', 1.75, 5.227, 2.95, 0.6, 2.3, 180),
+  // photos 21/22: two free-standing green painted wardrobes + a green picket-fence bench along the south wall (path to the desk stays > 0.6 m)
+  M('wardrobe-schlafen', 'wardrobe', 'schlafen', 3.27, 5.267, 0.5, 0.5, 2.1, 180),
+  M('wardrobe-schlafen-2', 'wardrobe', 'schlafen', 2.7, 5.317, 0.4, 0.4, 1.9, 180),
+  M('bench-schlafen-2', 'bench', 'schlafen', 1.6, 5.352, 1.3, 0.35, 0.95, 180, { note: 'green picket-fence bench (photo 21)' }),
   M('plant-schlafen', 'plant', 'schlafen', 3.3, 0.6, 0.3, 0.3, 0.8, 0), // NE corner, clear of door and terrace door
-  M('desk-schlafen', 'desk', 'schlafen', 1.99, 0.58, 1.1, 0.6, 0.75, 0, { note: 'white desk under the north window (photo 21)' }),
+  M('desk-schlafen', 'desk', 'schlafen', 0.62, 4.11, 1.1, 0.6, 0.75, 90, { note: 'Auftraggeber (final): small table in front of the window OPPOSITE the door = west terrace door w-schlafen-w' }),
   M('bench-schlafen', 'bench', 'schlafen', 2.56, 1.96, 1.3, 0.38, 0.45, 90, { note: 'bench with sheepskin at the bed foot (photo 20)' }),
   M('fireplace-schlafen', 'sideboard', 'schlafen', 3.465, 3.3, 1.0, 0.3, 1.2, -90, { note: 'white mock fireplace with mirror on the spine wall (photo 02)' }),
   // --- Kueche (x 3.785..7.90, z 0.28..4.42)
@@ -312,15 +317,15 @@ export const furniture: Furniture[] = [
   M('bench-kamin', 'bench', 'kamin', 6.4, 5.1, 1.0, 0.3, 0.42, 90, { note: 'log bench with white fur in the chimney recess (photo 10)' }),
   // --- Kamin: stove + round flue are built by geometry.ts (buildKaminStove), no furniture piece here
   // --- Kind links (x 0.28..3.615, z 5.677..10.127)
-  M('bed-kind-links', 'bed-single', 'kind-links', 2.675, 6.15, 0.9, 1.88, 0.5, -90, { note: 'head at east wall' }),
+  M('bed-kind-links', 'bed-single', 'kind-links', 2.61, 6.15, 0.9, 2.0, 0.5, -90, { note: 'head at east wall; daybed 0.9 x 2.0 (photo notes)' }),
   M('ns-kind-links', 'nightstand', 'kind-links', 3.405, 6.87, 0.5, 0.42, 0.5, -90),
   M('wardrobe-kind-links', 'wardrobe', 'kind-links', 0.56, 9.19, 1.13, 0.56, 2.1, 90),
   M('armchair-kind-links', 'armchair', 'kind-links', 0.64, 7.5, 0.7, 0.7, 0.8, 90, { note: 'small black armchair under the west window (photo 25)' }),
   M('desk-kind-links', 'desk', 'kind-links', 2.3, 9.75, 1.2, 0.75, 0.74, 180),
   M('chair-kind-links', 'chair', 'kind-links', 2.3, 9.05, 0.5, 0.5, 0.9, 0),
   // --- Kind mitte (bed ROTATED per arrow: crosswise, long axis east-west) x 4.945..7.645, z 6.11..10.127
-  M('dresser-kind-mitte', 'dresser', 'kind-mitte', 5.145, 6.85, 1.2, 0.4, 1.0, 90),
-  M('bed-kind-mitte', 'bed-single', 'kind-mitte', 6.69, 7.06, 0.9, 1.9, 0.5,
+  M('dresser-kind-mitte', 'dresser', 'kind-mitte', 5.17, 7.5, 1.2, 0.4, 0.5, 90, { note: 'Auftraggeber: lowered unit (suitcase-rack height ~0.5 m); furniture round 3: west wall south of the bed, front east (drawers reachable); bed head east, long side on the north wall' }),
+  M('bed-kind-mitte', 'bed-single', 'kind-mitte', KIND_MITTE_BED_HEAD === 'east' ? 6.61 : 5.9, 6.41, 0.9, 1.9, 0.5,
     KIND_MITTE_BED_HEAD === 'east' ? -90 : 90, { note: 'ROTATED per arrow: was lengthwise along east wall' }),
   M('desk-kind-mitte', 'desk', 'kind-mitte', 6.3, 9.82, 1.2, 0.6, 0.74, 180),
   M('chair-kind-mitte', 'chair', 'kind-mitte', 6.3, 9.15, 0.45, 0.45, 0.9, 0),
@@ -329,11 +334,11 @@ export const furniture: Furniture[] = [
   M('stool-kind-mitte', 'bench', 'kind-mitte', 6.55, 8.3, 0.45, 0.4, 0.38, -90, { note: 'footstool for the lounge chair' }),
   M('cot-kind-mitte', 'cot', 'kind-mitte', 5.25, 9.62, 0.9, 0.6, 0.75, 90, { note: 'photo-derived: pale grey-blue travel cot next to the desk / window (photo 42)' }),
   // --- Bad (x 10.04..11.89, z 0.28..3.759): tub across the north wall under the window, sink west wall, WC + corner shower east wall (photos 29, 30)
-  M('bathtub', 'bathtub', 'bad', 10.965, 0.655, 0.75, 1.7, 0.55, 90),
+  M('bathtub', 'bathtub', 'bad', 11.515, 1.13, 0.75, 1.7, 0.55, 0, { note: 'Auftraggeber: tub rotated 90 deg vs. earlier (lengthwise along the east wall, as in the floor plan)' }),
   M('washbasin-bad', 'washbasin', 'bad', 10.285, 1.95, 0.5, 0.45, 0.85, 90),
   M('plant-bad', 'plant', 'bad', 10.3, 1.3, 0.35, 0.35, 0.65, 0, { note: 'plan plant between tub and basin' }),
   M('shower-bad', 'shower', 'bad', 11.45, 3.34, 0.8, 0.8, 2.0, 0, { note: 'photo 30: corner glass shower cabin 0.8 x 0.8 at the door end, taupe tiled interior' }),
-  M('toilet-bad', 'toilet', 'bad', 11.7, 2.15, 0.38, 0.55, 0.4, -90, { note: 'photo 29/30: wall-hung WC on the east wall next to the shower' }),
+  M('toilet-bad', 'toilet', 'bad', 11.7, 2.45, 0.38, 0.55, 0.4, -90, { note: 'photo 29/30: wall-hung WC on the east wall next to the shower' }),
   M('shelf-abstell', 'shelf', 'abstell', 9.29, 1.16, 0.78, 0.32, 1.9, -90, { note: 'plain shelving on the east wall' }),
   M('boiler-abstell', 'boiler', 'abstell', 9.15, 0.5, 0.4, 0.4, 1.3, 0),
   M('console-flur-r', 'console', 'flur-rechts', 10.9, 4.06, 0.6, 0.22, 0.8, 0, { note: 'photo-derived: black console with orchid on the north wall of the side hall (photos 09, 10)' }),

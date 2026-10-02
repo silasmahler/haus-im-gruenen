@@ -147,7 +147,9 @@ function memo(key: string, fn: () => TexSet): TexSet {
   if (!t) {
     const t0 = performance.now()
     t = fn()
-    bakeMs += performance.now() - t0
+    const dt = performance.now() - t0
+    bakeMs += dt
+    if (typeof window !== 'undefined') { const w = window as unknown as { __tourMatBy?: Record<string, number> }; (w.__tourMatBy ??= {})[key] = Math.round(dt * 10) / 10 } // QA
     cache.set(key, t)
   }
   return t
@@ -189,6 +191,8 @@ export interface WoodFloor {
   lenVar?: number
   /** depth of the plank-edge bevel in the normal map (default 0.25); also darkens the bevel colour */
   bevel?: number
+  /** regular 1/3-plank stagger between rows (+- 3 % jitter) instead of random row offsets */
+  stagger?: boolean
   /** default 256 x 512 */
   size?: [number, number]
 }
@@ -203,7 +207,7 @@ export function woodFloorTex(name: string, o: WoodFloor): TexSet {
     const fig = o.figure ?? 0, jit = o.jitter ?? 0, cap = o.cap ?? 1, gv = o.groove ?? 0.3
     const jw = o.joint ?? 1, fib = o.fibre ?? 0, dsat = o.desat ?? 0, bvl = o.bevel ?? 0.25
     const off: number[] = []
-    for (let r = 0; r < rows; r++) off.push(hash(r, 7, o.seed))
+    for (let r = 0; r < rows; r++) off.push(o.stagger ? 1 + (r % 3) / 3 + (hash(r, 7, o.seed) - 0.5) * 0.3 : hash(r, 7, o.seed))
     // per plank: tone + colour jitter, computed once
     const nPl = rows * segs
     const pTone = new Float32Array(nPl), pJr = new Float32Array(nPl), pJb = new Float32Array(nPl)
@@ -250,9 +254,13 @@ export function woodFloorTex(name: string, o: WoodFloor): TexSet {
         if (fib > 0) t += (vn(u, vw, segs * 9, rows * 14, id * 9 + o.seed) - 0.5) * fib // long fibre streaks (>= 3 texels tall: no pixel-level aliasing)
         if (fig > 0) {
           // walnut: bright figure streaks and dark grain lines, pronounced contrast
-          const fg = sstep(0.6, 0.82, vn(u, v, segs * 4, rows * 9, id * 7 + o.seed))
-          const dk = sstep(0.58, 0.8, vn(u, vw, segs * 3, rows * 22, id * 11 + o.seed))
+          const fg = sstep(0.6, 0.82, vn(u, v, segs * (3 + (id % 3)), rows * (8 + (id % 4)), id * 7 + o.seed))
+          const dk = sstep(0.6, 0.8, vn(u, vw, segs * (2 + (id % 3)), rows * (18 + (id % 5) * 3), id * 11 + o.seed))
           t += (fg * 0.3 - dk * 0.26) * fig
+          // second grain scale, different per plank: broad wavy bands + tighter cathedral lines, breaks the repeat
+          const w2 = vn(u, vw, segs * (2 + (id % 3)), rows * (6 + (id % 5) * 3), id * 13 + o.seed)
+          const w3 = vn(u, vw, segs * (6 + (id % 4) * 2), rows * (20 + (id % 3) * 8), id * 17 + o.seed)
+          t += ((w2 - 0.5) * 0.3 + (w3 - 0.5) * 0.14) * fig
         }
         t = t < 0.02 ? 0.02 : t > cap ? cap : t
         // hairline joint + soft bevel, widths in texels so they survive the low texture size
@@ -282,21 +290,22 @@ export const TILE_N = 5
 /** Near-white square tiles with recessed light-grey grout, 5x5 tiles per repeat. Tint with material.color.
  *  metres = 5 * tile size (0.30 m tile -> 1.5). Per-tile tone + glaze mottling (about +-3 %), bevelled edges with a
  *  soft edge highlight. Roughness map: tile 0.34, grout 0.9. */
-export type TileKind = 'std' | 'floor' | 'splash' | 'bath'
-const TILE_KINDS: Record<TileKind, { g: number; tile: number; grout: number; var: number }> = {
+export type TileKind = 'std' | 'floor' | 'kfloor' | 'splash' | 'bath'
+const TILE_KINDS: Record<TileKind, { g: number; tile: number; grout: number; var: number; speck?: number; tint?: number; edge?: number; rough?: number; bev?: number; ns?: number; hs?: number }> = {
   std: { g: 0.55, tile: 1, grout: 0.86, var: 1 },
   floor: { g: 0.9, tile: 1, grout: 0.7, var: 1 }, // wider, darker grout: stays visible (and crisp) at a distance
+  kfloor: { g: 0.6, tile: 0.93, grout: 0.8, var: 0.9, speck: 1.3, tint: 0.4, ns: 0.25, hs: 0.3 }, // kitchen floor (photos 04 / 19): flat glazed light grey-white ceramic (~#DEDDD8), mild tile-to-tile tone, 1-2 px shallow light-grey grout, normal map at ~25 %
   splash: { g: 0.8, tile: 0.95, grout: 1.02, var: 0.9 }, // grey wall tile with LIGHTER grout, strong tile-to-tile variation
-  bath: { g: 1.05, tile: 1, grout: 0.52, var: 1.5 }, // bathroom / WC: clearly dark grout lines (photos 29 / 30)
+  bath: { g: 0.85, tile: 1, grout: 0.78, var: 1.3, edge: 1.1, rough: 0.22, bev: 0.4, speck: 2.2 }, // bathroom / WC: glossy glaze with fine speckle, ~3 mm mid-grey grout (10 % darker than before, visible from 2 m), small bevel (photos 29 / 32)
 }
 export function tileTex(kind: TileKind = 'std'): TexSet {
   return memo('tile' + (kind === 'std' ? '' : ':' + kind), () => {
-    const S = 510, C = S / TILE_N
+    const S = 400, C = S / TILE_N // 80 px per tile (4 mm per texel at 33 cm tiles)
     const K = TILE_KINDS[kind]
     const L = new Layers(S, S)
     const g = K.g // half grout width in px
     const pt = new Float32Array(TILE_N * TILE_N), pw = new Float32Array(TILE_N * TILE_N)
-    for (let i = 0; i < pt.length; i++) { pt[i] = (hash(i, 1, 11) - 0.5) * 0.06 * K.var; pw[i] = (hash(i, 2, 11) - 0.5) * 0.02 * K.var }
+    for (let i = 0; i < pt.length; i++) { pt[i] = (hash(i, 1, 11) - 0.5) * 0.06 * K.var; pw[i] = (hash(i, 2, 11) - 0.5) * 0.02 * (K.tint ?? K.var) }
     L.eachRow((y) => {
       const fy = y % C, dy = Math.min(fy, C - fy)
       const ty = Math.floor(y / C)
@@ -306,22 +315,23 @@ export function tileTex(kind: TileKind = 'std'): TexSet {
         const gr = 1 - sstep(g - 0.5, g + 0.5, d)
         const id = Math.floor(x / C) + TILE_N * ty
         const n = vn(x / S, y / S, 85, 85, 5) // glaze speckle
+        const sp = K.speck && K.speck > 1 ? (hash(x, y, 31) - 0.5) * 0.045 * (K.speck - 1) : 0 // per-texel glaze speckle (kitchen / bath floors)
         const m = vn(x / S, y / S, 10, 10, 6) // glaze cloud inside a tile
-        const bevel = 1 - sstep(g, g + 3.5, d)
-        const tone = (0.975 + pt[id] + (n - 0.5) * 0.02 + (m - 0.5) * 0.03 * K.var + bevel * 0.025) * K.tile // edges catch the light
+        const bevel = 1 - sstep(g, g + (kind === 'kfloor' ? 1.5 : 3.5) * (K.edge ? 1.5 : 1) * (K.bev ?? 1), d)
+        const tone = (0.975 + pt[id] + (n - 0.5) * 0.02 * (K.speck ?? 1) + (m - 0.5) * 0.03 * K.var + bevel * 0.025 * (K.edge ?? 1) + sp) * K.tile // edges catch the light
         // floor / std tiles: patchy wear (glaze rubbed matt) and rare tiny chips, so the highlight is never a uniform hotspot
-        const wear = kind === 'floor' ? sstep(0.55, 0.8, vn(x / S, y / S, 14, 14, 9)) : 0
-        const chip = kind === 'floor' && vn(x / S, y / S, 170, 170, 12) > 0.86 ? 1 : 0
+        const wear = kind === 'floor' || kind === 'kfloor' ? sstep(0.55, 0.8, vn(x / S, y / S, 14, 14, 9)) : 0
+        const chip = kind === 'floor' && vn(x / S, y / S, 170, 170, 12) > 0.86 ? 1 : 0 // kfloor: no chips
         const c = mix(tone * (1 - 0.05 * chip), K.grout + (n - 0.5) * 0.05, gr) * 255
-        L.put(x, y, c * (1 + pw[id]), c, c * (1 - pw[id]), -gr * 2.4 - bevel * 0.9 + (n - 0.5) * 0.12 - chip * 0.5, mix(0.34 + (m - 0.5) * 0.12 + wear * 0.22 + chip * 0.3, 0.9, gr))
+        L.put(x, y, c * (1 + pw[id]), c, c * (1 - pw[id]), (-gr * 2.4 * (K.bev ? 0.6 : 1) - bevel * 0.9 * (K.bev ?? 1) + (n - 0.5) * 0.12 - chip * 0.5) * (K.hs ?? 1), mix((K.rough ?? 0.34) + (m - 0.5) * 0.12 + wear * 0.22 + chip * 0.3, 0.9, gr))
       }
     })
-    return finish(L, 1.3)
+    return finish(L, 1.3 * (K.ns ?? 1))
   })
 }
 
 // ------------------------------------------------------------------ plaster (neutral)
-/** Rough-cast / Raufaser wall plaster. metres ~1.2 per repeat. Tint with material.color. */
+/** Rough-cast / Raufaser wall plaster, fine grained, low relief. metres ~0.7 per repeat. Tint with material.color. */
 export function plasterTex(): TexSet {
   return memo('plaster', () => {
     const S = 256
@@ -330,12 +340,14 @@ export function plasterTex(): TexSet {
       const v = y / S
       for (let x = 0; x < S; x++) {
         const u = x / S
-        const a = vn(u, v, 100, 100, 1) // fine grit
-        const b = vn(u, v, 24, 24, 2) // Raufaser chips (~5 cm)
-        const c = vn(u, v, 48, 48, 3)
-        const blot = vn(u, v, 5, 5, 4) // broad roller / trowel blotches
-        const lum = (0.985 + (a - 0.5) * 0.03 + (b - 0.5) * 0.03 + (blot - 0.5) * 0.024) * 255
-        L.put(x, y, lum, lum, lum, a * 1.1 + b * 1.6 + c * 0.9, 0.8 + (b - 0.5) * 0.24 + (blot - 0.5) * 0.3)
+        const a = vn(u, v, 128, 128, 1) // fine orange-peel (about 1 cm cells at 1.2 m per repeat)
+        const b = vn(u, v, 64, 64, 2)
+        const d = vn(u, v, 200, 200, 7) // finest octave
+        const blot = vn(u, v, 4, 4, 4) // broad roller / trowel blotches (colour only)
+        const streak = vn(u, v, 3, 20, 5) // vertical roller streaks (colour only)
+        const lum = (0.985 + (a - 0.5) * 0.016 + (b - 0.5) * 0.012 + (blot - 0.5) * 0.024 + (streak - 0.5) * 0.016) * 255
+        // relief is small and fine; the amplitude lives in the roughness map (paint sheen breaks up in raking light)
+        L.put(x, y, lum, lum, lum, (a * 0.6 + b * 0.25 + d * 0.5) * 0.3, 0.84 + (a - 0.5) * 0.14 + (b - 0.5) * 0.1 + (blot - 0.5) * 0.14)
       }
     })
     return finish(L, 1.0)
@@ -358,7 +370,7 @@ export function ceilingTex(): TexSet {
       for (let x = 0; x < S; x++) {
         const u = x / S
         const gn = vn(u, v, 3, rows * 22, b * 5 + 1)
-        const lum = (0.99 + (gn - 0.5) * 0.025 + (hash(b, 2, 4) - 0.5) * 0.015) * (1 - 0.13 * gr) * 255
+        const lum = (0.99 + (gn - 0.5) * 0.02 + (hash(b, 2, 4) - 0.5) * 0.04) * (1 - 0.1 * gr) * 255 // board tone +-2 %
         L.put(x, y, lum, lum, lum, (gn - 0.5) * 0.25 - gr * 2, 0.88 + gr * 0.08 + (gn - 0.5) * 0.06)
       }
     })
@@ -499,7 +511,7 @@ export function brushedTex(): TexSet {
 /** Beige laminate worktop with dark/light chips (photo 13), metres ~0.6 per repeat. Colour baked. */
 export function terrazzoTex(): TexSet {
   return memo('terrazzo', () => {
-    const S = 512
+    const S = 384
     const L = new Layers(S, S)
     L.eachRow((y) => {
       for (let x = 0; x < S; x++) {
@@ -526,16 +538,18 @@ export function rugTex(): TexSet {
     L.eachRow((y) => {
       for (let x = 0; x < S; x++) {
         const u = x / S, v = y / S
-        const fx = (u * 2) % 1, fy = (v * 2) % 1
+        // warp the pattern so the diamonds are not perfectly regular
+        const wu = u + (vn(u, v, 4, 4, 31) - 0.5) * 0.05, wv = v + (vn(u, v, 4, 4, 32) - 0.5) * 0.05
+        const fx = (wu * 2) % 1, fy = (wv * 2) % 1
         const d = Math.abs(fx - 0.5) + Math.abs(fy - 0.5) // diamond distance
-        const ring = sstep(0.05, 0.02, Math.abs(d - 0.36)) // thin outline
-        const ring2 = sstep(0.04, 0.015, Math.abs(d - 0.2)) * 0.6
-        const a = vn(u, v, 110, 110, 22), b = vn(u, v, 30, 30, 23)
-        const lum = (0.94 + (a - 0.5) * 0.09 + (b - 0.5) * 0.04) * (1 - 0.16 * ring - 0.09 * ring2) * 255
+        const ring = sstep(0.11, 0.0, Math.abs(d - 0.36)) // soft, blurred outline
+        const ring2 = sstep(0.09, 0.0, Math.abs(d - 0.2)) * 0.6
+        const a = vn(u, v, 110, 110, 22), b = vn(u, v, 30, 30, 23), big = vn(u, v, 3, 3, 24)
+        const lum = (0.94 + (a - 0.5) * 0.09 + (b - 0.5) * 0.04 + (big - 0.5) * 0.08) * (1 - 0.1 * ring - 0.06 * ring2) * 255
         L.put(x, y, lum, lum, lum, a * 0.9 + b * 0.5, 0.97)
       }
     })
-    return finish(L, 1.0, true)
+    return finish(L, 0.5, true)
   })
 }
 
@@ -547,7 +561,7 @@ export function floralTex(): TexSet {
     const c = document.createElement('canvas')
     c.width = c.height = S
     const g = c.getContext('2d', { willReadFrequently: true })!
-    g.fillStyle = '#e8dcbf'
+    g.fillStyle = '#efe6d0'
     g.fillRect(0, 0, S, S)
     let seed = 99
     const rnd = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296)
@@ -616,13 +630,12 @@ export function floralTex(): TexSet {
  */
 export function muralTex(): TexSet {
   return memo('mural', () => {
-    const W = 1536, H = 1024 // 3:2 = the TV wall (3.9 x 2.5 m), so strokes are not stretched
+    const W = 1024, H = 683, K = W / 768 // 3:2 = the TV wall (3.9 x 2.5 m); drawing code below works in the old 768 x 512 design space (scale K)
     const c = document.createElement('canvas')
     c.width = W; c.height = H
     const g = c.getContext('2d')!
-    // ---- grey concrete base + warm glow, per pixel (glow strongest behind the crown, cooler grey towards the edges)
-    // base is computed at half resolution (cheap) and upscaled; the crisp twigs are drawn at full resolution on top
-    const BW = W >> 1, BH = H >> 1
+    // ---- light grey-beige base #B7AFA4 -> #A89C8E (top to bottom), broad soft clouds, warm glow in the middle only (photos 06 / 09)
+    const BW = 384, BH = 256 // soft clouds: low-res base, upscaled smoothly
     const base = document.createElement('canvas')
     base.width = BW; base.height = BH
     const img = base.getContext('2d')!.createImageData(BW, BH)
@@ -631,58 +644,57 @@ export function muralTex(): TexSet {
       const v = y / BH
       for (let x = 0; x < BW; x++) {
         const u = x / BW
-        const n1 = vn(u, v, 6, 3, 31), n2 = vn(u, v, 22, 11, 32), n3 = vn(u, v, 90, 45, 33), n4 = vn(u, v, 380, 190, 34)
-        // weathered concrete: broad stains + pitting
-        let lum = 148 + (n1 - 0.5) * 46 + (n2 - 0.5) * 30 + (n3 - 0.5) * 18 + (n4 - 0.5) * 16
-        if (n3 > 0.72) lum -= (n3 - 0.72) * 90 // dark pits / stains
-        let r = lum, gg = lum * 0.985, b = lum * 0.955
-        // two glows: big one behind the crown, small one further right
-        const d1 = Math.hypot((u - 0.42) * 2, (v - 0.46) * 1.15), d2 = Math.hypot((u - 0.82) * 2, (v - 0.34) * 1.15)
-        const glow = Math.min(1, Math.exp(-d1 * d1 * 3.2) * 0.95 + Math.exp(-d2 * d2 * 5) * 0.45) * (0.78 + (n2 - 0.5) * 0.55)
-        r = mix(r, 232, glow * 0.62); gg = mix(gg, 138, glow * 0.6); b = mix(b, 82, glow * 0.66)
-        // vignette: strong at the sides and the bottom corners
-const vg = 1 - 0.5 * Math.pow(Math.abs(u - 0.5) * 2, 2.4) - 0.28 * Math.pow(v, 3)
-        // fine film grain (photo print) + soft fade into the white wall paint at the side and bottom edges
-        const gn = 1 + (hash(x, y, 77) - 0.5) * 0.09
-        const eF = sstep(0, 0.035, Math.min(u, 1 - u)) * sstep(0, 0.05, 1 - v)
+        const n1 = vn(u, v, 5, 3, 31), n2 = vn(u, v, 18, 10, 32), n3 = vn(u, v, 70, 40, 33)
+        const cl = (n1 - 0.5) * 16 + (n2 - 0.5) * 10 + (n3 - 0.5) * 5
+        let r = mix(183, 168, v) + cl, gg = mix(175, 156, v) + cl, b = mix(164, 142, v) + cl
+        const d1 = Math.hypot((u - 0.45) * 2, (v - 0.5) * 1.15)
+        const glow = Math.exp(-d1 * d1 * 4.5) * (0.8 + (n2 - 0.5) * 0.4)
+        r = mix(r, 222, glow * 0.4); gg = mix(gg, 170, glow * 0.4); b = mix(b, 128, glow * 0.4)
+        const eF = sstep(0, 0.03, Math.min(u, 1 - u)) * sstep(0, 0.04, 1 - v) // blend into the white wall paint
         const o = (y * BW + x) * 4
-        d[o] = mix(236, r * vg * gn, eF); d[o + 1] = mix(235, gg * vg * gn, eF); d[o + 2] = mix(231, b * vg * gn, eF); d[o + 3] = 255
+        d[o] = mix(236, r, eF); d[o + 1] = mix(235, gg, eF); d[o + 2] = mix(231, b, eF); d[o + 3] = 255
       }
     }
     base.getContext('2d')!.putImageData(img, 0, 0)
     g.imageSmoothingQuality = 'high'
     g.drawImage(base, 0, 0, W, H)
-    // ---- twigs: seeded, dense, thin, alpha and width fade with depth (distance from the top edge)
+    g.scale(K, K)
+    // ---- thin black twigs hanging from the top edge, ~60 % opacity, fading towards the bottom
     let seed = 9001
     const rnd = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296)
     g.lineCap = 'round'
-    const twig = (x: number, y: number, a: number, len: number, w: number, depth: number, blur: boolean): void => {
+    const twig = (x: number, y: number, a: number, len: number, w: number, depth: number): void => {
       if (depth <= 0 || len < 3) return
       const bend = (rnd() - 0.5) * 0.9
       const ex = x + Math.cos(a) * len, ey = y + Math.sin(a) * len
       const mx = x + Math.cos(a + bend) * len * 0.5, my = y + Math.sin(a + bend) * len * 0.5
-      const fade = 1 - 0.72 * sstep(0.1, 0.95, y / H)
-      g.strokeStyle = blur ? `rgba(70,58,50,${0.06 * fade})` : `rgba(24,20,18,${0.82 * fade})`
-      g.lineWidth = blur ? w * 2.6 + 2 : Math.max(0.55, w)
+      const fade = 1 - 0.75 * sstep(0.08, 0.9, y / 512)
+      g.strokeStyle = `rgba(16,13,11,${0.68 * fade})`
+      g.lineWidth = Math.max(0.45, w)
       g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(mx, my, ex, ey); g.stroke()
-      const n = rnd() < 0.62 ? 2 : 3
-      for (let i = 0; i < n; i++) twig(ex, ey, a + (rnd() - 0.5) * 1.7 + (i - 0.5) * 0.3, len * (0.62 + rnd() * 0.2), w * 0.7, depth - 1, blur)
-      if (rnd() < 0.5) twig(ex, ey, a + (rnd() < 0.5 ? -1 : 1) * (0.35 + rnd() * 0.6), len * 0.5, w * 0.6, depth - 2, blur)
+      const n = rnd() < 0.6 ? 2 : 3
+      for (let i = 0; i < n; i++) twig(ex, ey, a + (rnd() - 0.5) * 1.7 + (i - 0.5) * 0.3, len * (0.6 + rnd() * 0.2), w * 0.68, depth - 1)
+      if (rnd() < 0.4) twig(ex, ey, a + (rnd() < 0.5 ? -1 : 1) * (0.35 + rnd() * 0.6), len * 0.5, w * 0.6, depth - 2)
     }
-    for (let pass = 0; pass < 2; pass++) {
-      seed = 9001 // identical geometry in both passes: soft out-of-focus ghost, then crisp
-      for (let i = 0; i < 46; i++) {
-        const x = (i + rnd() * 0.9) * (W / 46), len = 120 + rnd() * 140, w = 2.2 + rnd() * 2.6
-        twig(x, -8, Math.PI / 2 + (rnd() - 0.5) * 0.9, len, w, 7, pass === 0)
-      }
+    for (let i = 0; i < 26; i++) {
+      const x = (i + rnd() * 0.9) * (768 / 26), len = 80 + rnd() * 100, w = 1.1 + rnd() * 1.1
+      twig(x, -6, Math.PI / 2 + (rnd() - 0.5) * 0.9, len, w, 6)
     }
-    // a few far, faint hairline twigs (depth of field) across the middle
-    g.strokeStyle = 'rgba(40,34,30,0.22)'
-    g.lineWidth = 0.7
-    for (let i = 0; i < 260; i++) {
-      const x = rnd() * W, y = H * (0.05 + rnd() * 0.55), a = Math.PI / 2 + (rnd() - 0.5) * 2.4, l = 20 + rnd() * 60
+    // sparse far hairline twigs (depth of field)
+    g.strokeStyle = 'rgba(50,44,40,0.14)'
+    g.lineWidth = 0.5
+    for (let i = 0; i < 120; i++) {
+      const x = rnd() * 768, y = 512 * (0.05 + rnd() * 0.5), a = Math.PI / 2 + (rnd() - 0.5) * 2.4, l = 14 + rnd() * 40
       g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + Math.cos(a + 0.4) * l * 0.5, y + Math.sin(a + 0.4) * l * 0.5, x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke()
     }
+    g.setTransform(1, 0, 0, 1, 0, 0)
+    // fine photo-paper grain over everything (no vignette)
+    const gd = g.getImageData(0, 0, W, H), q = gd.data
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const k = 1 + (hash(x, y, 77) - 0.5) * 0.07, o = (y * W + x) * 4
+      q[o] *= k; q[o + 1] *= k; q[o + 2] *= k
+    }
+    g.putImageData(gd, 0, 0)
     const t = canvasTex(c, true, 8)
     t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping
     return { map: t, normal: null, rough: null }

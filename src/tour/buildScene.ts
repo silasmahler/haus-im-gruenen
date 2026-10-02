@@ -5,18 +5,21 @@
  */
 import * as THREE from 'three'
 
-import { createControls, type Mode, type PoseState, type TourControls } from './controls'
+import { createControls, unreachableRooms, type Mode, type PoseState, type TourControls } from './controls'
 import { makeBackdrop } from './backdrop'
 import { buildDecor } from './decor'
-import { buildFurniture } from './furniture'
+import { buildFurniture, furnitureStats } from './furniture'
 import { buildGeometry, type Rect } from './geometry'
 import { setupLighting } from './lighting'
 import { disposeMaterials, getMaterial, materialKeys } from './materials'
+import { textureBakeMs } from './textures'
 import { FOOTPRINT, footprint, furniture, poses, rooms, type Room } from './plan'
 
-export interface TourStats { fps: number; drawCalls: number; triangles: number; mode: Mode; pose: PoseState }
+export interface TourStats { fps: number; drawCalls: number; triangles: number; mode: Mode; pose: PoseState; furniture?: Record<string, { drawCalls: number; triangles: number }> }
 export interface TourApi {
   ready: boolean
+  /** total procedural texture bake time in ms (QA: must stay < 400 in production) */
+  bakeMs?: number
   /** prefers-reduced-motion at creation time: controls should skip glides / animated transitions */
   reducedMotion: boolean
   /** navigation controls (UI: animated travel, stick input, fade) and the canvas (aria) */
@@ -24,6 +27,8 @@ export interface TourApi {
   canvas: HTMLCanvasElement
   /** walk colliders (QA: reachability / pose clearance checks) */
   colliders: Rect[]
+  /** room ids that cannot be reached on foot from the front door (must be empty) */
+  unreachable: string[]
   /** geometry.ts shell only (walls, floors, ceiling, frames, glass, stove, apron): meshes (= draw calls) and triangles, for budget checks */
   shell: { drawCalls: number; triangles: number }
   rooms: Room[]
@@ -52,6 +57,12 @@ export async function createTour(canvas: HTMLCanvasElement, onProgress?: Progres
   const scene = new THREE.Scene()
   const camera = new THREE.PerspectiveCamera(70, 1, 0.05, 100)
 
+  // dollhouse cut-away: 4 global clip planes owned by controls.ts (constant 1e3 = inactive); set before any program compiles so mode switches never recompile
+  const clip = [new THREE.Plane(), new THREE.Plane(), new THREE.Plane(), new THREE.Plane()]
+  clip.forEach((q) => { q.constant = 1e3 })
+  renderer.clippingPlanes = clip
+
+  let bakeMs = 0
   let house: ReturnType<typeof buildGeometry>
   let lighting: ReturnType<typeof setupLighting>
   try {
@@ -66,6 +77,7 @@ export async function createTour(canvas: HTMLCanvasElement, onProgress?: Progres
       if (ms > 5) times[keys[i]] = Math.round(ms)
     }
     ;(window as unknown as { __tourMatTimes?: unknown }).__tourMatTimes = times // QA
+    bakeMs = textureBakeMs()
     performance.mark('tour:textures')
     await onProgress?.('geometry', 0.5, true)
     house = buildGeometry()
@@ -77,7 +89,7 @@ export async function createTour(canvas: HTMLCanvasElement, onProgress?: Progres
     lighting = setupLighting(scene, renderer, camera)
     scene.add(makeBackdrop(FOOTPRINT.x1 / 2, FOOTPRINT.z1 / 2, coarse)) // window view: painted panorama (replaces the old leaf-card scenery)
     await onProgress?.('lighting', 0.92, true)
-    await renderer.compileAsync(scene, camera) // shaders compile in parallel off the main thread instead of stalling frame 1
+    await lighting.precompile() // walk + overview shader programs compile in parallel off the main thread (lighting.ts), not as a stall on frame 1 / first mode switch
     performance.mark('tour:lighting')
   } catch (e) {
     renderer.dispose() // aborted by the shell (unmount) or a build error
@@ -88,13 +100,33 @@ export async function createTour(canvas: HTMLCanvasElement, onProgress?: Progres
   // thin open door leaves are excluded: they would close the chimney niche / narrow door passages)
   // Tucked-in dining chairs are left out (passable in real life; they pinched the kitchen -> storage room route to 0.45 m).
   // Open door leaves ARE colliders (thin rects beside the door gap).
-  const pieces = furniture.filter((f) => !f.onTopOf && f.type !== 'rug' && f.type !== 'flue' && f.type !== 'dining-chair').map(footprint)
+  const floorPieces = furniture.filter((f) => !f.onTopOf && f.type !== 'rug' && f.type !== 'flue' && f.type !== 'dining-chair')
+  const pieces = floorPieces.map(footprint)
   // open leaves are only ~6 cm thick and sit flush with the door reveal: slim them by 2 cm a side so they never narrow the gap
   const slim = (r: Rect): Rect => (r.x1 - r.x0 < r.z1 - r.z0
     ? { x0: r.x0 + 0.02, x1: r.x1 - 0.02, z0: r.z0, z1: r.z1 }
     : { x0: r.x0, x1: r.x1, z0: r.z0 + 0.02, z1: r.z1 - 0.02 })
-  const colliders = [...house.collision.rects, ...house.collision.leaves.map(slim), ...pieces]
-  const controls = createControls(camera, canvas, colliders, [house.ceiling])
+  // Collision-only fixes so the narrow doors (bath, WC, storage: 0.60-0.64 m clear) stay walkable for a 0.18 m circle:
+  // jambs are inset 6 cm, and the side-hall console (sits right in front of the bath door) is trimmed to its east part.
+  const INSET = 0.06
+  const jambs = house.collision.rects.map((r) => ({ ...r }))
+  for (const g of house.collision.doorGaps) {
+    const h = g.width / 2
+    for (const r of jambs) {
+      if (g.axis === 'x' && g.z > r.z0 - 0.01 && g.z < r.z1 + 0.01) {
+        if (Math.abs(r.x1 - (g.x - h)) < 0.011) r.x1 -= INSET
+        else if (Math.abs(r.x0 - (g.x + h)) < 0.011) r.x0 += INSET
+      } else if (g.axis === 'z' && g.x > r.x0 - 0.01 && g.x < r.x1 + 0.01) {
+        if (Math.abs(r.z1 - (g.z - h)) < 0.011) r.z1 -= INSET
+        else if (Math.abs(r.z0 - (g.z + h)) < 0.011) r.z0 += INSET
+      }
+    }
+  }
+  const trimmed = pieces.map((r, i) => (floorPieces[i].id === 'console-flur-r' ? { ...r, x0: Math.max(r.x0, 10.85) } : r))
+  const colliders = [...jambs, ...house.collision.leaves.map(slim), ...trimmed]
+  const unreachable = unreachableRooms(colliders) // every room must be walkable from the front door
+  if (unreachable.length) console.error('[tour] rooms not reachable on foot:', unreachable.join(', '))
+  const controls = createControls(camera, canvas, colliders, [house.ceiling], clip)
   const start = poses[0]
   controls.setPose(start.x, start.z, start.yawDeg, start.pitchDeg, start.eye)
 
@@ -129,6 +161,7 @@ export async function createTour(canvas: HTMLCanvasElement, onProgress?: Progres
     controls,
     canvas,
     colliders,
+    unreachable,
     shell: (() => {
       let n = 0, t = 0
       house.group.traverse((o) => { if (o instanceof THREE.Mesh) { n++; t += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3 } })
@@ -146,8 +179,10 @@ export async function createTour(canvas: HTMLCanvasElement, onProgress?: Progres
       triangles: renderer.info.render.triangles,
       mode: controls.mode,
       pose: controls.getPose(),
+      furniture: furnitureStats, // per room group + total (meshes = draw calls per pass, triangles)
     }),
   }
+  api.bakeMs = bakeMs
   window.__tour = api
   ;(window as unknown as { __scene: unknown }).__scene = { scene, camera } // TMP-DEBUG
   raf = requestAnimationFrame(loop)

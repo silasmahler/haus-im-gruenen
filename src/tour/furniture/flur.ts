@@ -27,35 +27,45 @@ function consoleR(g: G, f: Furniture): void {
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) rod(g, [sx * (f.w / 2 - 0.03), 0, sz * (f.d / 2 - 0.03)], [sx * (f.w / 2 - 0.03), f.h - 0.03, sz * (f.d / 2 - 0.03)], 0.014, 0.014, blk, 6)
   rb(g, f.w, 0.035, f.d, 0.008, blk, 0, f.h - 0.035, 0)
   bx(g, f.w - 0.08, 0.02, f.d - 0.06, blk, 0, 0.2, 0)
-  orchid(g, -0.22, f.h, -0.02, 1.15)
-  cy(g, 0.11, 0.1, 0.012, paint(0xc9ccd0, 0.25, 1), 0.2, f.h, 0.02, 20)
+  orchid(g, 0.22, f.h, -0.02, 1.15)
+  cy(g, 0.11, 0.1, 0.012, paint(0xc9ccd0, 0.25, 1), -0.2, f.h, 0.02, 20)
 }
 
 function extras(root: G): void {
   // doormat at the front door (door centre x 4.14, inside face z 10.127)
   bx(root, 0.8, 0.014, 0.5, paint(0x3f3a35, 1), 4.2, 0, 9.78)
   bx(root, 0.72, 0.016, 0.42, paint(0x6a5a48, 1), 4.2, 0, 9.78)
-  // real mirror above the console (bright fake reflection, white frame), coat rail with soft coats on the east wall (face x 4.93)
-  picture(root, 0.55, 0.85, mirrorFake(), 4.925, 1.05, 9.7, -Math.PI / 2, 'furn-white', 0.035, 0.03)
-  { const r = at(root, 4.93, 7.15, -Math.PI / 2)
-    bx(r, 1.5, 0.09, 0.02, 'wood-birch', 0, 1.65, 0.01)
+  // real mirror above the console (bright fake reflection, white frame); hall east wall face is x 4.816, west wall face x 3.785
+  picture(root, 0.55, 0.85, mirrorFake(), 4.82, 1.05, 9.7, -Math.PI / 2, 'furn-white', 0.035, 0.03)
+  // coat board: oak plank with brass hooks, four jackets, a hat and a shoulder bag
+  { const r = at(root, 5.6385, 5.16, -Math.PI / 2) // Auftraggeber: Jackenablage in der Dielenecke vor der Küche (kurze Wand x 5.64, z 4.53..5.79)
+    rb(r, 1.1, 0.11, 0.025, 0.008, 'wood-birch', 0, 1.62, 0.0125, 0, 1)
     const coats = [0x39435a, 0x6b7350, 0xa0825a, 0x36363a]
-    for (let i = 0; i < 5; i++) {
-      const x = -0.6 + i * 0.3
-      rod(r, [x, 1.66, 0.02], [x, 1.66, 0.07], 0.008, 0.008, 'metal-black', 5)
-      cy(r, 0.014, 0.014, 0.012, 'metal-black', x, 1.66, 0.07, 8)
-      if (i < 4) coat(r, x, 1.62, 0.09, coats[i], 0.6 + (i % 2) * 0.1)
-    } }
-  picture(root, 0.5, 0.36, art('land'), 3.675, 1.55, 6.1, Math.PI / 2, 'furn-white', 0.02, 0.03)
-  picture(root, 0.5, 0.36, art('land'), 3.675, 1.55, 6.7, Math.PI / 2, 'furn-white', 0.02, 0.03)
-  picture(root, 0.36, 0.5, art('brown'), 3.675, 1.5, 5.4, Math.PI / 2, 'furn-white', 0.02, 0.03)
+    for (let i = 0; i < 4; i++) {
+      const x = -0.45 + i * 0.3
+      rod(r, [x, 1.67, 0.025], [x, 1.67, 0.07], 0.007, 0.007, 'brass', 5)
+      sp(r, 0.011, 'brass', x, 1.67, 0.075, 1, 1, 1, 6)
+    }
+    coat(r, -0.45, 1.62, 0.085, coats[0], 0.95, 0.46)
+    coat(r, -0.15, 1.62, 0.1, coats[1], 0.8, 0.44)
+    coat(r, 0.15, 1.62, 0.085, coats[2], 0.95, 0.46)
+    // hat on the fourth hook, bag from the hook beside it
+    cy(r, 0.11, 0.11, 0.012, paint(0x8a6a44, 0.9), 0.45, 1.63, 0.1, 16).rotation.x = Math.PI / 2
+    cy(r, 0.065, 0.075, 0.09, paint(0x8a6a44, 0.9), 0.45, 1.58, 0.1, 14).rotation.x = Math.PI / 2 }
+  picture(root, 0.5, 0.36, art('land'), 3.79, 1.55, 6.1, Math.PI / 2, 'furn-white', 0.02, 0.03)
+  picture(root, 0.5, 0.36, art('land'), 3.79, 1.55, 6.7, Math.PI / 2, 'furn-white', 0.02, 0.03)
+  picture(root, 0.36, 0.5, art('brown'), 3.79, 1.5, 5.4, Math.PI / 2, 'furn-white', 0.02, 0.03)
 }
-/** soft tapered coat hanging from a hook at (x, yTop): shoulders + flared body + sleeves, flattened in depth */
-function coat(r: G, x: number, yTop: number, z: number, hex: number, len = 0.65): void {
+/** jacket on a hook at (x, yTop): wide shoulders, boxy padded body with a slight belly, two sleeves, collar; w = body width, len = hang length */
+function coat(r: G, x: number, yTop: number, z: number, hex: number, len: number, w: number): void {
   const m = paint(hex, 0.95)
-  sp(r, 0.12, m, x, yTop - 0.06, z, 1, 0.42, 0.3, 10)
-  const body = cy(r, 0.105, 0.155, len - 0.08, m, x, yTop - len, z, 12); body.scale.z = 0.3
-  for (const s of [-1, 1]) { const sl = cy(r, 0.03, 0.026, len * 0.7, m, x + s * 0.135, yTop - len * 0.72, z + 0.005, 8); sl.rotation.z = s * 0.06; sl.scale.z = 1.1 }
+  sp(r, 0.5, m, x, yTop - 0.07, z, w * 0.56, 0.16, 0.14, 12)
+  const body = rb(r, w, len - 0.1, 0.1, 0.045, m, x, yTop - len, z, 0, 2); body.scale.z = 1
+  for (const s of [-1, 1]) {
+    const sl = rb(r, 0.1, len * 0.72, 0.09, 0.04, m, x + s * (w / 2 + 0.03), yTop - len * 0.8, z + 0.005, 0, 2); sl.rotation.z = s * 0.05
+  }
+  rb(r, 0.14, 0.05, 0.1, 0.02, paint(hex, 0.8), x, yTop - 0.05, z, 0, 1) // collar
+  bx(r, 0.004, len * 0.7, 0.004, paint(0x111111, 0.8), x, yTop - len + 0.05, z + 0.052) // zip line
 }
 
 export function build(): THREE.Group {

@@ -68,7 +68,7 @@ function clothPanel(w: number, h: number, mat: THREE.Material, pleat: number, am
   return m
 }
 
-const panelMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.05, 1.05, 1.02) }) // soft diffuser: reads white, does not bloom into a slab
+const panelMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0.93, 0.93, 0.9) }) // soft diffuser: reads white, does not bloom into a slab
 const casingMat = new THREE.MeshStandardMaterial({ color: 0xeeeeea, roughness: 0.5 })
 
 function frostTexture(): THREE.CanvasTexture {
@@ -132,7 +132,7 @@ export function buildDressing(scene: THREE.Scene): Dressing {
     disposables.push(bulbGeo, bulbMat)
     for (const dx of [-0.42, 0, 0.42]) { // warm filaments inside the clear glass globes on the wood beam (kueche.ts, photo 19)
       const b = new THREE.Mesh(bulbGeo, bulbMat)
-      b.position.set(table.x + dx, 1.735, table.z)
+      b.position.set(table.x + dx, 1.95, table.z)
       add(b)
     }
     const pl = new THREE.PointLight(0xffbe78, 14, 5.5, 2)
@@ -172,10 +172,12 @@ export function buildDressing(scene: THREE.Scene): Dressing {
     g.position.copy(badC)
     const rim = new THREE.Mesh(own(new THREE.CylinderGeometry(0.19, 0.19, 0.06, 28)), casingMat)
     rim.position.y = -0.03
-    const disc = new THREE.Mesh(own(new THREE.CircleGeometry(0.16, 28)), panelMat)
-    disc.rotation.x = Math.PI / 2
-    disc.position.y = -0.062
-    g.add(rim, disc)
+    const dome = new THREE.Mesh(own(new THREE.SphereGeometry(0.17, 24, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2.6)), panelMat) // opal glass shade, not a flat disc
+    dome.position.y = -0.03
+    dome.scale.y = 0.5
+    const mount = new THREE.Mesh(own(new THREE.CylinderGeometry(0.21, 0.21, 0.02, 28)), casingMat)
+    mount.position.y = -0.01
+    g.add(rim, dome, mount)
     add(g)
   }
   const km = roomBox('kind-mitte')
@@ -186,10 +188,15 @@ export function buildDressing(scene: THREE.Scene): Dressing {
     g.position.copy(kmC)
     const rim = new THREE.Mesh(own(new THREE.BoxGeometry(0.62, 0.05, 0.62)), casingMat)
     rim.position.y = -0.025
-    const led = new THREE.Mesh(own(new THREE.PlaneGeometry(0.54, 0.54)), panelMat) // LED panel, photo 24
-    led.rotation.x = Math.PI / 2
-    led.position.y = -0.052
-    g.add(rim, led)
+    const led = new THREE.Mesh(own(new THREE.BoxGeometry(0.5, 0.012, 0.5)), panelMat) // LED panel, photo 24: recessed diffuser inside the frame
+    led.position.y = -0.045
+    const bezel = new THREE.Mesh(own(new THREE.BoxGeometry(0.6, 0.02, 0.6)), casingMat) // frame lip around the diffuser
+    bezel.position.y = -0.058
+    const lip = new THREE.Mesh(own(new THREE.BoxGeometry(0.54, 0.024, 0.54)), own(new THREE.MeshStandardMaterial({ color: 0x9a9a96, roughness: 0.6 })))
+    lip.position.y = -0.052
+    g.add(rim, bezel, lip, led)
+    led.position.y = -0.066
+    led.scale.set(1, 1, 1)
     add(g)
   }
 

@@ -45,6 +45,7 @@ export interface TourUiDict {
   helpTouch: string
   bob: string
   hintMouse: string
+  lockMouse: string
   hintTouch: string
   stick: string
   /** graphics quality button label per level: high, medium, low */
@@ -484,7 +485,8 @@ export const dictionaries: Record<Locale, Dictionary> = {
         ],
         helpTouch: 'Am Handy: Kreis unten links zum Gehen, mit dem Finger über das Bild wischen zum Umsehen, im Puppenhaus zwei Finger zum Zoomen.',
         bob: 'Leichtes Wippen beim Gehen',
-        hintMouse: 'Ziehen zum Umsehen · Doppelklick fängt die Maus ein (Esc gibt sie frei) · W A S D zum Gehen',
+        hintMouse: 'Ziehen zum Umsehen · Maus-Symbol oder Doppelklick fängt die Maus ein (Esc gibt sie frei) · W A S D zum Gehen',
+        lockMouse: 'Maus einfangen zum Umsehen (Esc gibt sie frei)',
         hintTouch: 'Kreis zum Gehen, wischen zum Umsehen',
         stick: 'Steuerkreis zum Gehen',
         qualityNames: ['Grafik: hoch', 'Grafik: mittel', 'Grafik: niedrig'],
@@ -893,7 +895,8 @@ export const dictionaries: Record<Locale, Dictionary> = {
         ],
         helpTouch: 'On a phone: circle at the bottom left to walk, swipe across the picture to look around, two fingers to zoom in dollhouse view.',
         bob: 'Slight head bob while walking',
-        hintMouse: 'Drag to look around · Double-click captures the mouse (Esc releases it) · W A S D to walk',
+        hintMouse: 'Drag to look around · Mouse icon or double-click captures the mouse (Esc releases it) · W A S D to walk',
+        lockMouse: 'Capture the mouse to look around (Esc releases it)',
         hintTouch: 'Circle to walk, swipe to look',
         stick: 'Movement stick',
         qualityNames: ['Quality: high', 'Quality: medium', 'Quality: low'],

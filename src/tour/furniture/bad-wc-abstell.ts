@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-import { at, bush, buildRooms, bx, canvasMat, cy, mirrorFake, paint, pl, rb, ribRadiator, rod, sp } from './shared'
+import { at, bracket, cardboard, hangTowel, foldMat, bush, buildRooms, bx, canvasMat, cy, mirrorFake, paint, pl, rb, ring, rod, sp } from './shared'
 import { LAYOUT } from '../plan'
 import type { Furniture } from '../plan'
 
@@ -67,33 +67,35 @@ const printed = (): THREE.Material => canvasMat('seat-print', 128, 128, (c, w, h
 function toiletWc(g: G, f: Furniture): void { wallWC(g, -f.d / 2, printed(), 1.05) }
 
 function basin(g: G, f: Furniture, mirrorCab: boolean): void {
-  const w = f.w, d = f.d
-  rb(g, w, 0.14, d, 0.05, C, 0, 0.72, 0, 0, 3)
-  bx(g, w - 0.14, 0.004, d - 0.14, paint(0xdfe5e7, 0.12), 0, 0.86, 0.02)
-  cy(g, 0.022, 0.022, 0.006, CH, 0, 0.865, 0.06, 10)
-  cy(g, 0.018, 0.018, 0.34, CH, 0, 0.4, -d / 2 + 0.11, 10)
-  rod(g, [0, 0.4, -d / 2 + 0.11], [0, 0.45, -d / 2], 0.014, 0.014, CH, 8)
-  const tz = -d / 2 + 0.06
-  cy(g, 0.02, 0.025, 0.06, CH, 0, 0.86, tz, 10)
-  rod(g, [0, 0.92, tz], [0, 0.93, tz + 0.1], 0.01, 0.01, CH, 8)
+  const w = f.w, d = Math.min(f.d, 0.4), zc = -f.d / 2 + d / 2 // bowl 0.5 x 0.4 hard against the back wall
+  rb(g, w, 0.1, d, 0.025, C, 0, 0.76, zc, 0, 3)
+  bx(g, w - 0.09, 0.004, d - 0.09, paint(0xdfe5e7, 0.12), 0, 0.86, zc + 0.01)
+  cy(g, 0.016, 0.016, 0.004, CH, 0, 0.861, zc + 0.06, 10)
+  cy(g, 0.03, 0.045, 0.16, C, 0, 0.6, -f.d / 2 + 0.07, 12) // slim column
+  cy(g, 0.012, 0.012, 0.22, CH, 0, 0.3, -f.d / 2 + 0.06, 8)
+  rod(g, [0, 0.3, -f.d / 2 + 0.06], [0, 0.4, -f.d / 2], 0.009, 0.009, CH, 8)
+  const tz = -f.d / 2 + 0.05
+  cy(g, 0.012, 0.015, 0.045, CH, 0, 0.86, tz, 10)
+  rod(g, [0, 0.9, tz], [0, 0.91, tz + 0.07], 0.006, 0.006, CH, 6)
+  for (const s of [-1, 1]) cy(g, 0.007, 0.007, 0.02, CH, s * 0.05, 0.86, tz, 6)
   if (!mirrorCab) return
-  // mirror cabinet with white reveal, bright LED make-up strip above (real glow), glass shelf
-  const zb = -d / 2 + 0.065
-  bx(g, w, 0.68, 0.13, 'furn-white', 0, 1.3, zb)
+  // mirror cabinet 0.6 x 0.7 centred over the basin: white reveal, bright LED make-up strip above (real glow)
+  const zb = -d / 2 + 0.065, mw = 0.6, mh = 0.7, my = 1.22
+  bx(g, mw, mh, 0.13, 'furn-white', 0, my, zb)
   const rv = 0.025
-  bx(g, w - 0.02, rv, 0.02, 'furn-white', 0, 1.3 + 0.68 - rv, zb + 0.067); bx(g, w - 0.02, rv, 0.02, 'furn-white', 0, 1.3, zb + 0.067)
-  for (const sx of [-1, 1]) bx(g, rv, 0.68, 0.02, 'furn-white', sx * (w / 2 - rv / 2 - 0.01), 1.3, zb + 0.067)
-  pl(g, w - 0.09, 0.62, mirrorFake(), 0, 1.33, zb + 0.068)
+  bx(g, mw - 0.02, rv, 0.02, 'furn-white', 0, my + mh - rv, zb + 0.067); bx(g, mw - 0.02, rv, 0.02, 'furn-white', 0, my, zb + 0.067)
+  for (const sx of [-1, 1]) bx(g, rv, mh, 0.02, 'furn-white', sx * (mw / 2 - rv / 2 - 0.01), my, zb + 0.067)
+  pl(g, mw - 0.09, mh - 0.06, mirrorFake(), 0, my + 0.03, zb + 0.068)
   const led = paint(0xfff6e0, 0.3, 0, { emissive: 0xfff0c8, emissiveIntensity: 3.2 })
-  bx(g, w - 0.06, 0.02, 0.03, led, 0, 2.0, zb + 0.03)
-  bx(g, w - 0.06, 0.02, 0.03, 'furn-white', 0, 1.98, zb + 0.03)
+  bx(g, mw - 0.06, 0.02, 0.03, led, 0, my + mh + 0.05, zb + 0.03)
+  bx(g, mw - 0.06, 0.02, 0.03, 'furn-white', 0, my + mh + 0.03, zb + 0.03)
   // soft additive glow on the wall around the strip (fake light, no extra scene light)
   const glow = canvasMat('led-glow', 64, 64, (c, gw, gh) => { const r = c.createRadialGradient(gw / 2, gh / 2, 0, gw / 2, gh / 2, gw / 2); r.addColorStop(0, 'rgba(255,240,200,0.75)'); r.addColorStop(1, 'rgba(255,240,200,0)'); c.fillStyle = r; c.fillRect(0, 0, gw, gh) },
     { transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, roughness: 1 })
-  pl(g, w + 0.3, 0.5, glow, 0, 1.78, zb + 0.005)
+  pl(g, mw + 0.3, 0.4, glow, 0, my + mh - 0.1, zb + 0.005)
   bx(g, w - 0.1, 0.012, 0.12, paint(0xd8e6ea, 0.1, 0, { transparent: true, opacity: 0.6 }), 0, 1.18, -d / 2 + 0.06)
-  cy(g, 0.03, 0.03, 0.14, paint(0xe6c2a8, 0.4), -0.2, 0.86, 0.0, 10)
-  cy(g, 0.025, 0.025, 0.09, paint(0x9ec7d0, 0.3), 0.2, 0.86, -0.02, 10)
+  cy(g, 0.025, 0.025, 0.12, paint(0xe6c2a8, 0.4), -0.17, 0.86, -0.1, 10)
+  cy(g, 0.02, 0.02, 0.08, paint(0x9ec7d0, 0.3), 0.17, 0.86, -0.1, 10)
 }
 
 function shower(g: G, f: Furniture): void {
@@ -133,44 +135,90 @@ function shower(g: G, f: Furniture): void {
   cy(g, 0.07, 0.07, 0.012, CH, -s + 0.11, 1.93, 0.1, 18)
 }
 
+/** steel-and-pine utility shelving: 4 corner uprights with cross braces, 5 shelves, mixed supplies; front +z */
 function shelfUnit(g: G, f: Furniture): void {
-  const w = f.w, d = f.d
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) bx(g, 0.03, f.h, 0.03, paint(0xd8d8d6, 0.4, 0.6), sx * (w / 2 - 0.015), 0, sz * (d / 2 - 0.015))
-  const cols = [0xb8a07c, 0x8f9aa3, 0xd9d4c6, 0xa8a58f, 0xa89486] // cardboard / grey / off-white, nothing saturated
-  const card = paint(0xb69d78, 0.95)
-  for (let i = 0; i < 5; i++) {
-    const y = 0.15 + i * 0.4
-    bx(g, w, 0.025, d, 'wood-light', 0, y, 0)
-    // supplies: boxes / crates / bottles, deterministic
-    for (let j = 0; j < 3; j++) {
-      const bw = 0.16 + ((i * 3 + j) % 3) * 0.06, bh = 0.14 + ((i + j) % 3) * 0.06
-      const kind = (i + j) % 3
-      const x = -w / 2 + 0.12 + j * (w - 0.24) / 2.2
-      if (kind === 0) rb(g, bw, bh, d - 0.1, 0.01, paint(cols[(i + j) % 5], 0.8), x, y + 0.025, 0, 0, 1)
-      else if (kind === 1) cy(g, 0.05, 0.05, bh + 0.05, paint(cols[(i * 2 + j) % 5], 0.5), x, y + 0.025, 0, 10)
-      else bx(g, bw, bh * 0.7, d - 0.1, card, x, y + 0.025, 0) // plain cardboard box, no relief map
-    }
-  }
+  const w = f.w, d = f.d, steel = paint(0x8d9196, 0.4, 0.7)
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) bx(g, 0.035, f.h, 0.035, steel, sx * (w / 2 - 0.02), 0, sz * (d / 2 - 0.02))
+  for (const sx of [-1, 1]) for (const [y0, y1] of [[0.1, 0.9], [0.9, 1.7]] as [number, number][]) rod(g, [sx * (w / 2 - 0.02), y0, -d / 2 + 0.02], [sx * (w / 2 - 0.02), y1, -d / 2 + 0.02], 0.006, 0.006, steel, 5) // back diagonals
+  const ys = [0.12, 0.52, 0.92, 1.32, 1.72]
+  for (const y of ys) { bx(g, w - 0.03, 0.025, d, 'wood-light', 0, y, 0); bx(g, w - 0.03, 0.04, 0.012, steel, 0, y - 0.03, d / 2 - 0.006) }
+  const top = (i: number) => ys[i] + 0.025
+  const x = (k: number) => -w / 2 + 0.11 + k * 0.17
+  // shelf 0 (floor level): vacuum cleaner + crate of bottles
+  { const y = top(0); const vx = -w / 2 + 0.2
+    rb(g, 0.3, 0.14, 0.24, 0.05, paint(0xc23a2a, 0.5), vx, y, 0.0, 0, 2)
+    cy(g, 0.045, 0.045, 0.02, paint(0x222224, 0.5), vx - 0.08, y, 0.1, 10)
+    rod(g, [vx + 0.08, y + 0.1, 0], [vx + 0.14, y + 0.42, -0.06], 0.012, 0.012, paint(0x3a3a3c, 0.5, 0.4), 6)
+    rb(g, 0.1, 0.03, 0.06, 0.012, paint(0x3a3a3c, 0.5), vx + 0.14, y + 0.42, -0.06, 0, 1)
+    rb(g, 0.26, 0.2, 0.22, 0.015, paint(0x2f5d8a, 0.6), w / 2 - 0.2, y, 0.0, 0, 1) // blue plastic bin with lid
+    bx(g, 0.28, 0.025, 0.24, paint(0x24496c, 0.6), w / 2 - 0.2, y + 0.2, 0.0) }
+  // shelf 1: towels + bottles
+  { const y = top(1)
+    for (let i = 0; i < 3; i++) rb(g, 0.3, 0.05, 0.22, 0.015, paint([0xe9e4da, 0x9ec7d0, 0xd9b8a0][i], 0.95), -w / 2 + 0.2, y + i * 0.05, 0, 0, 1) // folded towels
+    for (let i = 0; i < 4; i++) { cy(g, 0.03, 0.03, 0.17, paint([0x2f6a3a, 0x6a3a1a, 0xd8c070, 0x2f6a3a][i], 0.2), x(2) + 0.02 + i * 0.07, y, -0.04, 10); cy(g, 0.012, 0.03, 0.04, paint([0x2f6a3a, 0x6a3a1a, 0xd8c070, 0x2f6a3a][i], 0.2), x(2) + 0.02 + i * 0.07, y + 0.17, -0.04, 10); cy(g, 0.012, 0.012, 0.03, paint([0x2f6a3a, 0x6a3a1a, 0xd8c070, 0x2f6a3a][i], 0.2), x(2) + 0.02 + i * 0.07, y + 0.2, -0.04, 8) }
+    cy(g, 0.055, 0.055, 0.12, paint(0xd8d8d6, 0.5), w / 2 - 0.12, y, 0.02, 14) }
+  // shelf 2: cleaning supplies (spray bottles, buckets) + cardboard box
+  { const y = top(2)
+    cy(g, 0.11, 0.09, 0.2, paint(0xc9ccd0, 0.5), -w / 2 + 0.14, y, 0.0, 14); ring(g, 0.1, 0.005, paint(0x55585c, 0.4, 0.6), -w / 2 + 0.14, y + 0.2, 0.0, 14)
+    for (let i = 0; i < 3; i++) { cy(g, 0.032, 0.032, 0.18, paint([0x3a86c8, 0xe8e8e2, 0x58a85a][i], 0.4), x(1) + 0.08 + i * 0.075, y, 0.02, 10); bx(g, 0.03, 0.03, 0.05, paint(0x2a2a2c, 0.5), x(1) + 0.08 + i * 0.075, y + 0.18, 0.03) }
+    rb(g, 0.28, 0.2, 0.22, 0.008, cardboard(), w / 2 - 0.17, y, 0.0, 0, 1) }
+  // shelf 3: storage boxes, jars
+  { const y = top(3)
+    rb(g, 0.3, 0.22, 0.24, 0.012, cardboard(), -w / 2 + 0.18, y, 0.0, 0, 1)
+    rb(g, 0.26, 0.16, 0.24, 0.012, cardboard(), -w / 2 + 0.18 + 0.29, y, 0.0, 0, 1)
+    for (let i = 0; i < 3; i++) cy(g, 0.04, 0.04, 0.12, 'glass', w / 2 - 0.1 - i * 0.09, y, 0.0, 10) }
+  // shelf 4: light bulbs box, rolled paper, basket
+  { const y = top(4)
+    rb(g, 0.28, 0.14, 0.22, 0.01, cardboard(), -w / 2 + 0.2, y, 0.0, 0, 1)
+    for (let i = 0; i < 2; i++) cy(g, 0.05, 0.05, 0.14, paint(0xf0ede6, 0.7), 0.0 + i * 0.11, y, 0.02, 12)
+    bx(g, 0.2, 0.06, 0.14, paint(0x9a9da1, 0.6), w / 2 - 0.15, y, 0.0) }
 }
 
+/** storage-room water heater: white tank with steel bands, top cap, copper pipes with shut-off valves, pressure-relief valve, drip tray, wall panel; front +z */
 function boiler(g: G, f: Furniture): void {
-  cy(g, 0.19, 0.19, 1.2, 'furn-white', 0, 0.05, 0, 24)
-  cy(g, 0.14, 0.19, 0.08, 'furn-white', 0, 1.25, 0, 24)
-  bx(g, 0.1, 0.14, 0.02, paint(0x222325, 0.4), 0, 0.85, 0.185)
-  bx(g, 0.03, 0.06, 0.02, paint(0xd93a2a, 0.5), 0.01, 0.88, 0.196)
-  cy(g, 0.03, 0.03, 0.08, 'furn-dark', 0, 0, 0, 10)
-  bx(g, 0.2, 2.5 - 1.2, 0.12, 'furn-white', 0, 1.2, -0.16) // wall duct hides the pipes up to the ceiling
+  const cu = paint(0xb87333, 0.3, 0.9), tank = 'furn-white'
+  bx(g, 0.5, 0.03, 0.4, paint(0x8d9196, 0.4, 0.6), 0, 0, 0.0) // drip tray
+  cy(g, 0.185, 0.185, 1.12, tank, 0, 0.05, 0, 28)
+  cy(g, 0.185, 0.165, 0.06, tank, 0, 1.17, 0, 28)
+  cy(g, 0.13, 0.15, 0.05, tank, 0, 1.23, 0, 24) // domed cap
+  cy(g, 0.17, 0.17, 0.015, 'furn-dark', 0, 1.26, 0, 24)
+  for (const y of [0.3, 0.7, 1.05]) ring(g, 0.187, 0.005, paint(0xb9bcc0, 0.35, 0.8), 0, y, 0, 28)
+  rb(g, 0.16, 0.2, 0.025, 0.008, paint(0x222325, 0.4), 0, 0.8, 0.185, 0, 1) // control panel
+  cy(g, 0.028, 0.028, 0.02, paint(0xd93a2a, 0.5), -0.03, 0.9, 0.195, 10).rotation.x = Math.PI / 2
+  bx(g, 0.07, 0.025, 0.012, paint(0x9ad0a0, 0.3, 0, { emissive: 0x66c070, emissiveIntensity: 0.6 }), 0.03, 0.83, 0.2) // status window
+  // pipes: cold in (left) and hot out (right) from the cap up to the duct, elbows, valves
+  for (const [sx, valve] of [[-1, 0x2a6ab8], [1, 0xc23a2a]] as [number, number][]) {
+    const px = sx * 0.07
+    rod(g, [px, 1.26, 0], [px, 1.5, 0], 0.011, 0.011, cu, 8)
+    rod(g, [px, 1.5, 0], [sx * 0.14, 1.5, -0.1], 0.011, 0.011, cu, 8)
+    rod(g, [sx * 0.14, 1.5, -0.1], [sx * 0.14, 2.45, -0.14], 0.011, 0.011, cu, 8)
+    sp(g, 0.017, cu, px, 1.5, 0, 1, 1, 1, 8)
+    cy(g, 0.022, 0.022, 0.03, cu, px, 1.33, 0, 8)
+    bx(g, 0.07, 0.014, 0.014, paint(valve, 0.5), px, 1.39, 0)
+  }
+  rod(g, [0.185, 1.0, 0.0], [0.25, 1.0, 0.0], 0.013, 0.013, cu, 8) // pressure relief valve + drain
+  rod(g, [0.25, 1.0, 0.0], [0.25, 0.1, 0.0], 0.008, 0.008, cu, 6)
+  bx(g, 0.54, 2.5 - 1.2, 0.03, 'furn-white', 0, 1.2, -0.185) // wall duct boxing in the pipes up to the ceiling
+  bx(g, 0.5, 0.95, 0.02, paint(0xe9e6de, 0.6), 0, 0.3, -0.19) // tiled-look wall panel behind the tank
   void f
 }
 
 function extras(root: G): void {
-  // --- Bad: towel radiator on the west wall, towel, stool with tray + toiletries by the tub
-  ribRadiator(root, 0.8, 0.5, 10.09, 0.2, 2.45, Math.PI / 2)
-  { const t = at(root, 10.09, 2.45, Math.PI / 2)
-    bx(t, 0.4, 0.34, 0.025, paint(0xe6e4df, 0.95), 0.05, 0.6, 0.07)
-    // hook rail on the tile wall above the radiator
-    bx(t, 0.55, 0.03, 0.014, 'furn-white', 0, 1.55, 0.007)
-    for (const x of [-0.18, 0, 0.18]) { rod(t, [x, 1.55, 0.014], [x, 1.55, 0.05], 0.006, 0.006, 'metal-black', 5); cy(t, 0.011, 0.011, 0.012, 'metal-black', x, 1.545, 0.05, 8) } }
+  // Bad: no washing machine (Auftraggeber)
+  { const t = at(root, 10.045, 3.1, Math.PI / 2) // hook rail: oak board with brass hooks, two folded towels (west wall, 0.5 m clear of the door line)
+    rb(t, 0.6, 0.07, 0.022, 0.006, 'wood-light', 0, 1.6, 0.011, 0, 1)
+    for (let i = 0; i < 2; i++) {
+      const x = -0.15 + i * 0.3
+      rod(t, [x, 1.6, 0.02], [x, 1.6, 0.055], 0.005, 0.005, 'brass', 5)
+      sp(t, 0.009, 'brass', x, 1.6, 0.058, 1, 1, 1, 6)
+      hangTowel(t, 0.26, 0.5, foldMat(i ? 0xe6e2d8 : 0x9db5bd, 1, 1), x, 1.62, 0.07, 0, i + 2)
+    } }
+  { const r = at(root, 10.07, 2.6, Math.PI / 2) // tall white towel radiator (west wall, south of the basin)
+    const rw = 0.5, rh = 1.15, y0 = 0.3
+    for (const y of [0.1, 0.3, 0.5, 0.7, 0.9, 1.1]) rod(r, [-rw / 2, y0 + y, 0.06], [rw / 2, y0 + y, 0.06], 0.014, 0.014, 'radiator', 8)
+    for (const sx of [-1, 1]) rb(r, 0.03, rh + 0.04, 0.03, 0.01, 'radiator', sx * (rw / 2), y0 - 0.02, 0.06, 0, 1)
+    rb(r, 0.4, 0.3, 0.014, 0.006, paint(0xe6e4df, 0.95), 0, y0 + 0.75, 0.085, 0, 1) // hand towel over the rails
+    rod(r, [rw / 2, y0 + 0.02, 0.06], [rw / 2, y0 - 0.05, 0.02], 0.008, 0.008, 'chrome', 6) }
   { const s = at(root, 11.28, 2.05, 0)
     for (let i = 0; i < 3; i++) { const a = i * 2.1; rod(s, [Math.cos(a) * 0.12, 0, Math.sin(a) * 0.12], [Math.cos(a) * 0.09, 0.4, Math.sin(a) * 0.09], 0.012, 0.014, 'wood-dark', 6) }
     cy(s, 0.15, 0.15, 0.03, 'wood-light', 0, 0.4, 0, 20)
@@ -183,17 +231,27 @@ function extras(root: G): void {
     cy(w, 0.03, 0.03, 0.09, paint(0xb5643c, 0.5), -0.12, 1.17, 0, 12)
     cy(w, 0.022, 0.022, 0.16, paint(0x9ec7d0, 0.3), 0.0, 1.17, 0.02, 10)
     bx(w, 0.12, 0.03, 0.08, 'furn-white', 0.12, 1.17, -0.01) }
-  // --- WC: black paper holder, decor shelf above the toilet
-  { const h = at(root, 8.5, 2.89, Math.PI)
-    bx(h, 0.14, 0.14, 0.03, 'furn-dark', 0, 0.62, 0)
-    cy(h, 0.06, 0.06, 0.1, 'furn-white', 0, 0.6, 0.07, 16).rotation.x = Math.PI / 2
-    rod(h, [0, 0.67, 0.02], [0, 0.67, 0.13], 0.005, 0.005, 'furn-dark', 4) }
-  { const s = at(root, 8.12, 2.29, Math.PI / 2)
-    bx(s, 0.8, 0.025, 0.16, 'wood-birch', 0, 1.35, 0.08)
-    cy(s, 0.03, 0.04, 0.17, paint(0x2f6ea8, 0.3), -0.25, 1.375, 0.08, 12)
-    cy(s, 0.03, 0.05, 0.02, paint(0xb5643c, 0.5), -0.05, 1.375, 0.08, 10)
-    rb(s, 0.09, 0.14, 0.07, 0.02, 'furn-white', 0.12, 1.375, 0.08)
-    cy(s, 0.035, 0.035, 0.09, 'furn-white', 0.28, 1.375, 0.08, 12) }
+  // --- WC (room x 8.05..9.45, z 2.20..3.08): loo-roll holder west wall, brush by the bowl, hand towel on the back wall, decor shelf
+  { const h = at(root, 8.055, 2.5, Math.PI / 2) // chrome roll holder beside the toilet, spare roll above
+    bx(h, 0.05, 0.1, 0.012, CH, 0, 0.62, 0.006)
+    rod(h, [0, 0.67, 0.012], [0, 0.67, 0.12], 0.006, 0.006, CH, 6)
+    cy(h, 0.055, 0.055, 0.1, 'furn-white', 0, 0.62, 0.07, 16).rotation.x = Math.PI / 2
+    cy(h, 0.052, 0.052, 0.1, 'furn-white', 0, 0.84, 0.07, 14) }
+  { const b = at(root, 8.78, 2.33, 0) // toilet brush in a steel holder
+    cy(b, 0.05, 0.045, 0.36, paint(0xc9ccd0, 0.25, 0.9), 0, 0, 0, 14)
+    cy(b, 0.052, 0.052, 0.012, paint(0x2a2a2c, 0.5), 0, 0.36, 0, 14)
+    rod(b, [0, 0.36, 0], [0, 0.5, 0], 0.006, 0.006, paint(0x2a2a2c, 0.5), 5)
+    sp(b, 0.03, paint(0x2a2a2c, 0.9), 0, 0.52, 0, 1, 1.5, 1, 8) }
+  { const r = at(root, 8.78, 2.2, 0) // towel ring + hand towel on the north wall between toilet and basin
+    ring(r, 0.03, 0.005, CH, 0, 1.2, 0.045, 14).rotation.set(0, 0, 0)
+    hangTowel(r, 0.26, 0.42, foldMat(0xe9e5dc, 1, 1), 0, 1.2, 0.055, 0, 4) }
+  { const s = at(root, 8.055, 2.6, Math.PI / 2) // birch shelf on the west wall above the roll holder
+    bx(s, 0.6, 0.025, 0.16, 'wood-birch', 0, 1.35, 0.0)
+    for (const bxp of [-0.22, 0.22]) bracket(s, bxp, 1.35, 0.14)
+    cy(s, 0.028, 0.028, 0.1, 'furn-white', -0.2, 1.375, 0.07, 12) // soap dispenser
+    cy(s, 0.006, 0.006, 0.05, CH, -0.2, 1.475, 0.07, 6)
+    cy(s, 0.04, 0.045, 0.06, paint(0xb5643c, 0.5), 0.02, 1.375, 0.07, 10); bush(s, 0.02, 1.435, 0.07, 0.14, 3, 8, 'furn-white')
+    cy(s, 0.05, 0.05, 0.1, 'furn-white', 0.22, 1.375, 0.07, 14); cy(s, 0.05, 0.05, 0.1, 'furn-white', 0.22, 1.475, 0.07, 14) }
 }
 
 export function build(): THREE.Group {

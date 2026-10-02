@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-import { art, at, bush, buildRooms, bx, canvasMat, cloth, cy, drawerBed, foldMat, nightstand, orchid, paint, mirrorFake as fakeMirror, panelRadiator, picture, pl, rb, rod, sp, tableLamp, whiteChair, legs4 } from './shared'
+import { art, at, bush, buildRooms, bx, canvasMat, cloth, cy, drawerBed, foldMat, nightstand, orchid, paint, mirrorWarm as fakeMirror, panelRadiator, picture, pl, rb, rod, sp, tableLamp, whiteChair, legs4 } from './shared'
 import { fur } from './shared'
 import { getMaterial } from '../materials'
 import type { Furniture } from '../plan'
@@ -28,10 +28,11 @@ function bed(g: G, f: Furniture): void {
   const pat = leafPattern()
   const white = foldMat(0xf4f2ec, 1, 1)
   drawerBed(g, f.w, f.d, {
-    top: 'fabric-linen', cover: foldMat(0x93ac93, 4, 5), coverFrac: 0.66, bothSides: true, headH: 0.52, rug: 'fabric-linen',
+    top: 'fabric-linen', cover: 'blanket-sage', coverFrac: 0.66, bothSides: true, headH: 0.52, rug: 'fabric-linen',
     pillows: [
-      { x: -0.4, z: -0.7, w: 0.6, d: 0.42, h: 0.1, m: white, tilt: 0.16 },
-      { x: 0.4, z: -0.7, w: 0.6, d: 0.42, h: 0.1, m: white, tilt: 0.16 },
+      { x: -0.42, z: -0.76, w: 0.62, d: 0.42, h: 0.13, m: white, tilt: 0.1 },
+      { x: 0.42, z: -0.76, w: 0.62, d: 0.42, h: 0.13, m: white, tilt: 0.1 },
+      { x: 0.0, z: -0.84, w: 0.6, d: 0.4, h: 0.12, m: foldMat(0xece8df, 1, 1), tilt: 0.14 },
       { x: -0.3, z: -0.5, w: 0.4, d: 0.08, h: 0.38, m: pat, tilt: -0.45, ry: 0.22 },
       { x: 0.32, z: -0.5, w: 0.38, d: 0.08, h: 0.36, m: pat, tilt: -0.45, ry: -0.18 },
     ],
@@ -44,16 +45,38 @@ function nightstandBuilder(g: G, f: Furniture): void {
   else { bush(g, 0, f.h, 0, 0.26, 3, 10, 'furn-white'); bx(g, 0.16, 0.03, 0.12, paint(0x6b7f8f, 0.6), 0.12, f.h, 0.1) }
 }
 
+/** free-standing painted wardrobe (photo 21): white-painted body, raised door panels, crown + plinth, brass-free black knobs; front +z */
 function wardrobe(g: G, f: Furniture): void {
-  const n = 6, dw = f.w / n
-  bx(g, f.w, f.h - 0.05, f.d - 0.02, 'furn-dark', 0, 0, -0.01)
-  bx(g, f.w, 0.08, f.d, W, 0, 0, 0)
-  for (let i = 0; i < n; i++) {
-    const x = -f.w / 2 + dw * (i + 0.5)
-    bx(g, dw - 0.008, f.h - 0.12, 0.02, i < 2 ? 'paint-green' : W, x, 0.08, f.d / 2 - 0.01)
-    rod(g, [x + (i % 2 ? -1 : 1) * (dw / 2 - 0.05), 0.95, f.d / 2 + 0.025], [x + (i % 2 ? -1 : 1) * (dw / 2 - 0.05), 1.3, f.d / 2 + 0.025], 0.007, 0.007, 'chrome', 6)
+  const G0 = 'furn-white', trim = paint(0xe4e2dc, 0.5)
+  rb(g, f.w, f.h - 0.06, f.d, 0.008, G0, 0, 0.06, 0)
+  bx(g, f.w - 0.04, 0.06, f.d - 0.04, trim, 0, 0, 0) // plinth
+  rb(g, f.w + 0.03, 0.05, f.d + 0.03, 0.01, trim, 0, f.h - 0.05, 0) // crown
+  const dw = f.w / 2
+  for (const s of [-1, 1]) {
+    const x = s * dw / 2
+    bx(g, dw - 0.014, f.h - 0.26, 0.012, trim, x, 0.13, f.d / 2 + 0.002) // door frame
+    bx(g, dw - 0.09, f.h - 0.34, 0.012, G0, x, 0.17, f.d / 2 + 0.009) // raised panel
+    sp(g, 0.011, 'brass', -s * (dw / 2 - 0.045) + x, 1.0, f.d / 2 + 0.024, 1, 1, 0.7, 8)
   }
-  bx(g, f.w, 0.04, f.d, W, 0, f.h - 0.04, 0)
+  bx(g, 0.004, f.h - 0.26, 0.014, paint(0xa9a7a0, 0.6), 0, 0.13, f.d / 2 + 0.004) // door gap
+}
+
+/** white painted picket-fence bench: low white seat bench + 0.6 m green fence panel as a back; back at local -z */
+function picketBench(g: G, f: Furniture): void {
+  const grn = 'furn-white'
+  legs4(g, f.w, f.d, 0.4, 0.02, 0.022, W, 0.04)
+  rb(g, f.w, 0.05, f.d, 0.01, W, 0, 0.4, 0)
+  bx(g, f.w - 0.1, 0.04, 0.03, W, 0, 0.2, 0)
+  // fence: two rails + pointed pickets
+  const bz = -f.d / 2 + 0.03
+  for (const y of [0.55, 0.85]) bx(g, f.w, 0.05, 0.03, grn, 0, y, bz)
+  const n = Math.round(f.w / 0.1)
+  for (let i = 0; i < n; i++) {
+    const x = -f.w / 2 + (i + 0.5) * (f.w / n)
+    bx(g, f.w / n - 0.025, 0.5, 0.02, grn, x, 0.45, bz + 0.025)
+    const tip = cy(g, 0.001, (f.w / n - 0.025) / 2, 0.05, grn, x, 0.95, bz + 0.025, 4); tip.rotation.y = Math.PI / 4; tip.scale.z = 0.5
+  }
+  rb(g, f.w - 0.3, 0.05, f.d - 0.1, 0.02, 'sheepskin', 0, 0.45, 0.02, 0.03, 3)
 }
 
 function desk(g: G, f: Furniture): void {
@@ -109,10 +132,14 @@ function fireplace(g: G, f: Furniture): void {
   rb(g, f.w + 0.04, 0.05, f.d + 0.05, 0.01, W, 0, 0.96, 0.01)
   // white-framed mirror on the wall above, green ornaments, orchid + small plant on the mantel
   const wallZ = -f.d / 2 + 0.02
-  const mw = 0.78, mh = 0.94, fr = 0.09
+  const mw = 0.78, mh = 0.94, fr = 0.1
   bx(g, fr, mh, 0.035, W, -mw / 2 + fr / 2, 1.0, wallZ); bx(g, fr, mh, 0.035, W, mw / 2 - fr / 2, 1.0, wallZ)
   bx(g, mw - 2 * fr, fr, 0.035, W, 0, 1.0, wallZ); bx(g, mw - 2 * fr, fr, 0.035, W, 0, 1.0 + mh - fr, wallZ)
   pl(g, mw - 2 * fr, mh - 2 * fr, fakeMirror(), 0, 1.0 + fr, wallZ + 0.019)
+  // inner bevel lip so the glass reads as recessed in the frame
+  const lip = paint(0xe6e4de, 0.5)
+  bx(g, mw - 2 * fr, 0.012, 0.012, lip, 0, 1.0 + fr, wallZ + 0.02); bx(g, mw - 2 * fr, 0.012, 0.012, lip, 0, 1.0 + mh - fr - 0.012, wallZ + 0.02)
+  for (const s of [-1, 1]) bx(g, 0.012, mh - 2 * fr, 0.012, lip, s * (mw / 2 - fr - 0.006), 1.0 + fr, wallZ + 0.02)
   const grn = paint(0x2f8a4f, 0.4)
   for (const [y, sc] of [[1.0 + mh - fr / 2, 1], [1.0 + fr / 2, 1]] as [number, number][]) {
     sp(g, 0.018 * sc, grn, -0.04, y, wallZ + 0.02, 1.6, 0.6, 0.4, 8); sp(g, 0.018 * sc, grn, 0.04, y, wallZ + 0.02, 1.6, 0.6, 0.4, 8); sp(g, 0.012, paint(0xe8e6de, 0.4), 0, y, wallZ + 0.021, 1, 1, 0.4, 8)
@@ -128,9 +155,9 @@ function extras(root: G): void {
   picture(root, 0.95, 0.66, art('portrait'), 0.285, 1.42, 1.96, Math.PI / 2, W)
   picture(root, 0.5, 0.7, art('red'), 0.75, 1.3, 0.285, 0, W)
   // white panel radiator under the north window, left of the desk pedestal (photo 02)
-  panelRadiator(root, 0.6, 0.55, 1.75, 0.18, 0.28)
-  // desk chair, tucked under the desk at the north window
-  { const c = at(root, 1.99, 0.93, Math.PI); whiteChair(c) }
+  panelRadiator(root, 0.6, 0.55, 1.5, 0.18, 0.28)
+  // desk chair at the desk under the north window (faces north); the west terrace door stays free
+  { const c = at(root, 2.4, 0.95, Math.PI); whiteChair(c) }
   // burgundy curtain with lace net at the west terrace door (z 3.8..4.8) + sheer at the north window
   rod(root, [0.33, 2.3, 3.3], [0.33, 2.3, 5.25], 0.011, 0.011, 'metal-black', 8)
   cloth(root, 1.4, 2.25, 6, 0.02, lace(), 0.34, 0.03, 4.29, Math.PI / 2)
@@ -142,7 +169,7 @@ function extras(root: G): void {
 
 export function build(): THREE.Group {
   return buildRooms('furniture:schlafen', ['schlafen'], {
-    'bed-double': bed, nightstand: nightstandBuilder, wardrobe, 'desk-schlafen': desk, 'bench-schlafen': bench, 'fireplace-schlafen': fireplace,
+    'bed-double': bed, nightstand: nightstandBuilder, wardrobe, 'desk-schlafen': desk, 'bench-schlafen': bench, 'bench-schlafen-2': picketBench, 'fireplace-schlafen': fireplace,
     plant: (g, f) => bush(g, 0, 0, 0, f.h, 2, 24, 'terracotta'),
   }, extras)
 }

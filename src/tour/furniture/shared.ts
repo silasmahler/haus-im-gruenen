@@ -166,6 +166,12 @@ export function rod(p: THREE.Object3D, a: [number, number, number], b: [number, 
   mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), vb.clone().sub(va).normalize())
   return mesh
 }
+/** small steel L bracket under a shelf: wall at local z=0, shelf underside at y, arm reaches +z by `depth` */
+export function bracket(p: THREE.Object3D, x: number, y: number, depth = 0.14): void {
+  bx(p, 0.016, 0.13, 0.005, 'steel', x, y - 0.13, 0.0025)
+  bx(p, 0.016, 0.008, depth, 'steel', x, y - 0.008, 0)
+  rod(p, [x, y - 0.11, 0.008], [x, y - 0.008, depth - 0.015], 0.005, 0.005, 'steel', 5)
+}
 /** torus lying flat (ring), centre (x,y,z) */
 export function ring(p: THREE.Object3D, R: number, r: number, m: Mat, x: number, y: number, z: number, seg = 16): THREE.Mesh {
   const t = add(p, new THREE.TorusGeometry(R, r, 6, seg), m, x, y, z)
@@ -363,6 +369,17 @@ export const mirrorFake = (): THREE.Material => {
   return m
 }
 
+/** brighter, warm-tinted glossy mirror (metal look, env-reflective) for framed wall mirrors */
+export const mirrorWarm = (): THREE.Material => {
+  let m = own.get('mirror-warm') as THREE.MeshStandardMaterial | undefined
+  if (!m) {
+    const base = mirrorFake() as THREE.MeshStandardMaterial
+    m = new THREE.MeshStandardMaterial({ map: base.map, color: 0xfff1dc, metalness: 0.85, roughness: 0.05, emissive: 0xffffff, emissiveMap: base.map, emissiveIntensity: 0.55 })
+    own.set('mirror-warm', m)
+  }
+  return m
+}
+
 /** pillow / cushion: rounded box whose broad faces bulge by `bulge` (metres) in the middle; normals follow the bulge. bottom-centre (x,y,z) */
 export function puff(p: THREE.Object3D, w: number, h: number, d: number, r: number, m: Mat, x = 0, y = 0, z = 0, ry = 0, bulge = 0.03, seg = 4): THREE.Mesh {
   const rr = Math.min(r, w / 2 - 0.0005, h / 2 - 0.0005, d / 2 - 0.0005)
@@ -378,6 +395,68 @@ export function puff(p: THREE.Object3D, w: number, h: number, d: number, r: numb
   }
   return add(p, g, m, x, y + h / 2, z, ry)
 }
+
+// ------------------------------------------------------------------ soft pads (duvets, pillows, cushions, folded throws)
+export interface PadOpts {
+  ew?: number; fold?: number; seed?: number; corner?: number
+  sym?: boolean // symmetric lens (pillow) instead of flat-bottomed (duvet)
+  over?: number; drop?: number; dropSides?: boolean; dropFoot?: boolean // drape over the bed sides / foot (local +z end)
+  tilt?: number // rotation about x (positive lifts the -z end), applied with yaw outermost
+}
+/** rounded-rectangle lens w (x) x len (z), max thickness h, bottom at y = 0. Smooth normals, planar uv 0..1. */
+export function padGeo(w: number, len: number, h: number, o: PadOpts = {}): THREE.BufferGeometry {
+  const step = 0.045
+  const nx = Math.max(4, Math.round(w / step)), nz = Math.max(4, Math.round(len / step))
+  const rr = Math.min(o.corner ?? Math.min(w, len) * 0.22, w / 2 - 0.001, len / 2 - 0.001)
+  const ew = o.ew ?? Math.min(h * 1.4, Math.min(w, len) * 0.45)
+  const amp = o.fold ?? 0, sd = o.seed ?? 1, over = o.over ?? 0.08, D = o.drop ?? 0.2
+  const layer = (up: boolean): THREE.BufferGeometry => {
+    const g = new THREE.PlaneGeometry(w, len, nx, nz)
+    g.rotateX(up ? -Math.PI / 2 : Math.PI / 2)
+    const pos = g.attributes.position
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), z = pos.getZ(i)
+      const qx = Math.abs(x) - (w / 2 - rr), qz = Math.abs(z) - (len / 2 - rr)
+      const e = -(Math.hypot(Math.max(qx, 0), Math.max(qz, 0)) + Math.min(Math.max(qx, qz), 0))
+      const t = Math.min(1, Math.max(0, e / ew)), th = h * Math.sqrt(1 - (1 - t) * (1 - t))
+      let drop = 0
+      if (o.dropSides) { const d = Math.min(1, Math.max(0, Math.abs(x) - (w / 2 - over)) / over); drop += D * d * d }
+      if (o.dropFoot) { const d = Math.min(1, Math.max(0, z - (len / 2 - over)) / over); drop += D * d * d }
+      const fold = amp * (0.6 * Math.sin(z * 7 + sd) + 0.4 * Math.sin(x * 9 + z * 3 + 2 * sd)) * t
+      const bottom = (o.sym ? (h - th) / 2 : 0) - drop
+      pos.setY(i, up ? bottom + th + fold : bottom + (o.sym ? 0 : fold * 0.5))
+    }
+    g.computeVertexNormals()
+    return g
+  }
+  const top = layer(true), bot = layer(false)
+  const out = mergeGeometries([top, bot], false)!
+  top.dispose(); bot.dispose()
+  return out
+}
+/** soft pad mesh, bottom-centre at (x,y,z); yaw ry, lean o.tilt about x (raises the -z end, pivot = bottom centre, lifted so it never sinks) */
+export function pad(p: THREE.Object3D, w: number, len: number, h: number, m: Mat, x = 0, y = 0, z = 0, ry = 0, o: PadOpts = {}): THREE.Mesh {
+  const mesh = add(p, padGeo(w, len, h, o), m, x, y + (len / 2) * Math.abs(Math.sin(o.tilt ?? 0)), z)
+  mesh.rotation.order = 'YXZ'
+  mesh.rotation.y = ry
+  mesh.rotation.x = o.tilt ?? 0
+  return mesh
+}
+
+/** hand / bath towel hanging from a rail at (x, yTop, z): soft folded cloth facing +z (yaw ry), over-rail band at the top */
+export function hangTowel(p: THREE.Object3D, w: number, h: number, m: Mat, x: number, yTop: number, z: number, ry = 0, seed = 1): void {
+  const a = at(p, x, z, ry)
+  pad(a, w, h, 0.03, m, 0, yTop - h, 0.02, 0, { tilt: Math.PI / 2, sym: true, ew: 0.02, fold: 0.012, seed, corner: 0.025 })
+  rb(a, w, 0.045, 0.06, 0.02, m, 0, yTop - 0.03, 0.0, 0, 2) // the fold over the rail
+}
+/** corrugated cardboard: tan, horizontal flute lines, a tape stripe and a label; UV covers each box face */
+export const cardboard = (): THREE.Material => canvasMat('cardboard', 128, 128, (c, w, h) => {
+  c.fillStyle = '#b89968'; c.fillRect(0, 0, w, h)
+  for (let y = 0; y < h; y += 3) { c.fillStyle = y % 6 ? 'rgba(90,60,30,0.10)' : 'rgba(255,230,180,0.10)'; c.fillRect(0, y, w, 1.5) }
+  c.fillStyle = 'rgba(214,188,140,0.85)'; c.fillRect(0, h * 0.44, w, 10)
+  c.fillStyle = '#efe9dc'; c.fillRect(w * 0.12, h * 0.68, w * 0.36, h * 0.16)
+  c.fillStyle = '#4a4034'; c.fillRect(w * 0.15, h * 0.72, w * 0.28, 2); c.fillRect(w * 0.15, h * 0.78, w * 0.2, 2)
+}, { roughness: 0.95 })
 
 // ------------------------------------------------------------------ plants (no alpha textures: small ellipsoid leaves)
 const rnd = (seed: number) => { let s = seed * 9301 + 49297; return () => ((s = (s * 9301 + 49297) % 233280) / 233280) }
@@ -533,14 +612,18 @@ export function drawerBed(g: THREE.Object3D, w: number, d: number, c: BedCfg): v
   rb(g, w - 0.16, hh - 0.14, 0.014, 0.006, W, 0, 0.36 + 0.07, -d / 2 + 0.05, 0, 1)
   rb(g, w + 0.02, 0.2, 0.04, 0.01, W, 0, 0.36, d / 2 - 0.02)
   rb(g, w - 0.04, 0.2, d - 0.08, 0.05, c.top, 0, 0.36, 0)
-  const cl = d * c.coverFrac, cz = d / 2 - cl / 2 - 0.03, cy0 = c.coverY ?? 0.56
-  rb(g, w + 0.02, 0.05, cl, 0.024, c.cover, 0, cy0, cz, 0, 3)
-  for (const sx of [-1, 1]) rb(g, 0.03, 0.17, cl - 0.06, 0.013, c.cover, sx * (w / 2 + 0.012), cy0 - 0.14, cz, 0, 2)
-  // blanket drapes over the foot board; folded band at the head edge
-  rb(g, w + 0.04, 0.2, 0.035, 0.014, c.cover, 0, cy0 - 0.17, d / 2 + 0.006, 0, 2)
-  rb(g, w - 0.02, 0.06, 0.16, 0.028, c.cover, 0, cy0 + 0.03, cz - cl / 2 + 0.05, 0, 3)
-  if (c.rug) rb(g, w - 0.04, 0.06, 0.22, 0.026, c.rug, 0, cy0 - 0.01, cz - cl / 2 - 0.1, 0, 3)
-  for (const p of c.pillows) { const m = puff(g, p.w, p.h, p.d, Math.min(0.05, p.h / 2.5), p.m, p.x, cy0 - 0.02, p.z, p.ry ?? 0, Math.min(0.035, p.h * 0.35)); m.rotation.x = -(p.tilt ?? 0) }
+  const cl = d * c.coverFrac, cy0 = c.coverY ?? 0.56, over = 0.055
+  // duvet / throw: soft lens with noise folds, drapes over both sides and the foot board; folded band at its head edge
+  const footEnd = d / 2 + 0.03, headEnd = d / 2 - cl - 0.03, len = footEnd - headEnd
+  pad(g, w + 0.06, len, 0.09, c.cover, 0, cy0 + 0.004, (footEnd + headEnd) / 2, 0,
+    { ew: 0.05, fold: 0.013, seed: w * 7, over, drop: 0.2, dropSides: true, dropFoot: true, corner: 0.08 })
+  pad(g, w - 0.04, 0.2, 0.08, c.cover, 0, cy0 + 0.03, headEnd + 0.12, 0, { sym: true, ew: 0.05, tilt: 0.05, corner: 0.06 })
+  if (c.rug) pad(g, w - 0.02, 0.3, 0.05, c.rug, 0, cy0, headEnd - 0.1, 0, { sym: true, ew: 0.03, fold: 0.006, seed: 3, corner: 0.06 })
+  for (const p of c.pillows) {
+    const upright = p.h > p.d, thick = Math.min(p.h, p.d), length = Math.max(p.h, p.d)
+    const tilt = upright ? Math.PI / 2 + (p.tilt ?? 0) : (p.tilt ?? 0) * 0.6 + 0.02
+    pad(g, p.w, length, thick, p.m, p.x, cy0 - 0.015, p.z, p.ry ?? 0, { sym: true, ew: thick * 1.1, tilt, corner: Math.min(p.w, length) * 0.3, fold: 0.004, seed: p.x * 9 + 1 })
+  }
 }
 /** white bedside table: 4 thin legs, drawer, lower shelf; front +z; top at h */
 export function nightstand(g: THREE.Object3D, w: number, d: number, h: number, m: Mat = 'furn-white'): void {

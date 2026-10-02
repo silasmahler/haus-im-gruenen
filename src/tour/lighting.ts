@@ -8,30 +8,24 @@
  *   lighting.refreshShadows()// re-scan the scene for shadow casters/receivers after adding meshes later
  *   lighting.dispose()
  *
- * What it sets up: ACES tone mapping (exposure 1.1), procedural sky dome (equirect canvas incl. tree line, colour > 1 so windows glow) + small PMREM
- * environment, lawn, alpha-card trees and hedges far away, sun (40 deg elevation from the south-west) with a PCF shadow frustum fitted to the
- * house (soft patches on floor and lower walls behind the S/W windows), window lights (RectAreaLight on level 0, else distance-limited point
- * lights 1.6 m inside the glass so no hot blob forms on the wall between two windows), weak bounce point lights in Kueche + Wohnen, soft ceiling-lamp
- * fills for windowless rooms, weak hemisphere, baked-looking fake AO (merged vertex-alpha meshes: wall feet, ceiling edges, inside corners,
- * furniture contact pads, and a contact band on the lawn along the outer walls), a sunlit/hazy lift of the garden foliage from geometry.ts seen
- * through the windows, and GTAO + bloom (postfx.ts, lazy). In dollhouse/top mode the ceiling is hidden and the same sun lights the open house.
- *
- * Quality levels (0 best): 0 = GTAO(4 samples, 4x MSAA) + bloom + 1536 shadows + area lights, ~35 fps on an M3 Pro, only on request (?q=0 / ?q=high);
- * 1 = bloom only, point/spot lights (DEFAULT on desktop, the "Grafik: hoch" button state); 2 = direct render, 1024 shadows, pixel ratio <= 1.25;
- * 3 = phone: pixel ratio 1, fewer fills; 4 = no window lights, 512 shadows.
- * Start level is auto-detected (mobile -> 3, weak CPU -> 2, software GL -> 2, else 1) and steps DOWN
- * automatically when the measured fps stays under 55 for 1.5 s. The level it dropped to is remembered for 1 h per tab
- * (sessionStorage). Force a level with `?q=0..4` (also `?q=high|medium|low`), which disables auto-step unless `&auto=1` is added.
- * Manual choice: lighting.cycleQuality() (button in TourUI), pinned for the tab.
+ * Round 3: lights are a POOL. Window spots, fills, bounce, washes and the dressing.ts lamps are described as virtual lights; only SLOTS[level] real
+ * SpotLights/PointLights exist (5+3 at level 1, 0 in dollhouse/top) and follow the camera's room, so shaders carry ~11 lights (was 46).
+ * Shadow maps render on demand (static scene). lighting.precompile() compiles walk + overview programs behind the loader.
+ * Adaptive quality: timed with performance.now, hidden tabs / stalls ignored, 3 bad 1.5 s windows (<52 fps) to step down, max one step per 10 s,
+ * 6 good windows to step back up to the detected level, remembered step-down expires after 10 min.
+ * Walk: ACES exposure 1.04, sun 28 deg from the SW (long floor patches), weak hemisphere (0.13), deeper AO bands. Overview: exposure 0.9, sun + hemisphere only.
+ * Sky dome / backdrop (seen through windows) kept near 1.0 so glass stays ~1.5-2x the wall and does not clip; curtains are dimmed albedo + visible folds.
+ * Quality levels (0 best): 0 = GTAO + bloom + 1536 shadows (?q=0 only); 1 = bloom only (DEFAULT desktop); 2 = direct render, 1024 shadows; 3 = phone (pixel ratio 1); 4 = 512 shadows, no pool.
+ * Force a level with `?q=0..4` (`&auto=1` keeps auto-step). Manual: lighting.cycleQuality() (TourUI button).
  * QA handle: window.__tourLight = { scene, renderer, camera, sun, level }.
  */
 import * as THREE from 'three'
-import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js'
 
 import { buildDressing } from './dressing'
 import type { Post } from './postfx'
-import { FOOTPRINT, WALL_HEIGHT, footprint, furniture, openings, roomAt, rooms, walls } from './plan'
+import { LAYOUT, FOOTPRINT, WALL_HEIGHT, footprint, furniture, openings, roomAt, rooms, walls } from './plan'
 import type { Opening } from './plan'
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 export interface Lighting {
   level: number
@@ -39,6 +33,8 @@ export interface Lighting {
   setSize(w: number, h: number): void
   setLevel(level: number): void
   refreshShadows(): void
+  /** compile the shader programs of walk AND overview light setups (call once, behind the loader) */
+  precompile(): Promise<void>
   /** 0 high, 1 medium, 2 low (for the quality button) */
   readonly qualityIndex: number
   /** high -> medium -> low -> high; pins the choice for this tab; returns the new index */
@@ -47,14 +43,18 @@ export interface Lighting {
 }
 
 // towards the sun: south-west, 40 deg elevation (patches land on the floor and lower walls close behind the windows)
-const SUN_DIR = new THREE.Vector3(-0.49, 0.643, 0.588).normalize() // 40 deg elevation
+const SUN_DIR = new THREE.Vector3(-0.373, 0.469, 0.8).normalize() // 28 deg elevation, 25 deg west of south: long floor patches behind the S/W glass, readable wall shadows in the overview
+const SKY_DIR = new THREE.Vector3(0.15, 0.85, -0.5).normalize() // cool skylight from the north, 58 deg elevation
 const SHADOW_SIZE = [1536, 1536, 1024, 1024, 512]
 const PIXEL_RATIO = [1.5, 1.5, 1.25, 1, 1]
 const HAZE = 0xdde8ee
-const HEMI = 0.17 // walk-mode ambient; window lights, sun and AO supply the contrast
-const EXPOSURE = 1.0
-const FPS_MIN = 55
+const HEMI = 0.13 // walk-mode ambient (kept low): window lights, sun patches and AO supply the contrast
+const EXPOSURE = 1.04
+const EXPOSURE_OVERVIEW = 0.9 // dollhouse / top: open house, whites would clip at the walk exposure
+const FPS_MIN = 52
 const STORE_KEY = 'tour:quality'
+const STORE_TTL = 10 * 60 * 1000 // a remembered step-down expires after 10 min
+const SLOTS: [number, number][] = [[5, 3], [5, 3], [4, 2], [3, 2], [0, 0]] // [spot, point] pool slots per quality level: the per-material light cap (+ sun, sky, hemisphere)
 const MANUAL_KEY = 'tour:quality-manual'
 
 const seeded = (seed: number) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
@@ -130,7 +130,7 @@ function makeEnvTexture(): THREE.CanvasTexture {
   c.height = 64
   const g = c.getContext('2d')!
   const grad = g.createLinearGradient(0, 0, 0, 64)
-  for (const [p, col] of [[0, '#6fa3dc'], [0.4, '#c5dcef'], [0.5, '#f0f2f2'], [0.52, '#dedad2'], [1, '#c8c2b6']] as [number, string][]) grad.addColorStop(p, col)
+  for (const [p, col] of [[0, '#a9c4e0'], [0.4, '#dbe4ea'], [0.5, '#f2f0ea'], [0.52, '#e2dccf'], [1, '#cdc3b2']] as [number, string][]) grad.addColorStop(p, col)
   g.fillStyle = grad
   g.fillRect(0, 0, 128, 64)
   const t = new THREE.CanvasTexture(c)
@@ -144,13 +144,13 @@ function makeLawnTexture(): THREE.CanvasTexture {
   const c = document.createElement('canvas')
   c.width = c.height = s
   const g = c.getContext('2d')!
-  g.fillStyle = '#5c9932'
+  g.fillStyle = '#7a9862'
   g.fillRect(0, 0, s, s)
   const rnd = seeded(3)
   // large soft patches (dry / lush) break up the flat colour; drawn wrapped so the texture tiles
   for (let i = 0; i < 40; i++) {
     const x = rnd() * s, y = rnd() * s, r = 30 + rnd() * 70
-    const col = rnd() < 0.5 ? '58,112,34' : '140,185,64'
+    const col = rnd() < 0.5 ? '84,112,62' : '150,172,100'
     for (const [ox, oy] of [[0, 0], [-s, 0], [s, 0], [0, -s], [0, s]]) {
       const rg = g.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, r)
       rg.addColorStop(0, `rgba(${col},0.16)`)
@@ -160,7 +160,7 @@ function makeLawnTexture(): THREE.CanvasTexture {
     }
   }
   for (let i = 0; i < 5000; i++) {
-    g.fillStyle = rnd() < 0.5 ? 'rgba(70,100,52,0.2)' : 'rgba(150,172,100,0.2)'
+    g.fillStyle = rnd() < 0.5 ? 'rgba(80,104,62,0.22)' : 'rgba(160,178,116,0.2)'
     g.fillRect(rnd() * s, rnd() * s, 1 + rnd() * 2, 2 + rnd() * 5)
   }
   const t = new THREE.CanvasTexture(c)
@@ -226,7 +226,7 @@ class AoBuilder {
   }
 }
 
-const EASE = [1, 0.62, 0.3, 0.1, 0] // alpha falloff across a strip (fraction of the peak): smooth without a texture
+const EASE = Array.from({ length: 9 }, (_, i) => { const t = 1 - i / 8; return t * t * (3 - 2 * t) }) // smoothstep 1 -> 0 over 8 steps: no visible banding, no texture
 const lerp3 = (p: V3, q: V3, t: number): V3 => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, p[2] + (q[2] - p[2]) * t]
 
 /** Strip from edge A (a0->a1) fading from `peak` to 0 at edge B (b0->b1) in several eased steps. */
@@ -247,8 +247,8 @@ function roomMinSide(id: string): number {
 
 function buildFakeAo(): { floor: THREE.Mesh; ceiling: THREE.Mesh; corners: THREE.Mesh; outside: THREE.Mesh } {
   const fl = new AoBuilder(), ce = new AoBuilder(), co = new AoBuilder(), ou = new AoBuilder()
-  const Y = 0.006, YC = WALL_HEIGHT - 0.006
-  const FOOT_A = 0.46, CEIL_A = 0.3, CORNER_A = 0.34, TOP_A = 0.1
+  const Y = 0.006, YC = WALL_HEIGHT - 0.006, WOFF = 0.01 // strips on the wall face sit 1 cm off it (no z-fight)
+  const FOOT_A = 0.9, CEIL_A = 0.62, CORNER_A = 0.9, TOP_A = 0.34 // round 3: about 1.5-2x deeper and wider bands (flat-look fix)
   const DOORS = openings.filter((o) => o.type !== 'window')
 
   // wall feet + ceiling edges
@@ -275,16 +275,16 @@ function buildFakeAo(): { floor: THREE.Mesh; ceiling: THREE.Mesh; corners: THREE
         const outer = horiz ? !roomAt(mid, far) : !roomAt(far, mid)
         if (outer) {
           const atO = (s: number, off: number): V3 => (horiz ? [s, -0.02, face + side * off] : [face + side * off, -0.02, s])
-          fadeStrip(ou, atO(lo, 0), atO(hi, 0), atO(lo, 0.7), atO(hi, 0.7), 0.3)
+          fadeStrip(ou, atO(lo, 0), atO(hi, 0), atO(lo, 1.1), atO(hi, 1.1), 0.5)
         }
         continue
       }
       const minSide = roomMinSide(r.id)
       const at = (s: number, y: number, off: number): V3 => (horiz ? [s, y, face + side * off] : [face + side * off, y, s])
-      const wf = Math.min(0.45, 0.3 * minSide)
+      const wf = Math.min(1.15, 0.4 * minSide)
       for (const [s0, s1] of spans) fadeStrip(fl, at(s0, Y, 0), at(s1, Y, 0), at(s0, Y, wf), at(s1, Y, wf), FOOT_A)
       if (minSide >= 2) { // narrow rooms: strips from opposite walls would cover the whole ceiling
-        const wc = Math.min(0.5, 0.3 * minSide)
+        const wc = Math.min(1.1, 0.38 * minSide)
         fadeStrip(ce, at(lo, YC, 0), at(hi, YC, 0), at(lo, YC, wc), at(hi, YC, wc), CEIL_A)
         // far walls fade slightly darker towards the ceiling (skips doors and windows: the strip would dim the glass)
         const tcuts = openings.filter((o) => o.wall === w.id)
@@ -294,7 +294,7 @@ function buildFakeAo(): { floor: THREE.Mesh; ceiling: THREE.Mesh; corners: THREE
         const tspans: [number, number][] = []
         for (const [s0, s1] of tcuts) { if (s0 > tc) tspans.push([tc, s0]); tc = Math.max(tc, s1) }
         if (hi > tc) tspans.push([tc, hi])
-        for (const [s0, s1] of tspans) fadeStrip(ce, at(s0, YC, 0.004), at(s1, YC, 0.004), at(s0, YC - 0.75, 0.004), at(s1, YC - 0.75, 0.004), TOP_A)
+        for (const [s0, s1] of tspans) fadeStrip(ce, at(s0, YC, WOFF), at(s1, YC, WOFF), at(s0, YC - 1.5, WOFF), at(s1, YC - 1.5, WOFF), TOP_A)
       }
     }
   }
@@ -333,7 +333,7 @@ function buildFakeAo(): { floor: THREE.Mesh; ceiling: THREE.Mesh; corners: THREE
         // inward normal = right of the polygon travel direction (polygon is clockwise on the plan for sgn > 0)
         const tx = other === n ? dx : -dx, tz = other === n ? dz : -dz
         const nx = (-tz / L) * sgn, nz = (tx / L) * sgn
-        const wcl = Math.min(0.32, L * 0.4), off = 0.006
+        const wcl = Math.min(0.42, L * 0.4), off = 0.006
         const a0: V3 = [v.x + nx * off, 0.02, v.z + nz * off], a1: V3 = [a0[0], WALL_HEIGHT - 0.02, a0[2]]
         const b0: V3 = [a0[0] + (dx / L) * wcl, 0.02, a0[2] + (dz / L) * wcl], b1: V3 = [b0[0], WALL_HEIGHT - 0.02, b0[2]]
         fadeStrip(co, a0, a1, b0, b1, CORNER_A)
@@ -343,7 +343,7 @@ function buildFakeAo(): { floor: THREE.Mesh; ceiling: THREE.Mesh; corners: THREE
 
   // contact shadows under furniture (skip rugs, on-top items, raised pieces, door thresholds)
   const rugs = furniture.filter((f) => f.type === 'rug').map(footprint)
-  const alphaOf = (t: string) => (/bed|sofa|wardrobe|dresser|sideboard|kitchen|bath|tv-unit/.test(t) ? 0.4 : /table|desk/.test(t) ? 0.2 : /chair/.test(t) ? 0.22 : 0.28)
+  const alphaOf = (t: string) => (/bed|sofa|wardrobe|dresser|sideboard|kitchen|bath|tv-unit/.test(t) ? 0.66 : /table|desk/.test(t) ? 0.42 : /chair/.test(t) ? 0.46 : 0.5)
   const nearDoor = (r: { x0: number; z0: number; x1: number; z1: number }, m: number) => DOORS.some((o) => {
     const wall = walls.find((w) => w.id === o.wall)
     if (!wall) return false
@@ -351,7 +351,7 @@ function buildFakeAo(): { floor: THREE.Mesh; ceiling: THREE.Mesh; corners: THREE
     const q = horiz ? { x0: o.at.x - hw, x1: o.at.x + hw, z0: o.at.z - d, z1: o.at.z + d } : { x0: o.at.x - d, x1: o.at.x + d, z0: o.at.z - hw, z1: o.at.z + hw }
     return r.x0 - m < q.x1 && r.x1 + m > q.x0 && r.z0 - m < q.z1 && r.z1 + m > q.z0
   })
-  const PAD = 0.3
+  const PAD = 0.42
   for (const f of furniture) {
     if (f.type === 'rug' || f.onTopOf || f.y > 0.05 || f.type === 'flue' || f.type === 'tv') continue
     const r = footprint(f)
@@ -370,6 +370,109 @@ function buildFakeAo(): { floor: THREE.Mesh; ceiling: THREE.Mesh; corners: THREE
     fl.quad(ring(0), [a, a, a, a])
   }
   return { floor: fl.mesh('lighting:ao-floor'), ceiling: ce.mesh('lighting:ao-ceiling'), corners: co.mesh('lighting:ao-corners'), outside: ou.mesh('lighting:ao-outside') }
+}
+
+
+// ---------------------------------------------------------------- draw-call merge + material trims
+/**
+ * Merge all opaque furniture meshes that share one material (across rooms) into a single mesh: ~180 furniture draws -> ~60, and the sun shadow
+ * pass draws them again, so the saving counts twice. Furniture is static and sits at the world origin (bake() in furniture/shared.ts).
+ * ponytail: no per-room frustum culling afterwards (whole-house meshes), fine at ~160k triangles.
+ */
+function mergeFurniture(scene: THREE.Scene): void {
+  const root = scene.getObjectByName('furniture')
+  if (!root) return
+  root.updateMatrixWorld(true)
+  const buckets = new Map<THREE.Material, THREE.Mesh[]>()
+  root.traverse((o) => {
+    if (!(o instanceof THREE.Mesh) || Array.isArray(o.material)) return
+    const m = o.material as THREE.Material
+    if (m.transparent || o.userData.noMerge || !o.geometry.attributes.position) return
+    const list = buckets.get(m)
+    if (list) list.push(o); else buckets.set(m, [o])
+  })
+  buckets.forEach((meshes, mat) => {
+    if (meshes.length < 2) return
+    const sig = (g: THREE.BufferGeometry) => Object.keys(g.attributes).sort().join() + (g.index ? 'i' : 'n')
+    const groups = new Map<string, THREE.Mesh[]>()
+    for (const m of meshes) { const k = sig(m.geometry); const l = groups.get(k); if (l) l.push(m); else groups.set(k, [m]) }
+    groups.forEach((list) => {
+      if (list.length < 2) return
+      const gs = list.map((m) => { const g = m.geometry.clone(); g.applyMatrix4(m.matrixWorld); return g })
+      const merged = mergeGeometries(gs, false)
+      gs.forEach((g) => g.dispose())
+      if (!merged) return
+      const out = new THREE.Mesh(merged, mat)
+      out.name = `furniture:merged:${mat.name || 'mat'}`
+      out.castShadow = list[0].castShadow
+      out.receiveShadow = list[0].receiveShadow
+      root.add(out)
+      for (const m of list) { m.parent?.remove(m); m.geometry.dispose() }
+    })
+  })
+}
+
+/** Black lacquer (vertex-colour tint materials) is lifted to a dark grey so it keeps form under the soft light instead of a flat black hole. */
+function liftBlacks(scene: THREE.Scene): void {
+  const c = new THREE.Color()
+  scene.getObjectByName('furniture')?.traverse((o) => {
+    if (!(o instanceof THREE.Mesh)) return
+    const col = o.geometry.attributes.color as THREE.BufferAttribute | undefined
+    if (!col || col.itemSize !== 3) return
+    const floor = o.parent?.name.includes('kind-links') ? 0.07 : 0.012 // linear
+    let touched = false
+    for (let i = 0; i < col.count; i++) {
+      c.setRGB(col.getX(i), col.getY(i), col.getZ(i))
+      const l = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b
+      if (l < floor) { const k = l > 0 ? floor / l : 0; col.setXYZ(i, l > 0 ? c.r * k : floor, l > 0 ? c.g * k : floor, l > 0 ? c.b * k : floor); touched = true }
+    }
+    if (touched) col.needsUpdate = true
+  })
+}
+
+/** Garden panorama seen through doors/windows: pull it towards the sky colour so it reads as distance (atmospheric haze), not a flat painted band. */
+function hazeBackdrop(scene: THREE.Scene): void {
+  const m = (scene.getObjectByName('backdrop:panorama') as THREE.Mesh | undefined)?.material as THREE.MeshBasicMaterial | undefined
+  if (!m) return
+  m.onBeforeCompile = (sh) => {
+    sh.fragmentShader = sh.fragmentShader.replace('#include <dithering_fragment>', 'gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.95, 1.02, 1.08), 0.12);\n#include <dithering_fragment>')
+  }
+  m.color.setRGB(0.92, 0.92, 0.92) // window plane about 1.5-2x the wall luminance after tone mapping: bright but not clipped, the tree / lawn contrast survives
+  m.needsUpdate = true
+}
+
+/** Baked-looking vertical gradient for large flat fronts (wardrobes): darker at the floor and under the ceiling, lighter in between. */
+function heightGradient(m: THREE.MeshStandardMaterial): void {
+  m.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vGradY;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvGradY = (modelMatrix * vec4(position, 1.0)).y;')
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vGradY;')
+      .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb *= mix(0.5, 1.0, smoothstep(0.0, 0.7, vGradY)) * mix(0.8, 1.0, smoothstep(2.45, 1.7, vGradY));')
+  }
+  m.customProgramCacheKey = () => 'heightGradient'
+  m.needsUpdate = true
+}
+
+/** Small material trims that belong to lighting (glare / overexposure), applied once by name. */
+function trimMaterials(scene: THREE.Scene): void {
+  const done = new Set<THREE.Material>()
+  scene.traverse((o) => {
+    if (!(o instanceof THREE.Mesh)) return
+    for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+      if (done.has(m) || !(m instanceof THREE.MeshStandardMaterial)) continue
+      done.add(m)
+      if (m.name === 'curtain-sheer' || m.name === 'lace-net') { m.emissiveIntensity = 0.03; m.color.setRGB(0.5, 0.5, 0.5) } // sun (30) falls straight on the cloth: dim the albedo so it stays white-grey with visible folds instead of clipping // was // was 0.6-0.9: bloom sparkle dots on the lace
+      else if (m.name === 'curtain-voile') { m.emissiveIntensity = 0.03; m.color.setRGB(0.5, 0.5, 0.52); m.opacity = 0.92 } // translucent, folds stay visible (the alpha + colour bands carry the shading)
+      else if (m.name === 'tile-bath') { m.roughnessMap = null; m.roughness = 0.8; m.envMapIntensity = 0.25; m.needsUpdate = true } // no glaze hot spot from the ceiling lamp // blotchy specular glare on the WC wall
+      else if (m.name === 'mirror') m.envMapIntensity = 0.4
+      else if (m.name === 'wardrobe-dark') { m.color.setRGB(0.3, 0.3, 0.32); m.emissive.setRGB(0.075, 0.075, 0.082); m.roughness = 0.75; m.envMapIntensity = 2.2; heightGradient(m) } // charcoal, not a black hole at 0.7 m
+      else if (m.name === 'paint-green') { m.color.multiplyScalar(1.2); m.emissive.setRGB(0.01, 0.03, 0.012); m.envMapIntensity = 2; heightGradient(m) } // dark green wardrobes: form stays readable, no black hole
+      else if (m.name === 'furn-white' || m.name === 'furn-white-grain' || m.name === 'white-mdf') {
+        m.color.multiplyScalar(0.93) // pure white blew out and read flat
+        m.roughness = Math.max(m.roughness, 0.6)
+        if (m instanceof THREE.MeshPhysicalMaterial) m.clearcoat = Math.min(m.clearcoat, 0.1)
+      } else if (m.map && m.emissiveMap === m.map && m.roughness < 0.1) m.emissiveIntensity = Math.min(m.emissiveIntensity, 0.25) // fake mirrors
+    }
+  })
 }
 
 // ---------------------------------------------------------------- level detection
@@ -399,7 +502,7 @@ function detectLevel(renderer: THREE.WebGLRenderer): { level: number; forced: bo
   }
   try { // level this device had to drop to earlier in this tab (see step-down below)
     const saved = JSON.parse(sessionStorage.getItem(STORE_KEY) || 'null') as { level: number; t: number } | null
-    if (saved && Date.now() - saved.t < 3600 * 1000 && saved.level > level) level = Math.min(4, saved.level)
+    if (saved && Date.now() - saved.t < STORE_TTL && saved.level > level) level = Math.min(4, saved.level)
   } catch { /* storage unavailable */ }
   return { level, forced: false }
 }
@@ -415,6 +518,8 @@ export function setupLighting(scene: THREE.Scene, renderer: THREE.WebGLRenderer,
   renderer.toneMappingExposure = EXPOSURE
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.shadowMap.enabled = true
+  renderer.shadowMap.autoUpdate = false // static scene: shadow maps are re-rendered on demand (needsUpdate), not every frame
+  renderer.shadowMap.needsUpdate = true
   // r170: shadow.radius only has an effect with PCFShadowMap / VSMShadowMap (PCFSoft has a fixed kernel). VSM was tried and rejected: it leaks sun light through the thin walls.
   renderer.shadowMap.type = THREE.PCFShadowMap
   renderer.info.autoReset = false // postfx renders several passes per frame; stats() should sum them
@@ -424,7 +529,7 @@ export function setupLighting(scene: THREE.Scene, renderer: THREE.WebGLRenderer,
   const skyTex = makeSkyTexture(level >= 3 ? 1024 : 2048, level >= 3 ? 512 : 1024)
   const sky = new THREE.Mesh(
     new THREE.SphereGeometry(95, 32, 16),
-    new THREE.MeshBasicMaterial({ map: skyTex, color: new THREE.Color(2.8, 2.8, 2.8), side: THREE.BackSide, fog: false, depthWrite: false }),
+    new THREE.MeshBasicMaterial({ map: skyTex, color: new THREE.Color(1.5, 1.5, 1.5), side: THREE.BackSide, fog: false, depthWrite: false }),
   )
   sky.name = 'lighting:sky'
   sky.renderOrder = -1000
@@ -436,15 +541,13 @@ export function setupLighting(scene: THREE.Scene, renderer: THREE.WebGLRenderer,
   const envRT = pmrem.fromEquirectangular(envTex)
   envTex.dispose()
   scene.environment = envRT.texture
-  scene.environmentIntensity = 0.18
+  scene.environmentIntensity = 0.2
   pmrem.dispose()
 
   // lawn + scenery
   const lawnTex = makeLawnTexture()
-  const ground = new THREE.Mesh(
-    new THREE.CircleGeometry(92, 48),
-    new THREE.MeshStandardMaterial({ map: lawnTex, roughness: 1, envMapIntensity: 0.5, emissive: 0xffffff, emissiveMap: lawnTex, emissiveIntensity: 0.36 }),
-  )
+  const groundMat = new THREE.MeshStandardMaterial({ map: lawnTex, roughness: 1, envMapIntensity: 0.5, emissive: 0xffffff, emissiveMap: lawnTex, emissiveIntensity: 0.3 })
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(92, 48), groundMat)
   ground.name = 'lighting:ground'
   ground.rotation.x = -Math.PI / 2
   ground.position.set((FOOTPRINT.x0 + FOOTPRINT.x1) / 2, -0.03, (FOOTPRINT.z0 + FOOTPRINT.z1) / 2)
@@ -458,22 +561,18 @@ export function setupLighting(scene: THREE.Scene, renderer: THREE.WebGLRenderer,
 
   // sun with fitted shadow frustum
   const cx = (FOOTPRINT.x0 + FOOTPRINT.x1) / 2, cz = (FOOTPRINT.z0 + FOOTPRINT.z1) / 2
-  const sun = new THREE.DirectionalLight(0xffecd0, 3.4)
-  sun.castShadow = true
-  sun.shadow.bias = -0.0003
-  sun.shadow.normalBias = 0.02
-  sun.position.set(cx, 0, cz).addScaledVector(SUN_DIR, 50)
-  sun.target.position.set(cx, 0, cz)
-  scene.add(sun, sun.target)
-  {
-    const cam = sun.shadow.camera
-    cam.position.copy(sun.position)
-    cam.lookAt(sun.target.position)
+  /** Fit an orthographic shadow frustum tightly around the house (wall tops projected onto the lawn included, so the house shadow is covered). */
+  const fitShadow = (light: THREE.DirectionalLight, dir: THREE.Vector3): void => {
+    light.position.set(cx, 0, cz).addScaledVector(dir, 50)
+    light.target.position.set(cx, 0, cz)
+    const cam = light.shadow.camera
+    cam.position.copy(light.position)
+    cam.lookAt(light.target.position)
     cam.updateMatrixWorld()
     const pts: THREE.Vector3[] = []
-    for (const x of [FOOTPRINT.x0 - 0.2, FOOTPRINT.x1 + 0.2]) for (const z of [FOOTPRINT.z0 - 0.2, FOOTPRINT.z1 + 0.2]) for (const y of [0, WALL_HEIGHT + 0.1]) {
+    for (const x of [FOOTPRINT.x0 - 0.2, FOOTPRINT.x1 + 0.2]) for (const z of [FOOTPRINT.z0 - 0.2, FOOTPRINT.z1 + 0.2]) for (const y of [0, WALL_HEIGHT + 0.3]) {
       const p = new THREE.Vector3(x, y, z)
-      pts.push(p, p.clone().addScaledVector(SUN_DIR, -p.y / SUN_DIR.y)) // wall tops projected onto the lawn
+      pts.push(p, p.clone().addScaledVector(dir, -p.y / dir.y))
     }
     let l = Infinity, r = -Infinity, b = Infinity, t = -Infinity, n = Infinity, f = -Infinity
     for (const p of pts) {
@@ -485,15 +584,51 @@ export function setupLighting(scene: THREE.Scene, renderer: THREE.WebGLRenderer,
     cam.near = Math.max(0.5, n - 2); cam.far = f + 2
     cam.updateProjectionMatrix()
   }
+  const sun = new THREE.DirectionalLight(0xffecd0, 3.4)
+  sun.castShadow = true
+  sun.shadow.bias = -0.0006
+  sun.shadow.normalBias = 0.05
+  scene.add(sun, sun.target)
+  fitShadow(sun, SUN_DIR)
+  // weak cool skylight from the north: a second, soft shadow caster, so furniture also throws shadows in rooms the sun never reaches (N/E windows)
+  const skyLight = new THREE.DirectionalLight(0xd6e4fa, 2)
+  skyLight.castShadow = true
+  skyLight.shadow.bias = -0.0008
+  skyLight.shadow.normalBias = 0.08
+  skyLight.shadow.radius = 7
+  scene.add(skyLight, skyLight.target)
+  fitShadow(skyLight, SKY_DIR)
+  // Roof: shadow-only box over the house. The ceiling is a single-sided plane and casts nothing, so without this the sun shone through the roof,
+  // lit the wall tops and made a serrated shadow fringe under the cornice. Invisible to the camera; off in dollhouse/top mode.
+  const roof = new THREE.Mesh(
+    new THREE.BoxGeometry(FOOTPRINT.x1 - FOOTPRINT.x0 + 0.4, 0.3, FOOTPRINT.z1 - FOOTPRINT.z0 + 0.4),
+    new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, side: THREE.DoubleSide }),
+  )
+  roof.name = 'lighting:roof'
+  roof.position.set(cx, WALL_HEIGHT + 0.18, cz)
+  roof.castShadow = true
+  roof.frustumCulled = false
+  roof.renderOrder = -999
+  scene.add(roof)
 
   // hemisphere: warm bounce from the floor, soft sky from above (kept low: the window lights give the direction)
-  const hemi = new THREE.HemisphereLight(0xf1f5fa, 0xd8d2c8, HEMI)
+  const hemi = new THREE.HemisphereLight(0xf7f5ef, 0xd8d0c2, HEMI)
   scene.add(hemi)
 
-  // window lights: windows next to each other on one wall share one light. Sun side (S/W) warmer and stronger.
-  RectAreaLightUniformsLib.init()
-  interface Win { rect: THREE.RectAreaLight; point: THREE.PointLight; room: string }
-  const windowLights: Win[] = []
+  // ---- light pool. Every light below is first described as a "virtual light" (room, pose, colour, reach). Only a handful of real
+  // SpotLight / PointLight objects exist (SLOTS per quality level); each frame they are handed to the virtual lights nearest to the camera
+  // (fading over 0.3 s). So the shaders always carry ~9 lights, however many lights the house has. Overview modes: pool off, sun + hemisphere only.
+  interface VLight { kind: 'spot' | 'point'; room: string; pos: THREE.Vector3; target: THREE.Vector3; color: number; intensity: number; distance: number; angle: number; penumbra: number; decay: number }
+  const vls: VLight[] = []
+  const addSpot = (room: string, pos: THREE.Vector3, target: THREE.Vector3, color: number, intensity: number, distance: number, angle: number, penumbra: number, decay: number): void => {
+    vls.push({ kind: 'spot', room, pos, target, color, intensity, distance, angle, penumbra, decay })
+  }
+  const addPoint = (room: string, pos: THREE.Vector3, color: number, intensity: number, distance: number, decay: number): void => {
+    vls.push({ kind: 'point', room, pos, target: pos, color, intensity, distance, angle: 0, penumbra: 0, decay })
+  }
+
+  // window lights: windows next to each other on one wall share one light. Sun side (S/W) warmer and stronger. A spot (not a point light) 0.5 m inside the
+  // glass, aimed down-inward: a soft daylight pool on the floor 1-2.5 m in front of the glass, bright near the window, dark at the far wall.
   {
     const groups: Opening[][] = []
     for (const o of openings.filter((q) => q.type === 'window')) {
@@ -508,7 +643,7 @@ export function setupLighting(scene: THREE.Scene, renderer: THREE.WebGLRenderer,
       const o0 = g[0]
       const room = rooms.find((r) => r.id === o0.rooms[0])
       const wall = walls.find((w) => w.id === o0.wall)
-      if (!room || !wall) continue
+      if (!room || !wall || (o0.rooms[0] === 'bad')) continue // the bath gets its own daylight cone (dressing.ts)
       const horiz = wall.a.z === wall.b.z
       const along = (o: Opening) => (horiz ? o.at.x : o.at.z)
       const lo = Math.min(...g.map((o) => along(o) - o.width / 2)), hi = Math.max(...g.map((o) => along(o) + o.width / 2))
@@ -518,29 +653,16 @@ export function setupLighting(scene: THREE.Scene, renderer: THREE.WebGLRenderer,
       const sunny = inward.dot(SUN_DIR) < 0 // the room looks away from the sun => this window faces it
       const y = o0.sill + o0.height / 2
       const c = horiz ? new THREE.Vector3(mid, y, o0.at.z) : new THREE.Vector3(o0.at.x, y, mid)
-      const colour = sunny ? 0xfff0dc : 0xeaf1fb
-      // Bigger and weaker than the glass itself: irradiance then falls off gently with depth instead of a hard hot band at the window.
-      // Sunny (S/W) walls a bit stronger; north/east windows only give cool skylight.
-      const RW = 1.0, RH = 1.3 // extra width / height around the glass
-      const rect = new THREE.RectAreaLight(colour, sunny ? 5.6 : 2.8, hi - lo + RW, o0.height + RH)
-      rect.position.copy(c).addScaledVector(inward, wall.t / 2 + 0.02) // just inside the room: does not light the reveal from behind
-      rect.lookAt(rect.position.clone().add(inward))
-      rect.name = `lighting:win:${o0.id}`
-      // cheap tiers: point light 0.6 m inside, distance-limited so the light dies out into the room depth
-      const point = new THREE.PointLight(colour, sunny ? 6.2 : 4.8, 10, 2)
-      point.position.copy(c).addScaledVector(inward, wall.t / 2 + 1.6) // well inside: a light close to the plaster makes a hot blob on the wall between two windows
-      point.name = `lighting:winpt:${o0.id}`
-      windowLights.push({ rect, point, room: o0.rooms[0] })
-      scene.add(rect, point)
+      const pos = c.clone().addScaledVector(inward, wall.t / 2 + 0.5)
+      pos.y = Math.min(y, 1.6)
+      const target = c.clone().addScaledVector(inward, wall.t / 2 + 1.8)
+      target.y = 0
+      addSpot(o0.rooms[0], pos, target, sunny ? 0xfff0dc : 0xeaf1fb, sunny ? 17 : 10, 9, 1.2, 1, 1.6)
     }
   }
 
-  // Soft ceiling-lamp fills for windowless rooms. A downward RectAreaLight (spot on cheap tiers) at the room centre: no point-light hot spots
-  // on the plaster next to the lamp. [intensity rect, intensity spot, reach] - deliberately dim, the plaster is close to white.
-  interface Fill { rect: THREE.RectAreaLight; spot: THREE.SpotLight; useRect: boolean }
-  const fills: Fill[] = []
-  const RECT_FILL = new Set(['flur-links', 'bad']) // only the two rooms that matter get an area light (each one costs every pixel); tiny rooms use the spot on all tiers
-  const FILL: Record<string, [number, number, number]> = { 'flur-links': [0.7, 2.2, 4], 'flur-rechts': [0.5, 1.6, 3], bad: [2.2, 4.6, 4.5], wc: [0.7, 1.8, 3], abstell: [0.7, 1.8, 3], kamin: [0.5, 1.4, 3] }
+  // Soft ceiling-lamp fills for windowless rooms (spot straight down at the room centre; deliberately dim, the plaster is close to white).
+  const FILL: Record<string, [number, number]> = { 'flur-links': [2.2, 4], 'flur-rechts': [1.6, 3], bad: [4.6, 4.5], wc: [3.2, 3.4], abstell: [1.8, 3], kamin: [1.4, 3], 'kind-mitte': [1.9, 3.6], 'kind-links': [1.4, 4] }
   for (const id of Object.keys(FILL)) {
     const r = rooms.find((q) => q.id === id)
     if (!r) continue
@@ -551,38 +673,46 @@ export function setupLighting(scene: THREE.Scene, renderer: THREE.WebGLRenderer,
       const t = (i + 0.5) / n
       const px = sx >= sz ? Math.min(...xs) + sx * t : Math.min(...xs) + sx / 2
       const pz = sx >= sz ? Math.min(...zs) + sz / 2 : Math.min(...zs) + sz * t
-      const [ir, is, reach] = FILL[id]
-      const rect = new THREE.RectAreaLight(0xfff0e2, ir / n, Math.min(0.9, sx * 0.5) , Math.min(0.9, sz * 0.5))
-      if (n > 1) { if (sx >= sz) rect.width = (sx / n) * 0.5; else rect.height = (sz / n) * 0.5 }
-      rect.position.set(px, WALL_HEIGHT - 0.03, pz)
-      rect.rotation.x = -Math.PI / 2 // faces down; width along x, height along z
-      rect.name = `lighting:fill:${id}:${i}`
-      const spot = new THREE.SpotLight(0xfff0e2, is / n, reach, 1.25, 1, 0.7)
-      spot.position.set(px, WALL_HEIGHT - 0.05, pz)
-      spot.target.position.set(px, 0, pz)
-      spot.name = `lighting:fillspot:${id}:${i}`
-      fills.push({ rect, spot, useRect: RECT_FILL.has(id) })
-      scene.add(rect, spot, spot.target)
+      const [is, reach] = FILL[id]
+      addSpot(id, new THREE.Vector3(px, WALL_HEIGHT - 0.05, pz), new THREE.Vector3(px, 0, pz), 0xfff0e2, is / n, reach, 1.25, 1, 0.7)
     }
   }
 
-  // Bounce fills: one weak point light at head height in the middle of the two big rooms lifts the far walls (the window lights are
-  // distance-limited). Low intensity + decay 2 => a broad gradient, no hot spot.
-  const bounce: THREE.PointLight[] = []
-  for (const [id, inten] of [['kueche', 2.1], ['wohnen', 2.6]] as [string, number][]) {
+  // Bounce fills: one weak point light at head height in the middle of the bigger rooms lifts the far walls a little (window spots are distance-limited).
+  for (const [id, inten] of [['kueche', 1.7], ['wohnen', 2.1], ['schlafen', 2.4], ['kind-links', 2.1], ['kind-mitte', 1.5]] as [string, number][]) {
     const r = rooms.find((q) => q.id === id)
     if (!r) continue
     const xs = r.polygon.map((p) => p.x), zs = r.polygon.map((p) => p.z)
-    const pl = new THREE.PointLight(0xfff1e4, inten, 8, 2)
-    pl.position.set((Math.min(...xs) + Math.max(...xs)) / 2, 1.75, (Math.min(...zs) + Math.max(...zs)) / 2) // below the pendants, well away from the ceiling (no hot ceiling spot)
-    pl.name = `lighting:bounce:${id}`
-    bounce.push(pl)
-    scene.add(pl)
+    addPoint(id, new THREE.Vector3((Math.min(...xs) + Math.max(...xs)) / 2, 1.75, (Math.min(...zs) + Math.max(...zs)) / 2), 0xfff1e4, inten, 9, 2)
+  }
+
+  // Wall wash on the Wohnen mural wall (TV wall, x = kmeE): a dark photo print would otherwise be the darkest thing in the house. Two soft spots from the room side.
+  for (const z of [6.9, 8.9]) {
+    addSpot('wohnen', new THREE.Vector3(LAYOUT.kmeE + 1.9, WALL_HEIGHT - 0.1, z), new THREE.Vector3(LAYOUT.kmeE, 1.2, z), 0xfff1e2, 7, 5.5, 1.0, 1, 2)
   }
 
   // fixtures + window dressing (pendants, table lamp, ceiling lamps, frosted bath window, curtains): after the furniture, so it can skip what exists
   const dressing = buildDressing(scene)
+  dressing.bathSpot?.color.set(0xf6f2ea) // was a cold blue: bath walls read grey-blue next to the warm house
+  {
+    // dressing.ts creates its own warm lights (pendants, worklight, table lamp, bath daylight cone): move them into the pool
+    const found: THREE.Light[] = []
+    dressing.group.traverse((o) => { if (o instanceof THREE.PointLight || o instanceof THREE.SpotLight) found.push(o) })
+    for (const l of found) {
+      const pos = l.getWorldPosition(new THREE.Vector3())
+      const room = roomAt(pos.x, pos.z)?.id ?? ''
+      if (l instanceof THREE.SpotLight) addSpot(room, pos, l.target.getWorldPosition(new THREE.Vector3()), l.color.getHex(), l.intensity, l.distance, l.angle, l.penumbra, l.decay)
+      else addPoint(room, pos, l.color.getHex(), (l as THREE.PointLight).intensity, (l as THREE.PointLight).distance, (l as THREE.PointLight).decay)
+      l.parent?.remove(l)
+      if (l instanceof THREE.SpotLight) l.target.parent?.remove(l.target)
+    }
+  }
   scene.add(dressing.group)
+
+  hazeBackdrop(scene)
+  liftBlacks(scene)
+  mergeFurniture(scene)
+  trimMaterials(scene)
 
   // fake AO
   const ao = buildFakeAo()
@@ -591,25 +721,77 @@ export function setupLighting(scene: THREE.Scene, renderer: THREE.WebGLRenderer,
 
   // ---- shadow flags
   let flagged = -1
+  let shadowDirty = true
   function refreshShadows(): void {
     scene.traverse((o) => {
       if (!(o instanceof THREE.Mesh) || o.userData.noShadow || o.name.startsWith('lighting:')) return
       const mats = Array.isArray(o.material) ? o.material : [o.material]
-      const glassy = mats.some((m) => m.transparent && m.opacity < 0.99)
+      const glassy = mats.some((m) => m.transparent) // glass, voile, lace: let the sun through
       o.castShadow = !glassy && !o.name.startsWith('floor:') && !o.name.startsWith('rug')
-      o.receiveShadow = true
+      o.receiveShadow = !glassy // sheer curtains picked up a stair-stepped shadow from the folds / frame: they are translucent, so no shadow receiving
     })
     flagged = scene.children.length
+    shadowDirty = true
     // garden hedges / trees (geometry.ts) are seen from inside on their shadow side: lift them towards a hazy, sunlit green so the window views read as daylight
     const gm = (scene.getObjectByName('exterior:garden-foliage') as THREE.Mesh | undefined)?.material as THREE.MeshStandardMaterial | undefined
     if (gm && gm.emissive) { gm.emissive.set(0x8aa574); gm.emissiveIntensity = 0.75 }
   }
   refreshShadows()
 
+  // ---- light pool (see the virtual-light comment above): a fixed number of real lights per quality level, reassigned to the lights nearest the camera
+  interface Slot { light: THREE.SpotLight | THREE.PointLight; target: THREE.Object3D | null; vl: VLight | null; k: number }
+  const slots: Slot[] = []
+  const makeSlots = (n: number, kind: 'spot' | 'point'): void => {
+    for (let i = 0; i < n; i++) {
+      const light = kind === 'spot' ? new THREE.SpotLight(0xffffff, 0) : new THREE.PointLight(0xffffff, 0)
+      light.name = `lighting:pool:${kind}:${i}`
+      const target = kind === 'spot' ? (light as THREE.SpotLight).target : null
+      scene.add(light)
+      if (target) scene.add(target)
+      slots.push({ light, target, vl: null, k: 0 })
+    }
+  }
+  makeSlots(SLOTS[0][0], 'spot')
+  makeSlots(SLOTS[0][1], 'point')
+  const camPos = new THREE.Vector3()
+  let camRoom = ''
+  /** Hand the pool to the virtual lights nearest to the camera (same room first); fade a slot out before it is re-pointed so nothing pops. */
+  function updatePool(dt: number, on: boolean): void {
+    camera.getWorldPosition(camPos)
+    camRoom = roomAt(camPos.x, camPos.z)?.id ?? camRoom
+    for (const kind of ['spot', 'point'] as const) {
+      const all = slots.filter((sl) => (sl.light instanceof THREE.SpotLight) === (kind === 'spot'))
+      for (const sl of all) if (!sl.light.visible) sl.light.intensity = 0
+      const mine = all.filter((sl) => sl.light.visible)
+      const want = vls.filter((v) => v.kind === kind)
+        .map((v) => ({ v, score: v.pos.distanceTo(camPos) + (v.room === camRoom ? 0 : 3.5) }))
+        .sort((p, q) => p.score - q.score).slice(0, mine.length).map((e) => e.v)
+      const free = mine.filter((sl) => !sl.vl || !want.includes(sl.vl))
+      const todo = want.filter((v) => !mine.some((sl) => sl.vl === v))
+      for (const sl of mine) {
+        if (sl.vl && want.includes(sl.vl)) { sl.k = on ? Math.min(1, sl.k + dt / 0.25) : 0; continue }
+        sl.k = Math.max(0, sl.k - dt / 0.2)
+        if (sl.k > 0 && on) continue
+        const next = free.includes(sl) ? todo.shift() : undefined
+        sl.vl = next ?? null
+        if (next) {
+          sl.light.position.copy(next.pos)
+          sl.light.color.setHex(next.color)
+          sl.light.distance = next.distance
+          sl.light.decay = next.decay
+          if (sl.light instanceof THREE.SpotLight && sl.target) { sl.light.angle = next.angle; sl.light.penumbra = next.penumbra; sl.target.position.copy(next.target) }
+        }
+      }
+      for (const sl of mine) sl.light.intensity = sl.vl && on ? sl.vl.intensity * sl.k : 0
+    }
+  }
+
   // ---- quality
   let post: Post | null = null
   let postLoading = false
+  let postReady: Promise<void> = Promise.resolve()
   let W = 1, H = 1
+  let poolOn = true // off in dollhouse / top: sun + hemisphere only
   const applyLevel = (): void => {
     const shadowSize = SHADOW_SIZE[level]
     if (sun.shadow.mapSize.x !== shadowSize) {
@@ -617,19 +799,29 @@ export function setupLighting(scene: THREE.Scene, renderer: THREE.WebGLRenderer,
       sun.shadow.map?.dispose()
       sun.shadow.map = null
     }
+    const skySize = Math.max(512, shadowSize / 2)
+    if (skyLight.shadow.mapSize.x !== skySize) {
+      skyLight.shadow.mapSize.set(skySize, skySize)
+      skyLight.shadow.map?.dispose()
+      skyLight.shadow.map = null
+    }
+    skyLight.castShadow = level <= 1 // extra shadow pass (rendered once, see autoUpdate): strong tiers only
+    skyLight.visible = level <= 1
     const pr = Math.min(dpr, PIXEL_RATIO[level])
     if (renderer.getPixelRatio() !== pr) { renderer.setPixelRatio(pr); renderer.setSize(W, H, false); post?.setSize(W, H) }
     dressing.setLevel(level)
-    windowLights.forEach((w) => {
-      w.rect.visible = level === 0
-      w.point.visible = level >= 1 && level <= 3 && !(w.room === 'bad' && dressing.bathSpot) // the bath gets a daylight cone (spot) instead
-    })
-    bounce.forEach((b) => { b.visible = level <= 3 })
-    fills.forEach((f, i) => { f.rect.visible = level === 0 && f.useRect; f.spot.visible = !f.rect.visible && (level <= 2 || (level === 3 && i < 3)) })
-    sun.shadow.radius = level <= 1 ? 4.5 : 2.5 // PCF tap spacing in texels: wider penumbra on the strong tiers
+    // pool size per level: lights above the limit are hidden (visible=false also removes them from the shader)
+    const [nSpot, nPoint] = SLOTS[level]
+    let si = 0, pi = 0
+    for (const sl of slots) {
+      const isSpot = sl.light instanceof THREE.SpotLight
+      sl.light.visible = poolOn && (isSpot ? si++ < nSpot : pi++ < nPoint)
+    }
+    sun.shadow.radius = level <= 1 ? 8 : 5 // PCF tap spacing in texels: wider penumbra on the strong tiers
+    shadowDirty = true
     if (level <= 1 && !post && !postLoading) {
       postLoading = true
-      import('./postfx').then(({ createPost }) => {
+      postReady = import('./postfx').then(({ createPost }) => {
         post = createPost(renderer, scene, camera, W, H, [ao.floor, ao.ceiling, ao.corners, ao.outside])
         post.setLevel(level)
       }).catch((e) => console.warn('[tour] postfx unavailable', e))
@@ -640,41 +832,63 @@ export function setupLighting(scene: THREE.Scene, renderer: THREE.WebGLRenderer,
   // ---- render loop hook
   let ceilingObj: THREE.Object3D | undefined
   let manual = false
-  let acc = 0, frames = 0, elapsed = 0, cooldown = 0
+  let wasWalk: boolean | null = null
+  // adaptive quality state. Frames are timed here (performance.now), NOT with the caller's clamped dt: a throttled rAF (background tab, 1 Hz) must not look like 1 fps of real load.
+  const bestLevel = start.level // never step up past what this device was detected as
+  let lastNow = performance.now(), acc = 0, frames = 0, bad = 0, good = 0, settle = 1.5, lastChange = -1e9
+  const onVis = (): void => { lastNow = performance.now(); acc = 0; frames = 0; bad = 0; good = 0; settle = 2 }
+  document.addEventListener('visibilitychange', onVis)
   const render = (dt: number): void => {
     ceilingObj ??= scene.getObjectByName('ceiling') ?? undefined
     if (flagged !== scene.children.length) refreshShadows()
     const walk = ceilingObj ? ceilingObj.visible : true
-    // overview (roof off): the sun lights everything, so pull it back a little; walk mode: the sun only enters through the window openings (strong, so its patches on the floor read like the photos)
-    sun.intensity = walk ? 9 : 2.6
-    hemi.intensity = (level < 4 ? HEMI : HEMI + 0.35) + (walk ? 0 : 0.35)
+    if (walk !== wasWalk) { wasWalk = walk; shadowDirty = true; poolOn = walk; roof.visible = walk; applyLevel() }
+    // overview (roof off): the open house is lit by the sun + hemisphere only (no pool lights, no window fills), lower exposure keeps the whites below clipping and
+    // the low sun throws readable wall shadows across the rooms. Walk mode: the sun only enters through the window openings (strong, so its patches read like the photos).
+    sun.intensity = walk ? 30 : 3.3
+    renderer.toneMappingExposure = walk ? EXPOSURE : EXPOSURE_OVERVIEW
+    groundMat.emissiveIntensity = walk ? 0.12 : 0.05 // overview: darker, greyer lawn so the house shadow reads and the lawn does not outshine the interior
+    groundMat.color.setRGB(walk ? 0.42 : 0.62, walk ? 0.46 : 0.68, walk ? 0.4 : 0.6) // walk: the strong window sun would blow the lawn out to pale green
+    skyLight.intensity = walk ? 2.0 : 0.5
+    hemi.intensity = (level < 4 ? HEMI : HEMI + 0.3) + (walk ? 0 : 0.3)
     ao.ceiling.visible = walk
     // with GTAO on the fake AO is only a light extra; in overview keep the floor pads subtle so they never read as black shapes
-    const base = level === 0 ? 0.75 : level === 1 ? 0.9 : 1
-    aoMats[0].opacity = base * (walk ? 1 : 0.35)
+    const base = level === 0 ? 0.75 : 1
+    aoMats[0].opacity = base * (walk ? 1 : 0.5)
     aoMats[1].opacity = base
-    aoMats[2].opacity = base * (walk ? 1 : 0.5)
-    aoMats[3].opacity = walk ? 0.6 : 1
+    aoMats[2].opacity = base * (walk ? 1 : 0.6)
+    aoMats[3].opacity = walk ? 0.6 : 1.6 // >1 is harmless (vertex alpha x opacity is clamped): dollhouse keeps a clear contact band around the plinth
     sky.position.copy(camera.position)
+    if (walk) updatePool(dt, true)
+    if (shadowDirty) { renderer.shadowMap.needsUpdate = true; shadowDirty = false }
 
     renderer.info.reset()
     if (post && level <= 1) post.render(dt)
     else renderer.render(scene, camera)
 
-    // adaptive quality: step down when fps stays under FPS_MIN for a 1.5 s window
-    elapsed += dt
-    if (!auto || manual || dt > 0.3) return // ignore stalls (tab switch, shader compile)
-    acc += dt; frames++
-    cooldown -= dt
-    if (acc >= 1.5) {
-      const fps = frames / acc
-      acc = 0; frames = 0
-      if (elapsed > 3 && cooldown <= 0 && fps < FPS_MIN && level < 4) {
-        level++
-        applyLevel()
-        cooldown = 3
-        try { sessionStorage.setItem(STORE_KEY, JSON.stringify({ level, t: Date.now() })) } catch { /* ignore */ }
-      }
+    // adaptive quality: 1.5 s windows. Step DOWN after 3 consecutive bad windows (max one step per 10 s); step UP (back to the detected level) after 6 good ones.
+    const now = performance.now()
+    const real = (now - lastNow) / 1000
+    lastNow = now
+    if (!auto || manual || document.hidden || real > 0.3) { acc = 0; frames = 0; if (real > 0.3) { bad = 0; good = 0 } ; return } // stalls, shader compiles, hidden/throttled tabs
+    settle -= real
+    if (settle > 0) return // first seconds after load / tab return / level change: shaders still warming up
+    acc += real; frames++
+    if (acc < 1.5) return
+    const fps = frames / acc
+    acc = 0; frames = 0
+    if (fps < FPS_MIN) { bad++; good = 0 } else if (fps >= 57) { good++; bad = 0 } else { bad = 0 }
+    const t = now / 1000
+    if (bad >= 3 && level < 4 && t - lastChange > 10) {
+      level++
+      bad = 0; lastChange = t; settle = 1.5
+      applyLevel()
+      try { sessionStorage.setItem(STORE_KEY, JSON.stringify({ level, t: Date.now() })) } catch { /* ignore */ }
+    } else if (good >= 6 && level > bestLevel && t - lastChange > 10) {
+      level--
+      good = 0; lastChange = t; settle = 1.5
+      applyLevel()
+      try { sessionStorage.removeItem(STORE_KEY) } catch { /* ignore */ }
     }
   }
 
@@ -691,7 +905,7 @@ export function setupLighting(scene: THREE.Scene, renderer: THREE.WebGLRenderer,
   }
 
   // QA / debugging handle
-  ;(window as unknown as { __tourLight?: unknown }).__tourLight = { scene, renderer, camera, sun, get level() { return level } }
+  ;(window as unknown as { __tourLight?: unknown }).__tourLight = { THREE, scene, renderer, camera, sun, get level() { return level } }
 
   const lighting: Lighting = {
     get level() { return level },
@@ -699,6 +913,22 @@ export function setupLighting(scene: THREE.Scene, renderer: THREE.WebGLRenderer,
     setSize(w, h) { W = w; H = h; post?.setSize(w, h) },
     setLevel(l) { level = Math.max(0, Math.min(4, l)); applyLevel() },
     refreshShadows,
+    async precompile() {
+      await postReady
+      const was = poolOn
+      const ceil = scene.getObjectByName('ceiling')
+      const ceilWas = ceil?.visible ?? true
+      for (const on of [true, false]) {
+        poolOn = on; applyLevel()
+        if (ceil) ceil.visible = on // overview = roof off, pool off: a different light count => different shader programs
+        roof.visible = on
+        if (on) updatePool(1, true)
+        await renderer.compileAsync(scene, camera)
+      }
+      if (ceil) ceil.visible = ceilWas
+      roof.visible = ceilWas
+      poolOn = was; applyLevel()
+    },
     get qualityIndex() { return qualityIndex() },
     cycleQuality,
     dispose() {
@@ -706,9 +936,10 @@ export function setupLighting(scene: THREE.Scene, renderer: THREE.WebGLRenderer,
       skyTex.dispose(); envRT.dispose(); lawnTex.dispose(); foliageTex.dispose()
       for (const o of [sky, ground, ao.floor, ao.ceiling, ao.corners, ao.outside]) { o.geometry.dispose(); (o.material as THREE.Material).dispose() }
       scenery.traverse((o) => { if (o instanceof THREE.Mesh) { o.geometry.dispose(); (o.material as THREE.Material).dispose() } })
-      sun.shadow.map?.dispose()
+      sun.shadow.map?.dispose(); skyLight.shadow.map?.dispose(); roof.geometry.dispose(); (roof.material as THREE.Material).dispose()
       dressing.dispose()
-      scene.remove(dressing.group, sky, ground, scenery, ao.floor, ao.ceiling, ao.corners, ao.outside, sun, sun.target, hemi, ...windowLights.flatMap((w) => [w.rect, w.point]), ...bounce, ...fills.flatMap((f) => [f.rect, f.spot, f.spot.target]))
+      document.removeEventListener('visibilitychange', onVis)
+      scene.remove(dressing.group, sky, ground, scenery, ao.floor, ao.ceiling, ao.corners, ao.outside, sun, sun.target, skyLight, skyLight.target, roof, hemi, ...slots.flatMap((sl) => (sl.target ? [sl.light, sl.target] : [sl.light])))
       scene.environment = null
       scene.fog = null
     },

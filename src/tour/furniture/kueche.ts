@@ -76,6 +76,18 @@ function fridgeFreezer(g: G, cx: number): void {
   handle(g, cx + w / 2 - 0.05, 1.7, zf + 0.006, 0.34, true)
   handle(g, cx + w / 2 - 0.05, 1.2, zf + 0.006, 0.6, true)
   bx(g, 0.02, 0.014, 0.004, paint(0x666666, 0.5), cx - 0.2, 1.8, zf + 0.001)
+  // side faces: recessed cream-grey panel with a frame line, door seam at the front edge, hinge caps, top vent (the sides are seen from the hall)
+  const panel = paint(0xe4e3dd, 0.42), seam = paint(0x8f8f8b, 0.5)
+  for (const s of [-1, 1]) {
+    const sx = cx + s * (w / 2 + 0.002)
+    bx(g, 0.004, h - 0.3, d - 0.16, panel, sx, 0.16, -0.02)
+    bx(g, 0.006, h - 0.26, 0.006, seam, sx, 0.14, zf - 0.035)
+    bx(g, 0.006, 0.006, d - 0.1, seam, sx, h - 0.1, -0.02)
+    bx(g, 0.006, 0.006, d - 0.1, seam, sx, 0.14, -0.02)
+    bx(g, 0.006, 0.03, 0.08, seam, sx, h - 0.05, 0.1)
+    bx(g, 0.006, 0.08, 0.02, 'steel', sx + s * 0.002, 1.25, zf - 0.02)
+    bx(g, 0.006, 0.08, 0.02, 'steel', sx + s * 0.002, 0.3, zf - 0.02)
+  }
 }
 
 function kitchenWest(g: G, f: Furniture): void {
@@ -170,18 +182,18 @@ function fridge(g: G, f: Furniture): void {
   bx(g, 0.022, 0.24, 0.03, 'steel', -f.w / 2 + 0.06, 0.2, f.d / 2 + 0.01)
   bx(g, f.w - 0.1, 0.06, 0.004, paint(0x111113, 0.3), 0, 1.36, f.d / 2 + 0.001)
   // microwave on top
-  rb(g, 0.46, 0.27, 0.36, 0.012, paint(0x1d1d20, 0.35, 0.4), 0, 1.48, 0)
-  bx(g, 0.28, 0.19, 0.006, paint(0x08080a, 0.12), -0.06, 1.52, 0.18)
-  bx(g, 0.1, 0.19, 0.006, 'steel', 0.14, 1.52, 0.18)
-  bx(g, 0.012, 0.16, 0.02, 'steel', 0.09, 1.535, 0.19)
+  rb(g, 0.4, 0.24, 0.3, 0.012, paint(0x1d1d20, 0.35, 0.4), 0, 1.48, 0.02)
+  bx(g, 0.25, 0.16, 0.006, paint(0x08080a, 0.12), -0.05, 1.52, 0.173)
+  bx(g, 0.09, 0.16, 0.006, 'steel', 0.13, 1.52, 0.173)
+  bx(g, 0.012, 0.14, 0.02, 'steel', 0.085, 1.53, 0.183)
 }
 
 /** weathered white-washed plank back wall (photo 15): light grey-cream vertical boards, worn grain */
 const plankWash = (): THREE.Material => canvasMat('plank-wash', 256, 256, (c, w, h) => {
-  c.fillStyle = '#e4e1d8'; c.fillRect(0, 0, w, h)
+  c.fillStyle = '#9a968a'; c.fillRect(0, 0, w, h)
   const n = 7, bw = w / n
   for (let i = 0; i < n; i++) {
-    const tone = 218 + ((i * 37) % 24)
+    const tone = 190 + ((i * 37) % 22)
     c.fillStyle = `rgb(${tone},${tone - 3},${tone - 10})`; c.fillRect(i * bw + 1, 0, bw - 2, h)
     for (let k = 0; k < 26; k++) { c.fillStyle = `rgba(150,146,134,${0.05 + ((k * 13 + i * 7) % 10) / 90})`; c.fillRect(i * bw + ((k * 29) % (bw - 3)), ((k * 71 + i * 13) % h), 1.2, 14 + ((k * 17) % 60)) }
     c.fillStyle = 'rgba(120,116,104,0.55)'; c.fillRect(i * bw, 0, 1.6, h)
@@ -197,14 +209,28 @@ const mugGreen = (): THREE.Material => canvasMat('mug-green', 64, 64, (c, w, h) 
 function coffeeBar(g: G, f: Furniture): void {
   const w = f.w, d = f.d
   const stl = paint(0xc2c5c8, 0.35, 1)
-  for (const s of [-1, 1]) bx(g, 0.03, f.h, d, WHITE, s * (w / 2 - 0.015), 0, 0)
+  for (const s of [-1, 1]) {
+    bx(g, 0.03, f.h, d, WHITE, s * (w / 2 - 0.015), 0, 0)
+    // shaker-style raised panel on the outer side face (seen from the room)
+    const px = s * (w / 2 + 0.002), fr = paint(0xd9d7cf, 0.5)
+    bx(g, 0.005, 0.74, d - 0.12, fr, px, 0.1, 0)
+    bx(g, 0.007, 0.62, d - 0.2, WHITE, px, 0.16, 0)
+    bx(g, 0.005, f.h - 1.18, d - 0.12, fr, px, 1.1, 0)
+    bx(g, 0.007, f.h - 1.3, d - 0.2, WHITE, px, 1.16, 0)
+  }
   bx(g, w, 0.03, d, WHITE, 0, f.h - 0.03, 0)
-  bx(g, w - 0.06, 0.82, d - 0.02, WHITE, 0, 0.06, -0.01)
+  // solid base cabinet with two shaker doors, thick worktop with a slight overhang (photo 15)
+  bx(g, w - 0.06, 0.78, d - 0.02, WHITE, 0, 0.06, -0.01)
   bx(g, w - 0.06, 0.06, d - 0.06, BLK, 0, 0, -0.02)
-  for (const s of [-1, 1]) { bx(g, w / 2 - 0.04, 0.78, 0.018, WHITE, s * (w / 4 - 0.005), 0.08, d / 2 - 0.009); bx(g, 0.012, 0.16, 0.02, BLK, s * 0.03, 0.78, d / 2 + 0.01) }
-  bx(g, w - 0.06, 0.03, d, WHITE, 0, 0.88, 0)
+  for (const s of [-1, 1]) {
+    const px = s * (w / 4 - 0.005)
+    bx(g, w / 2 - 0.04, 0.72, 0.018, WHITE, px, 0.1, d / 2 - 0.009)
+    bx(g, w / 2 - 0.12, 0.6, 0.006, paint(0xe9e6de, 0.5), px, 0.16, d / 2 + 0.002)
+    bx(g, 0.012, 0.16, 0.02, BLK, s * 0.03, 0.72, d / 2 + 0.012)
+  }
+  rb(g, w - 0.02, 0.045, d + 0.03, 0.008, paint(0xf4f2ec, 0.35), 0, 0.84, 0.012, 0, 1) // worktop top at 0.885
   // weathered plank back wall + shelf
-  bx(g, w - 0.06, f.h - 0.94, 0.012, plankWash(), 0, 0.91, -d / 2 + 0.008)
+  bx(g, w - 0.06, f.h - 0.9, 0.012, plankWash(), 0, 0.885, -d / 2 + 0.008)
   bx(g, w - 0.06, 0.025, d - 0.02, WHITE, 0, 1.45, -0.01)
   // mug rail with hooks + green striped mugs
   bx(g, w - 0.08, 0.03, 0.02, WHITE, 0, 1.78, -d / 2 + 0.024)
@@ -226,28 +252,54 @@ function coffeeBar(g: G, f: Furniture): void {
   cy(g, 0.03, 0.03, 0.1, 'glass', 0.4, 1.475, 0.0, 10)
   // counter: AEG-style drip coffee machine (steel body, black base, glass carafe), canister, tray with jars
   const mx = 0.02
-  bx(g, 0.2, 0.03, 0.22, BLK, mx, 0.91, -0.01)
-  rb(g, 0.19, 0.34, 0.075, 0.01, stl, mx, 0.94, -0.06)
-  rb(g, 0.19, 0.07, 0.21, 0.012, stl, mx, 1.21, -0.005)
-  bx(g, 0.19, 0.02, 0.212, BLK, mx, 1.21, -0.005)
-  cy(g, 0.055, 0.058, 0.12, 'glass', mx, 0.945, 0.03, 16)
-  cy(g, 0.05, 0.05, 0.05, paint(0x2b1a10, 0.3), mx, 0.95, 0.03, 12)
-  cy(g, 0.058, 0.058, 0.02, BLK, mx, 1.065, 0.03, 16)
-  rod(g, [mx + 0.055, 1.05, 0.03], [mx + 0.085, 1.0, 0.03], 0.007, 0.007, BLK, 5); rod(g, [mx + 0.085, 1.0, 0.03], [mx + 0.055, 0.96, 0.03], 0.007, 0.007, BLK, 5)
-  cy(g, 0.05, 0.05, 0.14, 'furn-dark', -0.34, 0.91, 0.0, 16)
-  cy(g, 0.052, 0.052, 0.015, 'brass', -0.34, 1.05, 0.0, 16)
-  bx(g, 0.22, 0.02, 0.14, paint(0xc9b79a, 0.7), 0.3, 0.91, 0.02)
-  cy(g, 0.03, 0.03, 0.08, 'glass', 0.26, 0.93, 0.02, 10)
-  cy(g, 0.03, 0.03, 0.06, paint(0xd8a23a, 0.4), 0.34, 0.93, 0.02, 10)
-  bush(g, 0.4, 0.91, -0.06, 0.2, 4, 10, 'furn-white')
+  bx(g, 0.2, 0.012, 0.22, BLK, mx, 0.885, -0.01)
+  rb(g, 0.19, 0.34, 0.075, 0.01, stl, mx, 0.915, -0.06)
+  rb(g, 0.19, 0.07, 0.21, 0.012, stl, mx, 1.185, -0.005)
+  bx(g, 0.19, 0.02, 0.212, BLK, mx, 1.185, -0.005)
+  cy(g, 0.055, 0.058, 0.12, 'glass', mx, 0.92, 0.03, 16)
+  cy(g, 0.05, 0.05, 0.05, paint(0x2b1a10, 0.3), mx, 0.925, 0.03, 12)
+  cy(g, 0.058, 0.058, 0.02, BLK, mx, 1.04, 0.03, 16)
+  rod(g, [mx + 0.055, 1.025, 0.03], [mx + 0.085, 0.975, 0.03], 0.007, 0.007, BLK, 5); rod(g, [mx + 0.085, 0.975, 0.03], [mx + 0.055, 0.935, 0.03], 0.007, 0.007, BLK, 5)
+  cy(g, 0.05, 0.05, 0.14, 'furn-dark', -0.34, 0.885, 0.0, 16)
+  cy(g, 0.052, 0.052, 0.015, 'brass', -0.34, 1.025, 0.0, 16)
+  bx(g, 0.22, 0.02, 0.14, paint(0xc9b79a, 0.7), 0.3, 0.885, 0.02)
+  cy(g, 0.03, 0.03, 0.08, 'glass', 0.26, 0.905, 0.02, 10)
+  cy(g, 0.03, 0.03, 0.06, paint(0xd8a23a, 0.4), 0.34, 0.905, 0.02, 10)
+  bush(g, 0.4, 0.885, -0.06, 0.2, 4, 10, 'furn-white')
 }
 
+/** reclaimed-wood tabletop (photo 04): dark brown boards with visible grain, knots and lighter worn streaks */
+const tableWood = (): THREE.Material => canvasMat('table-wood', 512, 256, (c, w, h) => {
+  const boards = 5, bh = h / boards
+  for (let i = 0; i < boards; i++) {
+    const t = 48 + ((i * 29) % 22)
+    c.fillStyle = `rgb(${t + 10},${t},${t - 10})`; c.fillRect(0, i * bh, w, bh)
+    for (let k = 0; k < 70; k++) {
+      const y = i * bh + ((k * 37 + i * 11) % Math.floor(bh)), a = 0.06 + ((k * 13) % 10) / 70
+      c.strokeStyle = k % 3 ? `rgba(20,12,8,${a})` : `rgba(140,110,80,${a * 0.7})`; c.lineWidth = 0.8 + (k % 3) * 0.5
+      c.beginPath(); c.moveTo(0, y); c.bezierCurveTo(w * 0.3, y + ((k * 7) % 5) - 2, w * 0.6, y - ((k * 5) % 5) + 2, w, y + ((k * 3) % 3) - 1); c.stroke()
+    }
+    c.fillStyle = 'rgba(14,8,5,0.55)'; c.fillRect(0, i * bh, w, 2)
+    c.fillStyle = 'rgba(14,8,5,0.9)'; c.beginPath(); c.ellipse(w * (0.2 + ((i * 41) % 60) / 100), i * bh + bh / 2, 9, 4, 0, 0, 7); c.fill()
+  }
+  for (let k = 0; k < 10; k++) { c.fillStyle = 'rgba(180,150,120,0.10)'; c.fillRect(((k * 97) % w), ((k * 53) % h), 40 + (k * 11) % 50, 2) }
+}, { roughness: 0.6 })
+
 function table(g: G, f: Furniture): void {
-  const top = paint(0x3b302a, 0.42), leg = paint(0x2f2621, 0.5)
-  // heavy weathered slab: thick satin top, deep apron, chunky 10 cm legs
+  const top = tableWood(), leg = paint(0x2f2621, 0.55), iron = paint(0x1c1c1e, 0.45, 0.6)
+  // heavy reclaimed slab: thick textured top, deep apron, chunky 10 cm legs with iron corner straps and caps
   rb(g, f.w, 0.055, f.d, 0.008, top, 0, 0.705, 0, 0, 1)
   bx(g, f.w - 0.22, 0.09, f.d - 0.22, leg, 0, 0.615, 0)
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) bx(g, 0.11, 0.705, 0.11, leg, sx * (f.w / 2 - 0.11), 0, sz * (f.d / 2 - 0.11))
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    const lx = sx * (f.w / 2 - 0.11), lz = sz * (f.d / 2 - 0.11)
+    bx(g, 0.11, 0.705, 0.11, leg, lx, 0, lz)
+    bx(g, 0.118, 0.02, 0.118, iron, lx, 0.02, lz) // foot cap
+    bx(g, 0.118, 0.05, 0.118, iron, lx, 0.56, lz) // leg band under the apron
+    // L-shaped iron corner strap on the top (two flat bars + rivet heads)
+    bx(g, 0.2, 0.004, 0.028, iron, sx * (f.w / 2 - 0.1), 0.76, sz * (f.d / 2 - 0.014))
+    bx(g, 0.028, 0.004, 0.2, iron, sx * (f.w / 2 - 0.014), 0.76, sz * (f.d / 2 - 0.1))
+    for (const q of [0.05, 0.14]) { sp(g, 0.007, iron, sx * (f.w / 2 - q), 0.764, sz * (f.d / 2 - 0.014), 1, 0.5, 1, 5); sp(g, 0.007, iron, sx * (f.w / 2 - 0.014), 0.764, sz * (f.d / 2 - q), 1, 0.5, 1, 5) }
+  }
   bx(g, f.w - 0.22, 0.05, 0.05, leg, 0, 0.16, 0)
   // linen runner + fruit bowl
   bx(g, 1.15, 0.006, 0.26, paint(0x5c6a72, 0.95), 0, 0.76, 0.0)
@@ -273,20 +325,24 @@ function chair(g: G): void {
 function extras(root: G): void {
   const t = fur('table-kueche')
   // hanging lamp bar with 3 pendants over the table (canopies come from geometry.ts at table.x +/- 0.42)
-  for (const s of [-0.42, 0.42]) rod(root, [t.x + s, 2.5, t.z], [t.x + s, 1.98, t.z], 0.003, 0.003, 'furn-dark', 4)
+  for (const s of [-0.42, 0.42]) rod(root, [t.x + s, 2.5, t.z], [t.x + s, 2.26, t.z], 0.003, 0.003, 'furn-dark', 4)
   // rustic wood beam (~1.2 m) carrying three black cords with clear-glass round bulbs (photo 19); dressing.ts adds the glowing filament + light
-  bx(root, 1.2, 0.07, 0.08, 'furn-wood', t.x, 1.955, t.z)
+  // hung high: beam underside 2.2 m, lowest glass 1.88 m (eye height 1.6 m); plain stained colour (a grain texture glitters at this size)
+  bx(root, 1.2, 0.07, 0.08, paint(0x6a4c33, 0.75), t.x, 2.2, t.z)
   for (const x of [-0.42, 0, 0.42]) {
-    rod(root, [t.x + x, 1.955, t.z], [t.x + x, 1.83, t.z], 0.0025, 0.0025, BLK, 4) // cord
-    cy(root, 0.016, 0.016, 0.06, BLK, t.x + x, 1.79, t.z, 8) // socket
-    sp(root, 0.062, 'glass', t.x + x, 1.735, t.z, 1, 1.1, 1, 14) // clear glass globe
+    rod(root, [t.x + x, 2.2, t.z], [t.x + x, 2.06, t.z], 0.0025, 0.0025, BLK, 4) // cord
+    cy(root, 0.016, 0.016, 0.06, BLK, t.x + x, 2.0, t.z, 8) // socket
+    sp(root, 0.062, 'glass', t.x + x, 1.95, t.z, 1, 1.1, 1, 14) // clear glass globe
   }
+  // sixth / fifth seat: end chairs tucked under the table ends (back 10 cm proud, keeps 0.5 m to the coffee bar) (photo 19 shows 6 chairs)
+  { const w = at(root, t.x - t.w / 2 + 0.1, t.z, Math.PI / 2); chair(w)
+    const e = at(root, t.x + t.w / 2 - 0.1, t.z, -Math.PI / 2); chair(e) }
   // floral curtains on both north windows, sills with plant / glasses / kettle
   const frame = (cx: number, halfW: number): void => {
     curtainRod(root, cx - halfW - 0.1, cx + halfW + 0.1, 2.28, 0.36)
     for (const s of [-1, 1]) cloth(root, 0.46, 1.42, 5, 0.05, 'fabric-floral', cx + s * (halfW - 0.12), 0.9, 0.34, 0) // dense gathered floral drapes (photos 14 / 16 / 19)
   }
-  frame(4.75, 0.5); frame(6.81, 0.52)
+  frame(4.75, 0.5); frame(7.3, 0.5) // right one = garden door (photo 19)
   // sink window sill (photo 14): small lamp, herbs, two coloured stemmed glass candle holders
   tableLamp(root, 4.42, 1.07, 0.33, 0.3, paint(0x222224, 0.4, 0.4))
   bush(root, 4.66, 1.07, 0.31, 0.27, 2, 12, 'furn-white')

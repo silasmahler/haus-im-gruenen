@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-import { arcLamp, at, bake, bx, buildRooms, curtainRod, cy, lantern, orchid, paint, pl, pendant, rb, ribRadiator, rod, sp, tableLamp, bush, canvasMat, cloth, legs4, quiltMat, normalTex, ring } from './shared'
+import { puff, foldMat, arcLamp, at, bake, bx, buildRooms, curtainRod, cy, lantern, orchid, paint, pl, pendant, rb, ribRadiator, rod, sp, tableLamp, bush, canvasMat, cloth, legs4, quiltMat, normalTex, ring } from './shared'
 import type { Furniture } from '../plan'
 
 type G = THREE.Group
@@ -16,16 +16,18 @@ function sofa(g: G): void {
   // slim base frame
   rb(g, 2.15, 0.1, 0.9, 0.02, plain, 0, 0.12, -0.125, 0, 1)
   rb(g, 0.7, 0.1, 0.3, 0.02, plain, -0.725, 0.12, 0.42, 0, 1)
-  // flat firm seat cushions with shallow diamond quilting (main part + chaise)
-  rb(g, 1.31, 0.14, 0.685, 0.03, quiltMat(CH, 1.31, 0.685), 0.28, 0.22, -0.0175, 0, 2)
-  rb(g, 0.7, 0.14, 0.935, 0.03, quiltMat(CH, 0.7, 0.935), -0.725, 0.22, 0.1075, 0, 2)
-  // back: tall flat quilted panel, slightly reclined, plus a slim arm on the +x side
-  const back = rb(g, 2.01, 0.42, 0.18, 0.045, quiltMat(CH, 2.01, 0.42), -0.07, 0.36, -0.47, 0, 2); back.rotation.x = -0.08
-  rb(g, 0.14, 0.34, 0.9, 0.04, quiltMat(CH, 0.9, 0.34), 1.005, 0.22, -0.125, 0, 2)
-  // two low scatter cushions, not lumps
-  const pillow = paint(0x62666c, 0.95)
-  const c1 = rb(g, 0.42, 0.36, 0.1, 0.04, pillow, -0.82, 0.36, -0.3, 0.1, 2); c1.rotation.x = -0.35
-  const c2 = rb(g, 0.38, 0.34, 0.1, 0.04, pillow, 0.72, 0.36, -0.3, -0.16, 2); c2.rotation.x = -0.35
+  // puffed seat cushions with a diamond-quilt normal map (main part + chaise), separated by a visible seam
+  puff(g, 1.31, 0.14, 0.685, 0.05, quiltMat(CH, 1.31, 0.685), 0.28, 0.22, -0.0175, 0, 0.03, 5)
+  puff(g, 0.7, 0.14, 0.935, 0.05, quiltMat(CH, 0.7, 0.935), -0.725, 0.22, 0.1075, 0, 0.03, 5)
+  // back: tall quilted panel, slightly reclined and puffed, plus a slim arm on the +x side
+  const back = puff(g, 2.01, 0.42, 0.18, 0.06, quiltMat(CH, 2.01, 0.42), -0.07, 0.36, -0.47, 0, 0.025, 5); back.rotation.x = -0.08
+  rb(g, 0.14, 0.34, 0.9, 0.05, quiltMat(CH, 0.9, 0.34), 1.005, 0.22, -0.125, 0, 2)
+  // scatter cushions: puffed, tilted; a pale knitted throw over the chaise end
+  const pillow = foldMat(0x62666c, 1, 1)
+  const c1 = puff(g, 0.42, 0.36, 0.11, 0.045, pillow, -0.82, 0.36, -0.3, 0.1, 0.035, 5); c1.rotation.x = -0.35
+  const c2 = puff(g, 0.38, 0.34, 0.11, 0.045, foldMat(0x8a8d92, 1, 1), 0.72, 0.36, -0.3, -0.16, 0.035, 5); c2.rotation.x = -0.35
+  const throwM = foldMat(0xb8b1a3, 2, 2)
+  puff(g, 0.44, 0.03, 0.62, 0.014, throwM, -0.74, 0.355, 0.15, 0.12, 0.012, 3)
 }
 
 function armchair(g: G, f: Furniture): void {
@@ -161,17 +163,20 @@ function logBench(g: G, f: Furniture): void {
   for (const x of [-0.35, 0.35]) cy(g, 0.13, 0.15, 0.3, 'wood-dark', x, 0, 0, 14)
   bx(g, f.w, 0.06, f.d, 'wood-dark', 0, 0.3, 0)
   rb(g, 0.75, 0.05, 0.27, 0.02, 'sheepskin', -0.05, 0.36, 0.0, 0.05)
-  // firewood stack against the north wall next to it
-  for (let i = 0; i < 6; i++) rod(g, [0.62, 0.05 + Math.floor(i / 3) * 0.09, -0.1 + (i % 3) * 0.1], [0.98, 0.05 + Math.floor(i / 3) * 0.09, -0.1 + (i % 3) * 0.1], 0.04, 0.04, 'wood-light', 7)
+  // neat firewood stack kept under the bench between the stumps (inside the footprint, nothing loose on the floor)
+  for (let r = 0; r < 3; r++) for (let i = 0; i < 4 - (r > 1 ? 1 : 0); i++) {
+    const z = -0.085 + (i + (r > 1 ? 0.5 : 0)) * 0.057 + (r % 2 ? 0.0 : 0)
+    rod(g, [-0.2, 0.03 + r * 0.055, z - 0.0], [0.2, 0.03 + r * 0.055, z], 0.028, 0.028, 'wood-light', 7)
+  }
 }
 
 function extras(root: G): void {
   const drape = paint(0x7f8388, 0.95) // grey side drape, only at the balcony door (photos 05 / 09 / 12)
   // --- south wall curtains (rod y 2.36, plane 6 cm off the wall face at z 10.127)
   const zc = 10.06
-  curtainRod(root, 8.0, 11.3, 2.36, zc, 'chrome')
-  for (const cx of [9.01, 10.39]) cloth(root, 1.4, 2.3, 5, 0.035, 'curtain-voile', cx, 0.03, zc - 0.03, Math.PI)
-  for (const cx of [8.15, 9.7, 11.15]) cloth(root, 0.4, 2.3, 3, 0.04, 'curtain-voile', cx, 0.03, zc, Math.PI)
+  curtainRod(root, 8.4, 10.85, 2.36, zc, 'chrome')
+  for (const cx of [9.1, 10.15]) cloth(root, 1.1, 2.3, 5, 0.035, 'curtain-voile', cx, 0.03, zc - 0.03, Math.PI)
+  for (const cx of [8.6, 9.62, 10.65]) cloth(root, 0.4, 2.3, 3, 0.04, 'curtain-voile', cx, 0.03, zc, Math.PI)
   // --- patio door curtains (east wall face x 11.891)
   const xc = 11.82
   rod(root, [xc, 2.36, 5.05], [xc, 2.36, 7.1], 0.009, 0.009, 'chrome', 8)
@@ -196,7 +201,7 @@ function extras(root: G): void {
 
 export function build(): THREE.Group {
   const out = buildRooms('furniture:wohnen', ['wohnen', 'kamin'],
-    { sofa, armchair, 'coffee-table': coffeeTable, 'tv-unit': tvUnit, tv, sideboard, rug, plant, 'bench-kamin': logBench },
+    { sofa, armchair, 'coffee-table': coffeeTable, 'tv-unit': (g, f) => tvUnit(at(g, 0, -0.12, 0), f), tv: (g) => tv(at(g, 0, -0.17, 0)), sideboard, rug, plant, 'bench-kamin': logBench },
     extras)
   return out
 }

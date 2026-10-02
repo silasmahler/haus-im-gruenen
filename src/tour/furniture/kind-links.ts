@@ -18,9 +18,11 @@ function bed(g: G, f: Furniture): void {
   const white = foldMat(0xf4f2ec, 1, 1)
   drawerBed(g, f.w, f.d, {
     // grey mattress with a small camel throw over the foot half (photos 24 / 25)
-    top: paint(0x6f747b, 0.95), cover: foldMat(0xc9a27a, 3, 4), coverFrac: 0.4,
+    top: paint(0x6f747b, 0.95), cover: foldMat(0xc9a27a, 1, 1), coverFrac: 0.42,
     pillows: [{ x: -0.15, z: -0.7, w: 0.5, d: 0.36, h: 0.1, m: white, tilt: 0.14 },
-      { x: 0.2, z: -0.7, w: 0.5, d: 0.36, h: 0.1, m: white, tilt: 0.14 }],
+      { x: 0.2, z: -0.7, w: 0.5, d: 0.36, h: 0.1, m: white, tilt: 0.14 },
+      { x: -0.22, z: -0.5, w: 0.36, d: 0.1, h: 0.34, m: art('cowbw'), tilt: -0.4, ry: 0.2 },
+      { x: 0.22, z: -0.46, w: 0.36, d: 0.1, h: 0.34, m: art('cowbrown'), tilt: -0.4, ry: -0.25 }],
   })
   // back board along the wall (local -x is the wall side)
   rb(g, 0.04, 0.42, f.d - 0.06, 0.01, W, -f.w / 2, 0.36, 0)
@@ -34,7 +36,7 @@ function nightstandB(g: G, f: Furniture): void {
 
 /** matte black two-door wardrobe: door gap, two long vertical handles, plinth; local +z = front (photo 24) */
 function wardrobe(g: G, f: Furniture): void {
-  const blk = paint(0x121214, 0.6), door = paint(0x161618, 0.6)
+  const blk = 'wardrobe-dark', door = 'wardrobe-dark' // textured charcoal laminate (materials.ts)
   rb(g, f.w, f.h, f.d - 0.02, 0.008, blk, 0, 0, -0.01, 0, 1)
   const dw = (f.w - 0.04) / 2
   for (const s of [-1, 1]) {

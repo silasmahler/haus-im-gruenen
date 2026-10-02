@@ -376,6 +376,7 @@ export function getCollisionData(): CollisionData {
       push(cur, s0)
       cur = s1
       const [gx, gz] = wpos(e, p, 0)
+      if (o.swing && o.swing.openDeg === 0 && o.rooms.includes('outside')) { push(s0, s1); continue } // closed garden door: solid, not a gap
       doorGaps.push({ id: o.id, axis: e.horiz ? 'x' : 'z', x: gx, z: gz, width: o.width - 2 * LINING })
       if (o.swing && leafAngle(o) >= 30) {
         const g = leafGeom(e, o)

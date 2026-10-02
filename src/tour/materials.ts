@@ -35,7 +35,7 @@
  *             hearth-slate (slate / blackened steel plate)
  *
  * BAKE BUDGET: textures are generated lazily on first getMaterial(); buildScene loops materialKeys() one by one with
- * yields, so the work is spread over frames behind the loader. Measured 2026-09-30 (round 4, machine load 60-90, so
+ * yields, so the work is spread over frames behind the loader. Measured 2026-10-02 (round 3 fixes: 315-390 ms on an M3 Pro, lower-res wood/mural/terrazzo bakes; before:
  * an upper bound): window.__tourMatMs = 330-440 ms in Chrome for the whole set. Sizes: wood 256x512 (walnut 512x512, laminate-brown
  * 1024x384, beech 512x384), tile 510^2, plaster 256^2, mural 1536x1024 (base at half res) (canvas paths only), roughness maps half size.
  */
@@ -58,6 +58,8 @@ interface UvCfg {
   wall?: [number, number]
   /** vertical faces: texture u runs up (wood grain vertical) */
   swap?: boolean
+  /** vertical faces: horizontal coordinate = x + z for every face orientation (gathered cloth whose fold normals point along x: no streaky columns) */
+  diag?: boolean
   /** bathroom tiles: vertical faces get their own tint / gloss and are painted above `paintY`; a thin cap strip
    *  (colour `cap`) sits at the tile edge. `full` = wall rectangle [x0,z0,x1,z1] tiled up to the ceiling (WC). */
   dual?: { tint: number; roughMul: number; paintY: number; paint: number; cap: number; full?: [number, number, number, number] }
@@ -76,10 +78,10 @@ function worldUV(m: THREE.MeshStandardMaterial, c: UvCfg): void {
   const r = ((c.rot ?? 0) * Math.PI) / 180
   const d = c.dual
   const sp = c.splash
-  m.customProgramCacheKey = () => (d ? 'worlduv-dual' : 'worlduv') + (c.env ? '-env' : '') + (c.mural ? '-mural' : '') + (sp ? '-splash' : '')
+  m.customProgramCacheKey = () => (d ? 'worlduv-dual' : 'worlduv') + (c.diag ? '-diag' : '') + (c.env ? '-env' : '') + (c.mural ? '-mural' : '') + (sp ? '-splash' : '')
   m.onBeforeCompile = (sh) => {
     sh.uniforms.uWF = { value: new THREE.Vector4(1 / c.floor[0], 1 / c.floor[1], Math.cos(r), Math.sin(r)) }
-    sh.uniforms.uWW = { value: new THREE.Vector4(1 / wall[0], 1 / wall[1], c.swap ? 1 : 0, 0) }
+    sh.uniforms.uWW = { value: new THREE.Vector4(1 / wall[0], 1 / wall[1], c.swap ? 1 : 0, c.diag ? 1 : 0) }
     sh.vertexShader = sh.vertexShader
       .replace(
         '#include <uv_pars_vertex>',
@@ -95,13 +97,13 @@ function worldUV(m: THREE.MeshStandardMaterial, c: UvCfg): void {
           wuv = vec2( uWF.z * p.x - uWF.w * p.y, uWF.w * p.x + uWF.z * p.y ) * uWF.xy;
           vWall = 0.0;
         } else {
-          float hc = wn3.x > wn3.z ? wp4.z : wp4.x;
+          float hc = uWW.w > 0.5 ? wp4.x + wp4.z : ( wn3.x > wn3.z ? wp4.z : wp4.x );
           wuv = ( uWW.z > 0.5 ? vec2( wp4.y, hc ) : vec2( hc, wp4.y ) ) * uWW.xy;
           vWall = 1.0;
         }
         vWY = wp4.y;
         vWXZ = wp4.xz;
-        vHC = wn3.y >= max( wn3.x, wn3.z ) ? 0.0 : ( wn3.x > wn3.z ? wp4.z : wp4.x );
+        vHC = wn3.y >= max( wn3.x, wn3.z ) ? 0.0 : ( uWW.w > 0.5 ? wp4.x + wp4.z : ( wn3.x > wn3.z ? wp4.z : wp4.x ) );
         ` + THREE.ShaderChunk.uv_vertex.replace(/\b[A-Z_]+_UV\b/g, (t) => (t === 'USE_UV' ? t : 'wuv')),
       )
     if (c.env) {
@@ -125,7 +127,8 @@ function worldUV(m: THREE.MeshStandardMaterial, c: UvCfg): void {
           `#include <common>
           uniform vec4 uMu;
           uniform vec4 uMu2;
-          uniform sampler2D uMuTex;` + (d ? '' : '\nvarying float vWY;\nvarying float vWall;\nvarying vec2 vWXZ;'),
+          uniform sampler2D uMuTex;
+          float mmMask = 0.0;` + (d ? '' : '\nvarying float vWY;\nvarying float vWall;\nvarying vec2 vWXZ;'),
         )
         .replace(
           '#include <map_fragment>',
@@ -134,9 +137,11 @@ function worldUV(m: THREE.MeshStandardMaterial, c: UvCfg): void {
           float mm2 = step( 0.5, vWall ) * step( abs( vWXZ.y - uMu2.x ), 0.03 ) * step( uMu2.y, vWXZ.x ) * step( vWXZ.x, uMu2.z ) * step( vWY, uMu.w );
           float mmu = mm2 > 0.5 ? 1.0 - clamp( ( vWXZ.x - uMu2.y ) / ( uMu2.z - uMu2.y ), 0.0, 1.0 ) : clamp( ( vWXZ.y - uMu.y ) / ( uMu.z - uMu.y ), 0.0, 1.0 );
           vec3 mcol = texture2D( uMuTex, vec2( mmu, clamp( vWY / uMu.w, 0.0, 1.0 ) ) ).rgb;
-          diffuseColor.rgb = mix( diffuseColor.rgb, mcol, max( mm1, mm2 ) );`,
+          diffuseColor.rgb = mix( diffuseColor.rgb, mcol, max( mm1, mm2 ) );
+          mmMask = max( mm1, mm2 );`,
         )
     }
+    if (c.mural) sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance *= 1.0 - mmMask * 0.85;')
     if (sp) {
       const r = sp.rects
       const pad = (i: number) => new THREE.Vector4(...(r[i] ?? [0, 0, 0, 0]))
@@ -243,29 +248,29 @@ const boost = (hex: number, k = 1.22): number => {
 }
 
 // wood floors (photos 20 / 18+45 / 24 / 26). All bake at 256 x 512 (walnut 512 x 512); joints are texel-sized.
-// walnut (photos 09 / 05 / 20 / 21): dark chocolate-brown laminate (~#4A2416 average, streaks up to #6b3a22), fine grain, SATIN (rough ~0.5)
+// walnut (photos 09 / 05 / 20 / 21): red-brown glossy laminate (~#4A2416 .. #6b3a22 with vivid red streaks), fine grain, rough ~0.35 so it catches the window light; planks staggered by 1/3
 const WALNUT: WoodFloor = {
-  seed: 3, rows: 14, boardW: 0.16, segs: 3, plankLen: 0.75, dark: [44, 21, 13], light: [104, 56, 33],
-  tone: 0.5, streak: 0.4, figure: 0.9, jitter: 0.15, lenVar: 0.5, desat: 0.1, rough: [0.44, 0.56], size: [512, 512], groove: 0.2, bevel: 0.35,
+  seed: 3, rows: 15, boardW: 0.16, segs: 4, plankLen: 0.85, dark: [46, 22, 14], light: [112, 54, 32], stagger: true,
+  tone: 0.5, streak: 0.4, figure: 0.8, jitter: 0.12, lenVar: 0.08, desat: 0.08, rough: [0.45, 0.52], size: [384, 390], groove: 0.14, joint: 0.7, bevel: 0.1,
 }
 // walnut strips (Schlafen): narrow 10 cm x 1.2 m strips, same dark chocolate walnut, satin
 const WALNUT_STRIP: WoodFloor = {
-  seed: 17, rows: 10, boardW: 0.1, segs: 2, plankLen: 1.2, dark: [42, 20, 12], light: [100, 54, 32],
-  tone: 0.55, streak: 0.4, figure: 0.9, jitter: 0.15, lenVar: 0.45, desat: 0.1, rough: [0.44, 0.56], size: [512, 512], groove: 0.12, joint: 0.6, bevel: 0.35,
+  seed: 17, rows: 15, boardW: 0.1, segs: 3, plankLen: 1.2, dark: [45, 22, 14], light: [110, 53, 31], stagger: true,
+  tone: 0.55, streak: 0.4, figure: 0.8, jitter: 0.12, lenVar: 0.08, desat: 0.08, rough: [0.45, 0.52], size: [384, 390], groove: 0.1, joint: 0.5, bevel: 0.1,
 }
 // hallways (photos 10 / 18): mid brown satin wood, a little lighter than the walnut rooms
 const HALL: WoodFloor = { seed: 21, rows: 12, boardW: 0.19, segs: 2, plankLen: 1.2, dark: [56, 32, 22], light: [104, 66, 46], tone: 0.3, streak: 0.35, jitter: 0.15, lenVar: 0.4, desat: 0.12, rough: [0.42, 0.58], bevel: 0.35 }
-const OAK: WoodFloor = { seed: 5, rows: 12, boardW: 0.19, segs: 2, plankLen: 1.2, dark: [142, 78, 38], light: [196, 120, 64], tone: 0.5, streak: 0.5, rough: [0.35, 0.65] }
+const OAK: WoodFloor = { seed: 5, rows: 12, boardW: 0.19, segs: 2, plankLen: 1.2, dark: [142, 78, 38], light: [196, 120, 64], tone: 0.5, streak: 0.5, rough: [0.35, 0.65], size: [128, 256] } // only the hidden subfloor under the plan uses it: tiny bake
 // laminates (photos 24 / 26): even figure, per-plank value variation ~8-10 %, capped so they never bleach
-// photo 24 (Kind-links): warm medium brown #7a5e46, 20 cm planks with fine long grain and clearly bevelled seams; 1024 wide so the grain stays sharp
+// Kind-links (photo 25 notes): DARK brown satin vinyl/laminate #5b4636 (key stays 'laminate-brown'; alias 'laminate-dark'), 20 cm planks with fine long grain and clearly bevelled seams; 1024 wide so the grain stays sharp
 const LAMINATE: WoodFloor = {
-  seed: 8, rows: 12, boardW: 0.2, segs: 2, plankLen: 1.2, dark: [108, 78, 54], light: [144, 106, 76], tone: 0.3, streak: 0.16, jitter: 0.25,
-  cap: 0.9, groove: 0.32, joint: 1, fibre: 0.34, desat: 0.05, lenVar: 0.3, rough: [0.5, 0.72], bevel: 0.6, size: [1024, 384],
+  seed: 8, rows: 12, boardW: 0.2, segs: 2, plankLen: 1.2, dark: [110, 86, 68], light: [148, 118, 97], tone: 0.3, streak: 0.14, jitter: 0.2,
+  cap: 0.9, groove: 0.15, joint: 0.5, fibre: 0.3, desat: 0.14, lenVar: 0.3, rough: [0.5, 0.62], bevel: 0.25, size: [384, 288],
 }
 // photo 26 / 08 (Kind-mitte): honey-orange beech laminate (#d9a26c / #b98a58), visible fine grain, dark bevelled seams
 const BEECH: WoodFloor = {
-  seed: 13, rows: 12, boardW: 0.19, segs: 2, plankLen: 1.2, dark: [186, 126, 72], light: [236, 172, 106], tone: 0.28, streak: 0.14, jitter: 0.5,
-  cap: 0.85, groove: 0.3, joint: 1, fibre: 0.36, desat: 0.02, rough: [0.45, 0.8], bevel: 0.55, size: [512, 384],
+  seed: 13, rows: 11, boardW: 0.19, segs: 3, plankLen: 0.8, dark: [196, 124, 66], light: [236, 170, 104], tone: 0.2, streak: 0.16, jitter: 0.25,
+  cap: 0.95, groove: 0.3, joint: 0.5, fibre: 0.75, desat: 0, lenVar: 0.3, rough: [0.36, 0.46], bevel: 0.3, size: [512, 384],
 }
 const wood = (name: string, o: WoodFloor, normal = 0.8, env = 0) => () => pbr(woodFloorTex(name, o), { floor: woodMetres(o), env: env || undefined }, undefined, normal)
 
@@ -299,21 +304,22 @@ const stoneLight = () => pbr(tileTex('floor'), { floor: [1.5, 1.5] }, { color: 0
 const registry: Record<string, () => THREE.Material> = {
   // ---------------------------------------------------------------- floors
   oak: wood('oak', OAK),
-  walnut: wood('walnut', WALNUT, 0.8, 1.0),
-  'walnut-strip': wood('walnut-strip', WALNUT_STRIP, 0.8, 1.0),
-  'laminate-brown': wood('laminate-brown', LAMINATE, 1.0),
+  walnut: wood('walnut', WALNUT, 0.7, 0.6),
+  'walnut-strip': wood('walnut-strip', WALNUT_STRIP, 0.7, 0.6),
+  'laminate-brown': wood('laminate-brown', LAMINATE, 0.7),
   beech: wood('beech', BEECH, 1.0),
+  'laminate-dark': wood('laminate-brown', LAMINATE, 0.7), // alias (shares the bake)
   'hall-brown': wood('hall-brown', HALL),
   // kitchen: cream-beige #D9D2C3 in the photos (04 / 16), light-grey grout; albedo is warm and bright because the
   // interior light is cool and dim, the on-screen result is what has to match the photo
-  'tile-grey': () => pbr(tileTex('floor'), { floor: [1.65, 1.65], rot: 45 }, { color: 0xd6cebd, roughness: 1 }, 1.0), // cream-beige #D9D2C3 (photo 04), worn glaze; was cool light grey (photos 16 / 18 / 19) with darker grout (~#8d8a85), slightly glossy; wider grout = crisp at a distance
+  'tile-grey': () => pbr(tileTex('kfloor'), { floor: [1.65, 1.65], rot: 45 }, { color: 0xf4f3ee, roughness: 1 }, 1.0), // light grey-white glazed 33 cm diagonal tiles (photos 04 / 19, body ~#DEDDD8 lit), thin light-grey grout
   // bath / WC: floor grey-beige #cfc9c0..#d0cdc6, walls glossy white #eeeeea (cooler than the paint above), sky reflection
   'tile-bath': () =>
     pbr(tileTex('bath'), {
       // floor: grey-beige ~27x27 (#c9c5bc) with dark grout; walls: white glossy 20x25 (photos 29 / 30 / 32), pale cap only, mild sky reflection
-      floor: [1.35, 1.35], wall: [1.0, 1.25], env: 2.5,
-      dual: { tint: 0xffffff, roughMul: 0.55, paintY: 1.5, paint: 0xfffdf8, cap: 0xeceeeb, full: wcBox() },
-    }, { color: 0xd3cfc5, roughness: 0.85 }, 0.9),
+      floor: [1.35, 1.35], wall: [1.0, 1.25], env: 1.5,
+      dual: { tint: 0xffffff, roughMul: 0.7, paintY: 1.5, paint: 0xfaf6ee, cap: 0xeceeeb, full: wcBox() },
+    }, { color: 0xc3c0b8, roughness: 0.85 }, 1.0),
   // light-grey 30x30 with dark grout (photo 10): chimney recess floor, entrance step, apron; the stove's floor plate uses the same material
   'stone-light': stoneLight,
   'hearth-slate': stoneLight,
@@ -322,23 +328,23 @@ const registry: Record<string, () => THREE.Material> = {
   // neutral white paint #f3f2ee in the photos; no emissive fake, exposure belongs to lighting
   'plaster-white': () =>
     pbr(plasterTex(), {
-      floor: [1.6, 1.6],
+      floor: [1.2, 1.2], // Raufaser: 1.2 m per repeat (tiling hidden by the roller mottle)
       // kitchen: grey 10x10 tile backsplash between worktop (0.9) and wall cabinets (photos 13 / 14 / 16 / 18); world-rect based, so the
       // other rooms sharing this paint are untouched
       splash: { rects: splashRects(), y0: 0.9, y1: 1.5, tint: 0xa5ada5, tex: tileTex('splash').map },
-    }, { color: 0xf5f3ef }, 1.0), // neutral white; slightly warm: the sky-blue ambient in shade turns it neutral, not blue-grey
+    }, { color: 0xf8f6f2, emissive: 0xf4f1ec, emissiveIntensity: 0.42 }, 0.9), // bright white Raufaser paint ~#F1EFEA (photos 02 / 04 / 24 / 27 / 41) with visible grit relief
   // 'plaster-warm' is the wall key of Wohnen + both children's rooms. World-space rule: the Wohnen west wall face (the TV wall, x = kmeE,
   // z zKmN..south wall, floor to ceiling) shows the branch-photo mural (photos 09 / 11) stretched over that rectangle; nothing else changes.
   'plaster-warm': () =>
     pbr(plasterTex(), {
-      floor: [1.6, 1.6],
+      floor: [1.2, 1.2],
       // TV wall (x = kmeE) + the north wall behind the armchairs / sideboard (z = zWoS, x 8.8..east wall), photos 05 / 09 / 11
       mural: { x: LAYOUT.kmeE, z0: LAYOUT.zKmN, z1: LAYOUT.IN.z1, y1: WALL_HEIGHT, tex: muralTex().map, wall2: { z: LAYOUT.zWoS, x0: 8.85, x1: LAYOUT.IN.x1 } },
-    }, { color: 0xf1efec }, 1.0), // near-white, very slightly cool (photos 05 / 09 / 24: bright white walls; also the bedroom paint, photo 20)
+    }, { color: 0xf8f6f2, emissive: 0xf4f1ec, emissiveIntensity: 0.42 }, 0.9), // near-white, very slightly cool (photos 05 / 09 / 24: bright white walls; also the bedroom paint, photo 20)
   // the same print as a stand-alone material for custom meshes (UV 0..1 over the mesh, e.g. a PlaneGeometry)
   'mural-branches': () => new THREE.MeshStandardMaterial({ map: muralTex().map, roughness: 0.9, metalness: 0 }),
   exterior: () => pbr(brickTex(), { floor: [1.0, 0.75] }, { color: 0xffffff }, 1),
-  ceiling: () => pbr(ceilingTex(), { floor: [0.8, 0.8] }, { color: 0xf5f4f0 }, 0.6),
+  ceiling: () => pbr(ceilingTex(), { floor: [0.8, 0.8] }, { color: 0xfafaf7, emissive: 0xf4f4f2, emissiveIntensity: 0.55 }, 0.5), // white #F2F2EE panels; emissive fill keeps it from reading grey under exposure
   baseboard: () => flat({ color: 0xf6f5f1, roughness: 0.42 }),
   frame: () => flat({ color: 0xf6f5f1, roughness: 0.32 }), // white PVC, glossier than the wall paint
   door: () => flat({ color: 0xf1f0ec, roughness: 0.42 }), // satin white paint like the walls; untextured so no shading blotches on the panels
@@ -350,9 +356,9 @@ const registry: Record<string, () => THREE.Material> = {
   // ---------------------------------------------------------------- furniture: original keys
   'furn-wood': grainMat(0x907250, 0.9),
   'furn-fabric': fabricMat(0x6f757c), // generic placeholder cloth (neutral grey)
-  'furn-white': () => flat({ color: 0xf0efeb, roughness: 0.45 }),
+  'furn-white': () => flat({ color: 0xdde8f2, roughness: 0.4 }), // white IKEA-style fronts ~#F2F1EC, low warm tint, satin
   // satin white-painted timber (photo 27): faint open-pore grain under the paint
-  'furn-white-grain': () => pbr(grainTex(0), { floor: [0.7, 0.18], swap: true }, { color: 0xf3f2ee, roughness: 0.5 }, 0.25),
+  'furn-white-grain': () => { const m = pbr(grainTex(0), { floor: [0.7, 0.18], swap: true }, { color: 0xf3f2ee, roughness: 0.5 }, 0.12); m.color.multiplyScalar(1.22); return m }, // colour x1.22: the grain map averages ~0.8, so the paint still lands near white
   'tile-trim': () => flat({ color: 0xd9dad6, roughness: 0.3 }),
   'furn-plant': () => flat({ color: 0x4f7a3c, roughness: 0.72 }),
   'furn-dark': () => flat({ color: 0x1c1c1e, roughness: 0.45 }),
@@ -366,10 +372,11 @@ const registry: Record<string, () => THREE.Material> = {
   'fabric-armchair': fabricMat(0x4f5257, 0.14, 0.5, 0.1, 1.04), // dark charcoal-grey armchairs (photos 05 / 09 / 11), ~#55585d once lit
   'fabric-linen': fabricMat(0xf2efe8, 0.16, 0.4, 0.3, 1.0), // duvet / white bed linen
   'fabric-sage': fabricMat(0x8fa88f, 0.16, 0.45, 0.25, 1.08), // bedroom blanket (photo 20)
+  'blanket-sage': fabricMat(0x8fa88f, 0.22, 0.3, 0.3, 1.02), // smooth knit/linen throw, sage #8FA88F (photo 02); no bump pattern, no seams
   'fabric-plum': fabricMat(0x6d1a3a, 0.16, 0.45, 0.25, 1.0), // bedroom curtain (photo 20)
   'fabric-cream': fabricMat(0xe8dfc8, 0.16, 0.4, 0.25, 1.05),
   'fabric-bluegrey': fabricMat(0x545d68, 0.15, 0.4), // daybed mattress (photo 24); NOT for the double bed (white duvet 'fabric-linen', sage blanket 'fabric-sage')
-  'fabric-floral': () => pbr(floralTex(), { floor: [0.6, 0.6] }, { color: 0xffffff, side: THREE.DoubleSide }, 0.8), // kitchen curtain + cushions
+  'fabric-floral': () => pbr(floralTex(), { floor: [1.2, 1.2], diag: true }, { color: 0xffffff, side: THREE.DoubleSide }, 0.8), // kitchen curtain + cushions: 1.2 m per repeat, large cream floral (photos 13 / 14 / 19)
   // net curtain (kind rooms, photos 25 / 27 / 33): lace pattern on an almost clear net, the garden view shows through
   'curtain-sheer': () =>
     pbr(laceTex(), { floor: [0.3, 0.3] }, {
@@ -389,6 +396,8 @@ const registry: Record<string, () => THREE.Material> = {
   worktop: () => pbr(terrazzoTex(), { floor: [0.5, 0.5] }, { color: 0xffffff, roughness: 0.9 }, 0.6), // fine low-contrast grey-beige pebble laminate, photos 13 / 16
   'splash-tile': () => pbr(tileTex('splash'), { floor: [0.5, 0.5] }, { color: 0xa5ada5, roughness: 1 }, 0.9), // grey 20x20 wall tile, light grout
   // round 1 additions: kind-links wardrobe / furniture (photos 21 / 24), bedroom window dressing (photos 20 / 23)
+  // Kinderzimmer 1 wardrobe (photo 24): dark charcoal laminate with a faint vertical grain + roughness variation (not a flat black slab)
+  'wardrobe-dark': () => { const m = flat({ color: 0x1f1f21, roughness: 0.5 }); m.userData.name = 'wardrobe-black'; return m }, // flat black satin melamine (photo 08), no grain; renamed so lighting.ts' by-name charcoal lift (for the old grey texture) does not apply
   'black-gloss': () => new THREE.MeshPhysicalMaterial({ color: 0x0e0e10, roughness: 0.16, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.06 }),
   'white-mdf': () => new THREE.MeshPhysicalMaterial({ color: 0xf3f2ee, roughness: 0.34, metalness: 0, clearcoat: 0.35, clearcoatRoughness: 0.2 }),
   'zebra-fabric': () => pbr(zebraTex(), { floor: [0.5, 0.5] }, { color: 0xffffff, roughness: 1 }, 0.4, 0.2),
@@ -411,6 +420,7 @@ const registry: Record<string, () => THREE.Material> = {
     m.customProgramCacheKey = () => 'garden-backdrop'
     return m
   },
+  'tray-satin': () => flat({ color: 0x3a3d40, roughness: 0.42 }), // shower tray: dark grey satin (furniture may use it instead of furn-white)
   'sink-black': () => flat({ color: 0x1e1e20, roughness: 0.35 }),
   steel: metalMat(0xc4c6c8, 0.8, 1), // fridge / hood / kettle
   'steel-dark': () => flat({ color: 0x1a1a1c, roughness: 0.25, metalness: 0.35 }), // glossy black fridge, oven glass front (no brushed streaks)
@@ -424,8 +434,8 @@ const registry: Record<string, () => THREE.Material> = {
   bulb: () => flat({ color: 0xfff0d0, roughness: 0.3, emissive: 0xffd9a0, emissiveIntensity: 1.2 }),
   terracotta: () => flat({ color: 0xb5643c, roughness: 0.85 }),
   soil: () => flat({ color: 0x3a2a1e, roughness: 1 }),
-  'paint-green': () => pbr(grainTex(0), { floor: [0.7, 0.18], swap: true }, { color: 0x24572a, roughness: 0.5 }, 0.22), // painted timber wardrobes (photo 21): muted green, vertical brush grain
-  'stone-sill': () => pbr(plasterTex(), { floor: [1.2, 1.2] }, { color: 0xb9b3a8, roughness: 1 }, 1.2),
+  'paint-green': () => pbr(grainTex(0), { floor: [0.7, 0.18], swap: true }, { color: 0xf3f2ee, roughness: 0.5 }, 0.12), // LEGACY KEY (schlafen wardrobes / picket bench): now white-painted timber, no green in the interior (critic round 3); lighting.ts still multiplies it x1.2 (harmless, the furniture now uses furn-white-grain)
+  'stone-sill': () => pbr(plasterTex(), { floor: [0.7, 0.7] }, { color: 0xb9b3a8, roughness: 1 }, 0.7),
   'plant-dark': () => flat({ color: 0x2f5a2e, roughness: 0.7 }),
 
   // ---------------------------------------------------------------- wood stove (photo 10)
@@ -451,7 +461,7 @@ export function getMaterial(key: string): THREE.Material {
   if (!m) {
     const build = registry[key]
     m = build ? build() : new THREE.MeshStandardMaterial({ color: 0xff00ff })
-    m.name = key
+    m.name = (m.userData.name as string | undefined) ?? key
     cache.set(key, m)
     if (typeof window !== 'undefined') (window as unknown as { __tourMatMs?: number }).__tourMatMs = textureBakeMs() // QA
   }

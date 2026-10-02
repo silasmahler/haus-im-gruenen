@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, CircleHelp, Map as MapIcon, X } from 'lucide-react'
+import { ArrowLeft, CircleHelp, Map as MapIcon, Mouse, X } from 'lucide-react'
 import Link from 'next/link'
 import { memo, useEffect, useRef, useState } from 'react'
 
@@ -8,7 +8,7 @@ import { useLanguage } from '@/i18n/LanguageContext'
 
 import type { TourApi } from './buildScene'
 import type { Mode, TourControls } from './controls'
-import { FOOTPRINT, type Pt, type Room, type RoomId } from './plan'
+import { FOOTPRINT, openings, walls, type Pt, type Room, type RoomId } from './plan'
 
 /** Overlay: mode switch, room chips (roving arrow keys), minimap, joystick, help dialog, aria-live room announcements. */
 
@@ -19,6 +19,12 @@ const on = 'bg-white text-brand-900'
 
 const PAD = 0.3
 const VIEWBOX = `${-PAD} ${-PAD} ${FOOTPRINT.x1 + 2 * PAD} ${FOOTPRINT.z1 + 2 * PAD}`
+// door / passage gaps as white ticks across the wall line (closed outside doors are not passable: skipped)
+const ticks = openings.filter((o) => o.type !== 'window' && !(o.swing && o.swing.openDeg === 0)).map((o) => {
+  const w = walls.find((q) => q.id === o.wall)!
+  const h = o.width / 2
+  return w.a.z === w.b.z ? { x1: o.at.x - h, z1: o.at.z, x2: o.at.x + h, z2: o.at.z } : { x1: o.at.x, z1: o.at.z - h, x2: o.at.x, z2: o.at.z + h }
+})
 const pts = (poly: Pt[]) => poly.map((q) => `${q.x},${q.z}`).join(' ')
 
 const MiniMap = memo(function MiniMap({ rooms, current, label, onPick, marker }: {
@@ -34,6 +40,7 @@ const MiniMap = memo(function MiniMap({ rooms, current, label, onPick, marker }:
           <title>{label(r)}</title>
         </polygon>
       ))}
+      {ticks.map((k, i) => <line key={i} {...k} stroke="#fff" strokeWidth={0.2} strokeLinecap="butt" />)}
       <g ref={marker}>
         <path d="M0,0 L-1.53,-2.1 A2.6,2.6 0 0 1 1.53,-2.1 Z" fill="var(--color-brand-400)" fillOpacity={0.55} />
         <circle r={0.34} fill="var(--color-brand-500)" stroke="#fff" strokeWidth={0.12} />
@@ -264,7 +271,7 @@ export function TourUI({ api }: { api: TourApi }) {
       {/* graphics quality: next to Back on phones, left of the help button from sm up (never over the mode switch) */}
       <button type="button" data-tour-quality aria-label={u.qualityNames[quality]} title={u.qualityNames[quality]}
         onClick={() => setQuality(api.quality.cycle())}
-        className={`${glass} ${btn} ${idle} absolute left-[64px] top-[max(12px,env(safe-area-inset-top))] px-3! text-[13px]! sm:left-auto sm:right-[116px] sm:top-[68px]`}>
+        className={`${glass} ${btn} ${idle} absolute left-[64px] top-[max(12px,env(safe-area-inset-top))] px-3! text-[13px]! sm:left-auto sm:right-[168px] sm:top-[68px]`}>
         {u.qualityNames[quality]}
       </button>
       <div role="group" aria-label={u.modes}
@@ -276,11 +283,16 @@ export function TourUI({ api }: { api: TourApi }) {
       </div>
 
       {/* right column: help, map toggle, minimap */}
-      <div className="absolute right-3 top-[68px] flex flex-col items-end gap-2 max-[379px]:top-[124px]">
+      <div className="absolute right-3 top-[68px] flex flex-col items-end gap-2 max-sm:top-[124px]">
         <div className="flex gap-2">
           <button ref={helpBtn} className={`${glass} ${btn} ${idle} px-0!`} aria-label={u.help} aria-haspopup="dialog" onClick={() => setHelpOpen(true)}>
             <CircleHelp className="h-5 w-5" aria-hidden />
           </button>
+          {!touch && mode === 'walk' && (
+            <button className={`${glass} ${btn} ${idle} px-0!`} aria-label={u.lockMouse} title={u.lockMouse} onClick={() => { ctrl.lockPointer(); setHint(false) }}>
+              <Mouse className="h-5 w-5" aria-hidden />
+            </button>
+          )}
           <button className={`${glass} ${btn} ${idle} px-0!`} aria-label={mapOpen ? u.mapHide : u.mapShow}
             aria-pressed={mapOpen} aria-keyshortcuts="M" onClick={() => setMapOpen((o) => !o)}>
             <MapIcon className="h-5 w-5" aria-hidden />

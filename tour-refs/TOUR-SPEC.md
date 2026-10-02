@@ -94,3 +94,9 @@ Known skeleton limits: walls sampled by room at the segment midpoint only (a lon
 - Door lining + casing use the private material `geo-casing` (lit from below like `geo-soffit`), so thin end faces no longer render as dark hairlines; door leaves got more fill/less env reflection to match on shaded sides.
 - Areas now: wohnen 26.30 (-0.8 %), flur-links 6.95 (-0.7 %), kind-mitte 10.82 (-0.2 %); others within 0.2 %.
 - Kamin recess stays 0.84 x 1.26 m (1.06 m2) vs ~1.3 x 1.9 m in photo 10: deepening would take area from the kitchen/Diele/Kind-mitte, all at their label limits. Deliberate deviation.
+
+## Korrekturen Auftraggeber (2026-10-02)
+1. Wohnen hat nur EIN Doppelfenster (Südwand, gegenüber den Bädern): `w-wohnen-s`, 2,1 m breit, 2 Flügel + Mittelpfosten, Mitte x 9,62 (Plan: zwei nebeneinanderliegende Felder unten rechts). Vorhänge angepasst.
+2. Das "Fenster" rechts neben dem Kühlschrank (Küche, Nordwand, Fotos 04/19: weiße Tür mit Glas, Spitzengardine) ist eine Außentür: `w-kueche-n` entfernt, `d-kueche-garten` (0,9 x 2,1, Typ entrance, geschlossen) bei x 7,3. Kollision: solide Wand (kein Gap), Blickziel/Garten dahinter sichtbar. Die Ost-Tür `d-east` am Seitenflur ist eine andere Tür (bleibt).
+3. Schlafen: kleiner weißer Tisch + Stuhl stehen vor dem WEST-Fenster/Terrassentür (x 0,6, z 4,11) statt vor dem Nordfenster.
+4. Kind-mitte: Kommode/Sideboard abgesenkt auf h 0,5 m (Kofferablage).
