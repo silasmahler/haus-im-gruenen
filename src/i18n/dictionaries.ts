@@ -97,7 +97,6 @@ export interface Dictionary {
     intro: string
     groups: ActivityGroupDict[]
   }
-  cta: { heading: string; text: string; button: string }
   tour: {
     page: {
       title: string
@@ -413,11 +412,6 @@ export const dictionaries: Record<Locale, Dictionary> = {
           ],
         },
       ],
-    },
-    cta: {
-      heading: 'Nächsten Urlaub planen?',
-      text: 'Freie Termine und Preise findest du auf Airbnb — dort kannst du auch direkt buchen.',
-      button: 'Auf Airbnb buchen',
     },
     tour: {
       page: {
@@ -824,11 +818,6 @@ export const dictionaries: Record<Locale, Dictionary> = {
           ],
         },
       ],
-    },
-    cta: {
-      heading: 'Planning your next getaway?',
-      text: 'You can find availability and prices on Airbnb — and book directly there too.',
-      button: 'Book on Airbnb',
     },
     tour: {
       page: {

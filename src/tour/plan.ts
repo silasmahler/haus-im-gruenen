@@ -220,14 +220,14 @@ const zFlurC = r3((zBathS + zWoN) / 2); // centre of the side-hall vestibule (ea
  * Door table. Leaf 2.01 x 0.86 m (photo 08) => interior doors 0.80-0.86 in the tour; drawn 0.70 doors are widened to 0.80 where the
  * room allows. d-front 0.87 (2.10 high), d-east 0.78. d-schlafen + d-kind-links: leaf on the SOUTH jamb, opening west (as drawn).
  * d-kind-mitte: the plan shows only a glazed strip without leaf; a leaf hinged on the north jamb is kept deliberately.
- * Photo-derived: w-wohnen-e (French door in the east wall), w-bad-n (small frosted bath window 0.70 x 0.90, sill 1.10, photo 29),
+ * Photo-derived: w-bad-n (small frosted bath window 0.70 x 0.90, sill 1.10, photo 29),
  * w-schlafen-w drawn as a floor-length terrace door (photos 20, 28). Window sills / heights from photos 14 (kitchen 1.2 x 1.2,
  * sill 1.05), 20 (Schlafen 1.2 x 1.2, sill 0.9), 27 (Kind 0.9 x 1.1), 33 (Kind 1.3 x 1.3), 46 (French window 2.1 high).
  */
 export const openings: Opening[] = [
   // doors
-  { ...door('d-front', 'ext-s', xHallC, 0.87, ['flur-links', 'outside'], { hinge: 'a', toward: 'n', openDeg: 90 }), type: 'entrance', height: 2.1 },
-  { ...door('d-east', 'ext-e', zFlurC, 0.78, ['flur-rechts', 'outside'], { hinge: 'b', toward: 'w', openDeg: 90 }), type: 'entrance' },
+  { ...door('d-front', 'ext-s', xHallC, 0.87, ['flur-links', 'outside'], { hinge: 'a', toward: 'n', openDeg: 0 }), type: 'entrance', height: 2.1 },
+  { ...door('d-east', 'ext-e', zFlurC, 0.78, ['flur-rechts', 'outside'], { hinge: 'b', toward: 'w', openDeg: 0 }), type: 'entrance' },
   door('d-schlafen', 'int-spine', 4.53, 0.8, ['schlafen', 'flur-links'], { hinge: 'b', toward: 'w', openDeg: 90 }),
   door('d-kind-links', 'int-spine', 8.19, 0.8, ['kind-links', 'flur-links'], { hinge: 'b', toward: 'w', openDeg: 90 }),
   door('d-kind-mitte', 'int-kmitte-w', 8.7, 0.8, ['kind-mitte', 'flur-links'], { hinge: 'a', toward: 'e', openDeg: 90 }),
@@ -246,9 +246,8 @@ export const openings: Opening[] = [
   win('w-kind-links-s', 'ext-s', 2.3, 1.1, 0.9, 1.25, 'kind-links'),
   win('w-kind-mitte-s', 'ext-s', 6.3, 1.2, 0.9, 1.3, 'kind-mitte'), // photo 25: ~1.2 x 1.3, deep sill
   // Auftraggeber: the living room has ONE double window (2 sashes + mullion) opposite the baths; plan: two adjacent panes x 8.5..10.75
-  win('w-wohnen-s', 'ext-s', 9.62, 2.1, 0.75, 1.4, 'wohnen'),
-  // French / patio door in the garden (east) wall next to the sofa, grey tile threshold (photos 05, 09, 12); sill 0 = full-height glass
-  win('w-wohnen-e', 'ext-e', 6.05, 1.2, 0, 2.1, 'wohnen'),
+  win('w-wohnen-s', 'ext-s', 9.62, 2.1, 0, 2.1, 'wohnen'), // Auftraggeber: the ONLY living-room glazing, floor-length double window (2 sashes + mullion)
+  // (w-wohnen-e removed: Auftraggeber - east wall of Wohnen is solid)
   // small frosted bath window above the tub, north wall (photo 29); lighting.ts/dressing.ts add the frosted pane + daylight
   { ...win('w-bad-n', 'ext-n', r3((xbW + IN.x1) / 2), 0.7, 1.1, 0.9, 'bad') },
 ];
@@ -272,7 +271,7 @@ const M = (id: string, type: FurnitureType, room: RoomId, x: number, z: number, 
 export const KIND_MITTE_BED_HEAD = 'west' as 'east' | 'west'; // arrow curves counter-clockwise -> head at the west end (followed literally)
 
 // dining table: rearrangement 1 (arrow image): moved to the upper right (NE) of the kitchen, under the north window (photo 19: ~1.6-1.8 x 0.9)
-const tx = 6.25, tz = 2.4; // pushed east toward the coffee bar: 0.61 m walkway to it, 0.6 m to the fridge (north), east aisle to the garden door stays open
+const tx = 6.2, tz = 1.8; // upper-right (NE) kitchen corner: table x 5.4..7.0 / z 1.35..2.25, 1.06 m aisle to the west run, 0.66 m to the coffee bar, chairs clear the fridge front (z 0.88)
 
 export const furniture: Furniture[] = [
   // --- Schlafen (x 0.28..3.615, z 0.28..5.527)
@@ -309,6 +308,12 @@ export const furniture: Furniture[] = [
   M('sofa-wohnen', 'sofa', 'wohnen', 11.315, 7.81, 2.15, 1.15, 0.85, -90, { note: 'L-sofa (chaise at the north end), faces west (TV)' }),
   M('armchair-n', 'armchair', 'wohnen', 10.3, 6.43, 0.78, 0.8, 0.8, 0),
   M('armchair-s', 'armchair', 'wohnen', 10.3, 9.23, 0.78, 0.8, 0.8, 180),
+  // decor colliders (arc floor lamps: pole base + hanging shade; side tables); drawn in furniture/wohnen.ts by id, shade pieces sit at y 1.1 so AO / radiator checks ignore them
+  M('lamp-arc-1', 'plant', 'wohnen', 11.65, 6.4, 0.3, 0.3, 2.05, 0),
+  M('lamp-arc-1-shade', 'plant', 'wohnen', 10.9, 6.65, 0.34, 0.34, 0.4, 0, { y: 1.1, onTopOf: 'lamp-arc-1' }),
+  M('lamp-arc-2', 'plant', 'wohnen', 8.15, 6.4, 0.3, 0.3, 2.0, 0),
+  M('lamp-arc-2-shade', 'plant', 'wohnen', 8.15, 6.0, 0.34, 0.34, 0.4, 0, { y: 1.1, onTopOf: 'lamp-arc-2' }),
+  M('table-side-1', 'plant', 'wohnen', 9.5, 6.3, 0.5, 0.5, 0.52, 0),
   M('coffee-table', 'coffee-table', 'wohnen', 10.24, 7.9, 0.8, 0.8, 0.42, 0),
   M('tv-unit', 'tv-unit', 'wohnen', 8.0, 7.67, 2.65, 0.42, 0.45, 90, { note: 'long low unit against the mural (TV) wall' }),
   M('tv', 'tv', 'wohnen', 8.0, 7.67, 1.3, 0.06, 0.8, 90, { y: 0.45, onTopOf: 'tv-unit' }),
@@ -388,7 +393,7 @@ export const poses: JumpPose[] = [
   pose('wohnen-1', 'wohnen', 8.4, 9.5, 40, 'Wohnzimmer', 'Living room'),
   pose('wohnen-2', 'wohnen', 8.9, 7.8, 90, 'Sitzgruppe', 'Seating area'),
   pose('schlafen-1', 'schlafen', 2.05, 4.5, 320, 'Schlafzimmer', 'Bedroom', -4), // SE corner by the door, bed + both windows in view
-  pose('kind-links-1', 'kind-links', 1.27, 9.2, 355, 'Kinderzimmer 1', "Children's room 1", -3), // SW corner looking north
+  pose('kind-links-1', 'kind-links', 1.55, 8.95, 12, 'Kinderzimmer 1', "Children's room 1", -3), // SW corner looking north
   pose('kind-mitte-1', 'kind-mitte', 6.0, 8.55, 345, 'Kinderzimmer 2', "Children's room 2"),
   pose('bad-1', 'bad', 10.55, 3.05, 355, 'Bad', 'Bathroom'),
   { id: 'wc-1', room: 'wc', x: 8.95, z: 2.82, yawDeg: 270, pitchDeg: -8, eye: EYE, de: 'WC', en: 'Toilet' },

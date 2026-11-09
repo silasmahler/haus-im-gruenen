@@ -90,7 +90,7 @@ export function quiltMat(hex: number, rw: number, rh: number, cell = 0.075, roug
     const cv = document.createElement('canvas'); cv.width = cv.height = 128
     const c = cv.getContext('2d')!, img = c.createImageData(128, 128)
     for (let y = 0; y < 128; y++) for (let x = 0; x < 128; x++) {
-      const h = quiltH(x / 128, y / 128), g = Math.max(0, Math.min(255, 175 + h * 95)), i = (y * 128 + x) * 4
+      const h = quiltH(x / 128, y / 128), g = Math.max(0, Math.min(255, 205 + h * 38)), i = (y * 128 + x) * 4
       img.data[i] = img.data[i + 1] = img.data[i + 2] = g; img.data[i + 3] = 255
     }
     c.putImageData(img, 0, 0)
@@ -101,8 +101,8 @@ export function quiltMat(hex: number, rw: number, rh: number, cell = 0.075, roug
   const rx = Math.max(1, Math.round(rw / cell)), ry = Math.max(1, Math.round(rh / cell))
   const n = quiltBase.n.clone(), t = quiltBase.m.clone()
   n.repeat.set(rx, ry); t.repeat.set(rx, ry); n.needsUpdate = true; t.needsUpdate = true
-  m = new THREE.MeshPhysicalMaterial({ color: hex, map: t, normalMap: n, normalScale: new THREE.Vector2(0.7, 0.7), roughness: rough, metalness: 0,
-    sheen: 0.6, sheenRoughness: 0.6, sheenColor: new THREE.Color(0x8a8f96) })
+  m = new THREE.MeshPhysicalMaterial({ color: hex, map: t, normalMap: n, normalScale: new THREE.Vector2(0.35, 0.35), roughness: Math.max(rough, 0.95), metalness: 0,
+    sheen: 0.3, sheenRoughness: 0.6, sheenColor: new THREE.Color(0x8a8f96) })
   quiltCache.set(key, m)
   return m
 }

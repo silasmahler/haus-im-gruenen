@@ -34,16 +34,21 @@ function nightstandB(g: G, f: Furniture): void {
   bx(g, 0.14, 0.04, 0.1, paint(0xc94f2a, 0.7), 0.1, f.h, 0.12)
 }
 
-/** matte black two-door wardrobe: door gap, two long vertical handles, plinth; local +z = front (photo 24) */
+/** satin charcoal two-door wardrobe (photo 24): framed doors with raised panels, door gap, chrome bar handles, top cornice, plinth; local +z = front */
 function wardrobe(g: G, f: Furniture): void {
-  const blk = 'wardrobe-dark', door = 'wardrobe-dark' // textured charcoal laminate (materials.ts)
-  rb(g, f.w, f.h, f.d - 0.02, 0.008, blk, 0, 0, -0.01, 0, 1)
+  const body = paint(0x3e4044, 0.55), door = paint(0x4a4c51, 0.5), panel = paint(0x55575c, 0.45), gap = paint(0x1a1b1d, 0.8)
+  rb(g, f.w, f.h - 0.08, f.d - 0.02, 0.008, body, 0, 0.08, -0.01, 0, 1)
+  bx(g, f.w - 0.06, 0.08, f.d - 0.06, gap, 0, 0, -0.01) // recessed plinth
+  rb(g, f.w + 0.03, 0.05, f.d + 0.02, 0.01, panel, 0, f.h - 0.05, 0, 0, 1) // top cornice (lighter edge catches the light)
   const dw = (f.w - 0.04) / 2
   for (const s of [-1, 1]) {
-    bx(g, dw - 0.004, f.h - 0.12, 0.02, door, s * (dw / 2 + 0.002), 0.06, f.d / 2 - 0.02)
-    bx(g, 0.014, 0.7, 0.024, paint(0x3a3a3d, 0.4, 0.5), s * 0.05, 0.75, f.d / 2 + 0.004)
+    const x = s * (dw / 2 + 0.002)
+    bx(g, dw - 0.008, f.h - 0.16, 0.02, door, x, 0.09, f.d / 2 - 0.02)
+    bx(g, dw - 0.14, f.h - 0.42, 0.008, panel, x, 0.22, f.d / 2 - 0.006) // raised panel
+    bx(g, dw - 0.14, 0.012, 0.012, gap, x, 0.22, f.d / 2 - 0.004); bx(g, dw - 0.14, 0.012, 0.012, gap, x, f.h - 0.22, f.d / 2 - 0.004)
+    bx(g, 0.016, 0.7, 0.026, 'chrome', s * 0.06, 0.8, f.d / 2 + 0.006) // long bar handle at the meeting edge
   }
-  bx(g, 0.006, f.h - 0.1, 0.02, paint(0x050506, 0.9), 0, 0.06, f.d / 2 - 0.02) // door gap
+  bx(g, 0.008, f.h - 0.16, 0.024, gap, 0, 0.09, f.d / 2 - 0.02) // door gap
 }
 
 /** tall black-framed leaning mirror (photo 24); local +z = front */

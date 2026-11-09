@@ -171,17 +171,12 @@ function logBench(g: G, f: Furniture): void {
 }
 
 function extras(root: G): void {
-  const drape = paint(0x7f8388, 0.95) // grey side drape, only at the balcony door (photos 05 / 09 / 12)
   // --- south wall curtains (rod y 2.36, plane 6 cm off the wall face at z 10.127)
   const zc = 10.06
   curtainRod(root, 8.4, 10.85, 2.36, zc, 'chrome')
   for (const cx of [9.1, 10.15]) cloth(root, 1.1, 2.3, 5, 0.035, 'curtain-voile', cx, 0.03, zc - 0.03, Math.PI)
   for (const cx of [8.6, 9.62, 10.65]) cloth(root, 0.4, 2.3, 3, 0.04, 'curtain-voile', cx, 0.03, zc, Math.PI)
-  // --- patio door curtains (east wall face x 11.891)
-  const xc = 11.82
-  rod(root, [xc, 2.36, 5.05], [xc, 2.36, 7.1], 0.009, 0.009, 'chrome', 8)
-  cloth(root, 1.5, 2.3, 5, 0.035, 'curtain-voile', xc - 0.03, 0.03, 6.05, -Math.PI / 2)
-  for (const cz of [5.25, 6.85]) cloth(root, 0.34, 2.3, 3, 0.03, drape, xc, 0.03, cz, -Math.PI / 2)
+  // (east wall patio door curtains removed: Auftraggeber - east wall is solid)
   ribRadiator(root, 0.7, 0.62, 11.82, 0.16, 4.85, -Math.PI / 2)
   // --- lamps and side table
   arcLamp(root, 11.65, 6.4, 1.85, -0.75, 0.25)
@@ -201,7 +196,9 @@ function extras(root: G): void {
 
 export function build(): THREE.Group {
   const out = buildRooms('furniture:wohnen', ['wohnen', 'kamin'],
-    { sofa, armchair, 'coffee-table': coffeeTable, 'tv-unit': (g, f) => tvUnit(at(g, 0, -0.12, 0), f), tv: (g) => tv(at(g, 0, -0.17, 0)), sideboard, rug, plant, 'bench-kamin': logBench },
+    { sofa, armchair, 'coffee-table': coffeeTable, 'tv-unit': (g, f) => tvUnit(at(g, 0, -0.12, 0), f), tv: (g) => tv(at(g, 0, -0.17, 0)), sideboard, rug, plant, 'bench-kamin': logBench,
+      // collider-only pieces (plan.ts): the lamps / side tables are drawn in extras()
+      'lamp-arc-1': () => undefined, 'lamp-arc-1-shade': () => undefined, 'lamp-arc-2': () => undefined, 'lamp-arc-2-shade': () => undefined, 'table-side-1': () => undefined },
     extras)
   return out
 }

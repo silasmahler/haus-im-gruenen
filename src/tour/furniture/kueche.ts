@@ -6,7 +6,7 @@ import type { Furniture } from '../plan'
 
 type G = THREE.Group
 const BLK = 'metal-black'
-const WHITE = 'furn-white'
+const WHITE = paint(0xf3f3f1, 0.42) // cool white fronts (#f4f3ef in photos 16 / 18)
 
 /** one bar handle (black), horizontal (len along x) or vertical */
 const handle = (g: G, x: number, y: number, z: number, len = 0.2, vertical = false): void => {
@@ -67,7 +67,7 @@ function upper(g: G, d: number, x0: number, x1: number, glass = false): void {
 /** tall white two-door fridge-freezer, 0.6 x 0.6 x 1.85, black bar handles (photo 18); local x = centre in the run, front +z */
 function fridgeFreezer(g: G, cx: number): void {
   const w = 0.6, d = 0.6, h = 1.85, zf = 0.3
-  const body = paint(0xf1f1ef, 0.3)
+  const body = paint(0xf3f3f1, 0.32)
   rb(g, w, h, d, 0.012, body, cx, 0.02, 0.0, 0, 1)
   bx(g, w - 0.04, 0.02, d - 0.06, BLK, cx, 0, 0)
   // door seam + two door panels

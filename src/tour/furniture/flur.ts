@@ -40,32 +40,37 @@ function extras(root: G): void {
   // coat board: oak plank with brass hooks, four jackets, a hat and a shoulder bag
   { const r = at(root, 5.6385, 5.16, -Math.PI / 2) // Auftraggeber: Jackenablage in der Dielenecke vor der Küche (kurze Wand x 5.64, z 4.53..5.79)
     rb(r, 1.1, 0.11, 0.025, 0.008, 'wood-birch', 0, 1.62, 0.0125, 0, 1)
-    const coats = [0x39435a, 0x6b7350, 0xa0825a, 0x36363a]
-    for (let i = 0; i < 4; i++) {
-      const x = -0.45 + i * 0.3
+    const coats = [0x39435a, 0xa0825a]
+    const hooks = [-0.35, 0.0, 0.35]
+    for (const x of hooks) {
       rod(r, [x, 1.67, 0.025], [x, 1.67, 0.07], 0.007, 0.007, 'brass', 5)
       sp(r, 0.011, 'brass', x, 1.67, 0.075, 1, 1, 1, 6)
     }
-    coat(r, -0.45, 1.62, 0.085, coats[0], 0.95, 0.46)
-    coat(r, -0.15, 1.62, 0.1, coats[1], 0.8, 0.44)
-    coat(r, 0.15, 1.62, 0.085, coats[2], 0.95, 0.46)
-    // hat on the fourth hook, bag from the hook beside it
-    cy(r, 0.11, 0.11, 0.012, paint(0x8a6a44, 0.9), 0.45, 1.63, 0.1, 16).rotation.x = Math.PI / 2
-    cy(r, 0.065, 0.075, 0.09, paint(0x8a6a44, 0.9), 0.45, 1.58, 0.1, 14).rotation.x = Math.PI / 2 }
+    coat(r, -0.35, 1.62, 0.085, coats[0], 0.9, 0.36)
+    coat(r, 0.0, 1.62, 0.085, coats[1], 0.8, 0.34)
+    // woven shoulder bag on the third hook (strap loop + body) instead of a third jacket
+    { const bx0 = 0.35
+      rod(r, [bx0 - 0.03, 1.66, 0.085], [bx0 - 0.07, 1.4, 0.1], 0.006, 0.006, paint(0x6a4a34, 0.8), 5)
+      rod(r, [bx0 + 0.03, 1.66, 0.085], [bx0 + 0.07, 1.4, 0.1], 0.006, 0.006, paint(0x6a4a34, 0.8), 5)
+      rb(r, 0.26, 0.2, 0.08, 0.03, paint(0x8a6a44, 0.85), bx0, 1.24, 0.1, 0, 2) }
+    // flat-brim hat on the end hook
+    cy(r, 0.1, 0.1, 0.008, paint(0x8a6a44, 0.9), 0.5, 1.63, 0.1, 16).rotation.x = Math.PI / 2
+    cy(r, 0.055, 0.065, 0.07, paint(0x8a6a44, 0.9), 0.5, 1.59, 0.1, 14).rotation.x = Math.PI / 2
+    rod(r, [0.5, 1.67, 0.025], [0.5, 1.67, 0.08], 0.007, 0.007, 'brass', 5) }
   picture(root, 0.5, 0.36, art('land'), 3.79, 1.55, 6.1, Math.PI / 2, 'furn-white', 0.02, 0.03)
   picture(root, 0.5, 0.36, art('land'), 3.79, 1.55, 6.7, Math.PI / 2, 'furn-white', 0.02, 0.03)
   picture(root, 0.36, 0.5, art('brown'), 3.79, 1.5, 5.4, Math.PI / 2, 'furn-white', 0.02, 0.03)
 }
-/** jacket on a hook at (x, yTop): wide shoulders, boxy padded body with a slight belly, two sleeves, collar; w = body width, len = hang length */
+/** jacket on a hook: sloped shoulders, slim body (7 cm deep), tapered sleeves, hood; w = body width, len = hang length */
 function coat(r: G, x: number, yTop: number, z: number, hex: number, len: number, w: number): void {
   const m = paint(hex, 0.95)
-  sp(r, 0.5, m, x, yTop - 0.07, z, w * 0.56, 0.16, 0.14, 12)
-  const body = rb(r, w, len - 0.1, 0.1, 0.045, m, x, yTop - len, z, 0, 2); body.scale.z = 1
+  sp(r, 0.5, m, x, yTop - 0.06, z, w * 0.5, 0.1, 0.07, 10) // shoulder yoke
+  rb(r, w, len - 0.1, 0.07, 0.03, m, x, yTop - len, z, 0, 2)
   for (const s of [-1, 1]) {
-    const sl = rb(r, 0.1, len * 0.72, 0.09, 0.04, m, x + s * (w / 2 + 0.03), yTop - len * 0.8, z + 0.005, 0, 2); sl.rotation.z = s * 0.05
+    rod(r, [x + s * (w / 2 - 0.01), yTop - 0.08, z], [x + s * (w / 2 + 0.035), yTop - len * 0.72, z + 0.012], 0.034, 0.024, m, 7) // tapered sleeve
   }
-  rb(r, 0.14, 0.05, 0.1, 0.02, paint(hex, 0.8), x, yTop - 0.05, z, 0, 1) // collar
-  bx(r, 0.004, len * 0.7, 0.004, paint(0x111111, 0.8), x, yTop - len + 0.05, z + 0.052) // zip line
+  sp(r, 0.5, paint(hex, 0.85), x, yTop - 0.09, z - 0.045, w * 0.3, 0.09, 0.055, 8) // hood bunched behind the neck
+  bx(r, 0.004, len * 0.55, 0.004, paint(0x111111, 0.8), x, yTop - len * 0.65, z + 0.037) // zip
 }
 
 export function build(): THREE.Group {

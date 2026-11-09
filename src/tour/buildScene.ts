@@ -60,7 +60,7 @@ export async function createTour(canvas: HTMLCanvasElement, onProgress?: Progres
   // dollhouse cut-away: 4 global clip planes owned by controls.ts (constant 1e3 = inactive); set before any program compiles so mode switches never recompile
   const clip = [new THREE.Plane(), new THREE.Plane(), new THREE.Plane(), new THREE.Plane()]
   clip.forEach((q) => { q.constant = 1e3 })
-  renderer.clippingPlanes = clip
+  renderer.localClippingEnabled = true // the planes are attached to the wall-shell materials only (ground, backdrop and furniture are never clipped)
 
   let bakeMs = 0
   let house: ReturnType<typeof buildGeometry>
@@ -83,6 +83,11 @@ export async function createTour(canvas: HTMLCanvasElement, onProgress?: Progres
     house = buildGeometry()
     performance.mark('tour:geometry')
     await onProgress?.('furniture', 0.6, true)
+    house.group.traverse((o) => {
+      if (o instanceof THREE.Mesh && /^(wall|trim|door|window|radiator|handle)/.test(o.name)) {
+        for (const m of Array.isArray(o.material) ? o.material : [o.material]) m.clippingPlanes = clip
+      }
+    })
     scene.add(house.group, buildFurniture(), buildDecor())
     performance.mark('tour:furniture')
     await onProgress?.('lighting', 0.8, true)

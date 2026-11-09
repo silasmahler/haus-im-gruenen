@@ -45,9 +45,10 @@ function nightstandBuilder(g: G, f: Furniture): void {
   else { bush(g, 0, f.h, 0, 0.26, 3, 10, 'furn-white'); bx(g, 0.16, 0.03, 0.12, paint(0x6b7f8f, 0.6), 0.12, f.h, 0.1) }
 }
 
-/** free-standing painted wardrobe (photo 21): white-painted body, raised door panels, crown + plinth, brass-free black knobs; front +z */
+/** free-standing painted wardrobe (photo 21): green (#1f6a2a) painted body, raised door panels, crown + plinth, brass knobs; front +z */
+const GREEN = (): THREE.Material => paint(0x1f6a2a, 0.6)
 function wardrobe(g: G, f: Furniture): void {
-  const G0 = 'furn-white', trim = paint(0xe4e2dc, 0.5)
+  const G0 = GREEN(), trim = paint(0x2a7a35, 0.55)
   rb(g, f.w, f.h - 0.06, f.d, 0.008, G0, 0, 0.06, 0)
   bx(g, f.w - 0.04, 0.06, f.d - 0.04, trim, 0, 0, 0) // plinth
   rb(g, f.w + 0.03, 0.05, f.d + 0.03, 0.01, trim, 0, f.h - 0.05, 0) // crown
@@ -58,12 +59,12 @@ function wardrobe(g: G, f: Furniture): void {
     bx(g, dw - 0.09, f.h - 0.34, 0.012, G0, x, 0.17, f.d / 2 + 0.009) // raised panel
     sp(g, 0.011, 'brass', -s * (dw / 2 - 0.045) + x, 1.0, f.d / 2 + 0.024, 1, 1, 0.7, 8)
   }
-  bx(g, 0.004, f.h - 0.26, 0.014, paint(0xa9a7a0, 0.6), 0, 0.13, f.d / 2 + 0.004) // door gap
+  bx(g, 0.004, f.h - 0.26, 0.014, paint(0x0f3a16, 0.7), 0, 0.13, f.d / 2 + 0.004) // door gap
 }
 
-/** white painted picket-fence bench: low white seat bench + 0.6 m green fence panel as a back; back at local -z */
+/** picket-fence bench: low white seat bench + 0.6 m green (#1f6a2a) fence panel as a back; back at local -z */
 function picketBench(g: G, f: Furniture): void {
-  const grn = 'furn-white'
+  const grn = GREEN()
   legs4(g, f.w, f.d, 0.4, 0.02, 0.022, W, 0.04)
   rb(g, f.w, 0.05, f.d, 0.01, W, 0, 0.4, 0)
   bx(g, f.w - 0.1, 0.04, 0.03, W, 0, 0.2, 0)

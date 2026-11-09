@@ -18,7 +18,6 @@ import {
   ShowerHead,
   Home,
   ExternalLink,
-  CalendarDays,
   Bike,
   Waves,
   Baby,
@@ -83,12 +82,24 @@ const HAUSREGELN_ICONS: React.ReactNode[][] = [
     <Camera key="photo" />,
     <CigaretteOff key="smoke" />,
   ],
-  [<Trash2 key="waste" />, <Utensils key="dishes" />, <Car key="park" />, <CigaretteOff key="smoke2" />],
-  [<Trash2 key="waste2" />, <Zap key="power" />, <Key key="key" />, <Utensils key="dishes2" />],
+  [
+    <Trash2 key="waste" />,
+    <Utensils key="dishes" />,
+    <Car key="park" />,
+    <CigaretteOff key="smoke2" />,
+  ],
+  [
+    <Trash2 key="waste2" />,
+    <Zap key="power" />,
+    <Key key="key" />,
+    <Utensils key="dishes2" />,
+  ],
   [<AlarmCheck key="co2" />, <Flame key="smoke3" />],
 ]
 
 // Start downloading the (three.js) tour chunk as soon as the teaser is touched/hovered; three stays out of the home bundle.
+// 3D tour is built but not published yet; set to true (and move src/_tour-hidden back to src/app/tour) to release it
+const SHOW_TOUR = false
 const warmTour = () => void import('@/tour/buildScene')
 
 export default function Page() {
@@ -104,10 +115,12 @@ export default function Page() {
             <Home className="h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold leading-none text-[var(--brand-ink)]">
+            <p className="truncate text-sm leading-none font-semibold text-[var(--brand-ink)]">
               Haus im Grünen
             </p>
-            <p className="truncate text-xs text-[var(--brand-ink-soft)]">{t.header.subtitle}</p>
+            <p className="truncate text-xs text-[var(--brand-ink-soft)]">
+              {t.header.subtitle}
+            </p>
           </div>
           <div className="ml-auto flex shrink-0 basis-full items-center justify-end gap-2 sm:basis-auto sm:justify-normal">
             <LanguageSwitcher />
@@ -115,7 +128,7 @@ export default function Page() {
               href={AIRBNB_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 whitespace-nowrap rounded-full bg-[var(--color-brand-500)] px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+              className="flex items-center gap-1 rounded-full bg-[var(--color-brand-500)] px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-white transition-opacity hover:opacity-90"
             >
               {t.header.bookNow}
               <ExternalLink className="h-3 w-3" />
@@ -133,9 +146,13 @@ export default function Page() {
           <h1 className="text-3xl font-bold text-[var(--brand-ink)]">
             {t.hero.title1}
             <br />
-            <span className="text-[var(--color-brand-600)]">{t.hero.title2}</span>
+            <span className="text-[var(--color-brand-600)]">
+              {t.hero.title2}
+            </span>
           </h1>
-          <p className="mt-3 text-base text-[var(--brand-ink-soft)]">{t.hero.subtitle}</p>
+          <p className="mt-3 text-base text-[var(--brand-ink-soft)]">
+            {t.hero.subtitle}
+          </p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             {t.hero.tags.map((tag) => (
               <span
@@ -149,37 +166,44 @@ export default function Page() {
         </section>
 
         {/* 3D-Rundgang Teaser */}
-        <section aria-labelledby="tour-teaser-heading">
-          <Link
-            href="/tour?autostart=1"
-            onPointerEnter={warmTour}
-            onFocus={warmTour}
-            onTouchStart={warmTour}
-            className="group flex items-center gap-4 overflow-hidden rounded-2xl border border-[var(--color-brand-200)] bg-[var(--color-brand-50)] p-3 transition-shadow hover:shadow-[var(--brand-shadow-medium)] sm:gap-5 sm:p-4"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/tour/grundriss.webp"
-              alt={t.tour.teaser.imageAlt}
-              width={1000}
-              height={911}
-              loading="lazy"
-              className="h-24 w-24 shrink-0 rounded-xl bg-white object-contain sm:h-28 sm:w-28"
-            />
-            <div className="min-w-0">
-              <span className="brand-pill mb-1 inline-flex">
-                <Box className="h-3 w-3" aria-hidden /> {t.tour.teaser.pill}
-              </span>
-              <h2 id="tour-teaser-heading" className="text-lg font-bold text-[var(--brand-ink)]">
-                {t.tour.teaser.heading}
-              </h2>
-              <p className="mt-0.5 text-sm text-[var(--brand-ink-soft)]">{t.tour.teaser.text}</p>
-              <span className="mt-2 inline-block text-sm font-semibold text-[var(--color-brand-600)] group-hover:underline">
-                {t.tour.teaser.button} →
-              </span>
-            </div>
-          </Link>
-        </section>
+        {SHOW_TOUR && (
+          <section aria-labelledby="tour-teaser-heading">
+            <Link
+              href="/tour?autostart=1"
+              onPointerEnter={warmTour}
+              onFocus={warmTour}
+              onTouchStart={warmTour}
+              className="group flex items-center gap-4 overflow-hidden rounded-2xl border border-[var(--color-brand-200)] bg-[var(--color-brand-50)] p-3 transition-shadow hover:shadow-[var(--brand-shadow-medium)] sm:gap-5 sm:p-4"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/tour/grundriss.webp"
+                alt={t.tour.teaser.imageAlt}
+                width={1000}
+                height={911}
+                loading="lazy"
+                className="h-24 w-24 shrink-0 rounded-xl bg-white object-contain sm:h-28 sm:w-28"
+              />
+              <div className="min-w-0">
+                <span className="brand-pill mb-1 inline-flex">
+                  <Box className="h-3 w-3" aria-hidden /> {t.tour.teaser.pill}
+                </span>
+                <h2
+                  id="tour-teaser-heading"
+                  className="text-lg font-bold text-[var(--brand-ink)]"
+                >
+                  {t.tour.teaser.heading}
+                </h2>
+                <p className="mt-0.5 text-sm text-[var(--brand-ink-soft)]">
+                  {t.tour.teaser.text}
+                </p>
+                <span className="mt-2 inline-block text-sm font-semibold text-[var(--color-brand-600)] group-hover:underline">
+                  {t.tour.teaser.button} →
+                </span>
+              </div>
+            </Link>
+          </section>
+        )}
 
         {/* Fotogalerie */}
         <section id="galerie">
@@ -249,12 +273,18 @@ export default function Page() {
 
         {/* Preise */}
         <section id="preise">
-          <h2 className="mb-3 text-xl font-bold text-[var(--brand-ink)]">{t.preise.heading}</h2>
+          <h2 className="mb-3 text-xl font-bold text-[var(--brand-ink)]">
+            {t.preise.heading}
+          </h2>
           <div className="brand-card overflow-hidden">
             <div className="bg-[var(--color-brand-600)] px-5 py-4 text-white">
-              <p className="text-sm font-medium opacity-80">{t.preise.cleaningFee}</p>
+              <p className="text-sm font-medium opacity-80">
+                {t.preise.cleaningFee}
+              </p>
               <p className="text-3xl font-bold">45 €</p>
-              <p className="mt-1 text-xs opacity-70">{t.preise.cleaningIncludes}</p>
+              <p className="mt-1 text-xs opacity-70">
+                {t.preise.cleaningIncludes}
+              </p>
             </div>
             <div className="divide-y divide-[var(--color-brand-100)] px-5">
               <PriceItem
@@ -262,7 +292,10 @@ export default function Page() {
                 price={t.preise.beddingPrice}
                 detail={t.preise.beddingDetail}
               />
-              <PriceItem label={t.preise.extraBedding} price={t.preise.extraBeddingPrice} />
+              <PriceItem
+                label={t.preise.extraBedding}
+                price={t.preise.extraBeddingPrice}
+              />
               <PriceItem
                 label={t.preise.firewood}
                 price={t.preise.firewoodPrice}
@@ -275,7 +308,9 @@ export default function Page() {
               />
             </div>
           </div>
-          <p className="mt-3 text-xs text-[var(--brand-ink-soft)]">{t.preise.note}</p>
+          <p className="mt-3 text-xs text-[var(--brand-ink-soft)]">
+            {t.preise.note}
+          </p>
         </section>
 
         {/* Ausstattung */}
@@ -296,7 +331,9 @@ export default function Page() {
                 key={t.ausstattung.items[index]}
                 className="brand-card-green flex items-center gap-2.5 px-3 py-2.5"
               >
-                <span className="shrink-0 text-[var(--color-brand-600)]">{icon}</span>
+                <span className="shrink-0 text-[var(--color-brand-600)]">
+                  {icon}
+                </span>
                 <span className="text-xs font-medium text-[var(--brand-ink)]">
                   {t.ausstattung.items[index]}
                 </span>
@@ -310,7 +347,9 @@ export default function Page() {
           <h2 className="mb-1 text-xl font-bold text-[var(--brand-ink)]">
             {t.ausflugsziele.heading}
           </h2>
-          <p className="mb-4 text-sm text-[var(--brand-ink-soft)]">{t.ausflugsziele.intro}</p>
+          <p className="mb-4 text-sm text-[var(--brand-ink-soft)]">
+            {t.ausflugsziele.intro}
+          </p>
 
           <div className="space-y-6">
             {t.ausflugsziele.groups.map((group, index) => (
@@ -322,26 +361,6 @@ export default function Page() {
                 items={group.items}
               />
             ))}
-          </div>
-        </section>
-
-        {/* Buchungs-CTA */}
-        <section className="overflow-hidden rounded-2xl bg-[var(--color-brand-700)] px-6 py-7 text-white">
-          <div className="flex items-start gap-4">
-            <CalendarDays className="mt-0.5 h-6 w-6 shrink-0 opacity-80" />
-            <div>
-              <h2 className="text-lg font-bold">{t.cta.heading}</h2>
-              <p className="mt-1 text-sm opacity-80">{t.cta.text}</p>
-              <a
-                href={AIRBNB_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-[var(--color-brand-700)] transition-opacity hover:opacity-90"
-              >
-                {t.cta.button}
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
-            </div>
           </div>
         </section>
       </main>
@@ -386,7 +405,7 @@ function RuleGroup({
 }) {
   return (
     <div className="px-5 py-4">
-      <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-[var(--color-brand-500)]">
+      <p className="mb-3 text-xs font-semibold tracking-widest text-[var(--color-brand-500)] uppercase">
         {title}
       </p>
       <div className="space-y-3">{children}</div>
@@ -411,7 +430,9 @@ function RuleItem({
       <div>
         <p className="text-sm font-medium text-[var(--brand-ink)]">{label}</p>
         {detail && (
-          <p className="mt-0.5 text-xs text-[var(--brand-ink-soft)]">{detail}</p>
+          <p className="mt-0.5 text-xs text-[var(--brand-ink-soft)]">
+            {detail}
+          </p>
         )}
       </div>
     </div>
@@ -432,7 +453,9 @@ function PriceItem({
       <div>
         <p className="text-sm font-medium text-[var(--brand-ink)]">{label}</p>
         {detail && (
-          <p className="mt-0.5 text-xs text-[var(--brand-ink-soft)]">{detail}</p>
+          <p className="mt-0.5 text-xs text-[var(--brand-ink-soft)]">
+            {detail}
+          </p>
         )}
       </div>
       <span className="shrink-0 text-sm font-bold text-[var(--color-brand-600)]">
@@ -483,7 +506,13 @@ function ActivityGroup({
   icon: React.ReactNode
   title: string
   color: keyof typeof COLOR_MAP
-  items: { name: string; distance: string; detail: string; mapsQuery?: string; website?: string }[]
+  items: {
+    name: string
+    distance: string
+    detail: string
+    mapsQuery?: string
+    website?: string
+  }[]
 }) {
   const c = COLOR_MAP[color]
   return (
@@ -497,7 +526,9 @@ function ActivityGroup({
       <div className="space-y-3">
         {items.map((item) => (
           <div key={item.name} className="flex gap-3">
-            <div className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${c.dot}`} />
+            <div
+              className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${c.dot}`}
+            />
             <div>
               <div className="flex flex-wrap items-baseline gap-x-2">
                 {item.mapsQuery ? (

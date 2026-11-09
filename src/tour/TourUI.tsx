@@ -151,7 +151,7 @@ export function TourUI({ api }: { api: TourApi }) {
 
   useEffect(() => {
     setTouch(matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0)
-    if (matchMedia('(max-width: 639px)').matches) setMapOpen(false) // phones: minimap collapsed until toggled
+    if (matchMedia('(max-width: 639px)').matches || matchMedia('(pointer: coarse)').matches || innerHeight < 500) setMapOpen(false) // phones (portrait + landscape) and touch devices: minimap collapsed until toggled
   }, [])
 
   // Sync of the imperative parts (fade, minimap marker) each frame; room + mode state also synchronously on every
@@ -228,7 +228,7 @@ export function TourUI({ api }: { api: TourApi }) {
   // keep the active chip in view
   useEffect(() => {
     const el = chips.current?.querySelector<HTMLElement>('[aria-current="true"]')
-    el?.scrollIntoView({ block: 'nearest', inline: 'center' })
+    el?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'instant' as ScrollBehavior })
   }, [room])
 
   const stepping = useRef(false) // true while arrow keys step through the chips: focus stays for the next step
@@ -299,7 +299,7 @@ export function TourUI({ api }: { api: TourApi }) {
           </button>
         </div>
         {mapOpen && !stickOn && (
-          <div className={`${glass} w-[124px] rounded-xl p-1.5 sm:w-[224px] sm:p-2`} role="img" aria-label={u.map}>
+          <div className={`${glass} w-[110px] rounded-xl p-1.5 sm:w-[224px] sm:p-2 [@media(max-height:499px)]:w-[110px]! [@media(max-height:499px)]:p-1.5!`} role="img" aria-label={u.map}>
             <MiniMap rooms={api.rooms} current={room} label={label} onPick={(id) => pickRoom(id)} marker={marker} />
           </div>
         )}
@@ -321,7 +321,7 @@ export function TourUI({ api }: { api: TourApi }) {
       <nav aria-label={u.rooms} className="absolute inset-x-0 bottom-0">
         <div ref={chips} data-tour-nokeys onKeyDown={onChipKeys} role="toolbar" aria-label={u.rooms}
           className="pointer-events-auto overflow-x-auto px-3 pb-[max(12px,env(safe-area-inset-bottom))] pt-2 [scrollbar-width:none] snap-x snap-proximity scroll-px-3 [&::-webkit-scrollbar]:hidden">
-          <div className="mx-auto flex w-max gap-2">
+          <div className="flex w-max min-w-full justify-center gap-2">
             {api.rooms.map((r) => (
               <button key={r.id} onClick={(e) => pickRoom(r.id, e)} aria-current={r.id === room ? 'true' : undefined}
                 tabIndex={r.id === room ? 0 : -1}
