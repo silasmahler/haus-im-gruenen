@@ -1,0 +1,157 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: haus-im-gruenen.com booking/company inquiry form -> SES mail (Lambda Function URL)
+
+Parameters:
+  Recipient:
+    Type: String
+    Default: mail@ambergarten.com
+  SenderDomain:
+    Type: String
+    Default: haus-im-gruenen.com
+
+Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/haus-im-gruenen-inquiry
+      RetentionInDays: 30
+      Tags: [{ Key: Project, Value: haus-im-gruenen }]
+
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: inquiry
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !Sub '${LogGroup.Arn}'
+              - Effect: Allow
+                Action: ses:SendEmail
+                Resource: !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/${SenderDomain}'
+      Tags: [{ Key: Project, Value: haus-im-gruenen }]
+
+  Function:
+    Type: AWS::Lambda::Function
+    DependsOn: LogGroup
+    Properties:
+      FunctionName: haus-im-gruenen-inquiry
+      Runtime: nodejs22.x
+      Handler: index.handler
+      Role: !GetAtt Role.Arn
+      MemorySize: 128
+      Timeout: 10
+      ReservedConcurrentExecutions: 2
+      LoggingConfig: { LogGroup: !Ref LogGroup }
+      Environment:
+        Variables:
+          RECIPIENT: !Ref Recipient
+          FROM: !Sub 'anfrage@${SenderDomain}'
+      Tags: [{ Key: Project, Value: haus-im-gruenen }]
+      Code:
+        ZipFile: |
+          const { SESv2Client, SendEmailCommand } = require('@aws-sdk/client-sesv2');
+          const ses = new SESv2Client({});
+          const json = (statusCode, body) => ({ statusCode, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+          const bad = (error) => json(400, { ok: false, error });
+          const clean = (v) => String(v ?? '').replace(/[\r\n]+/g, ' ').trim();
+          const EMAIL = /^[^\s@<>",;]+@[^\s@<>",;]+\.[^\s@<>",;]{2,}$/;
+          const isDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(Date.parse(s + 'T00:00:00Z')) && new Date(s + 'T00:00:00Z').toISOString().slice(0, 10) === s;
+
+          exports.handler = async (event) => {
+            if (event.requestContext?.http?.method !== 'POST') return json(405, { ok: false, error: 'method' });
+            const raw = event.isBase64Encoded ? Buffer.from(event.body || '', 'base64').toString('utf8') : event.body || '';
+            if (Buffer.byteLength(raw) > 10240) return json(413, { ok: false, error: 'too_large' });
+            let b;
+            try { b = JSON.parse(raw); } catch { return bad('invalid_json'); }
+            if (!b || typeof b !== 'object' || Array.isArray(b)) return bad('invalid_json');
+            if (clean(b.website)) return json(200, { ok: true }); // honeypot
+
+            const f = {};
+            for (const k of ['type', 'name', 'company', 'email', 'phone', 'arrival', 'departure', 'guests', 'lang']) {
+              const v = clean(b[k]);
+              if (v.length > 200) return bad('too_long:' + k);
+              f[k] = v;
+            }
+            f.message = String(b.message ?? '').replace(/\r\n?/g, '\n').trim();
+            if (f.message.length > 2000) return bad('too_long:message');
+
+            if (f.type !== 'urlaub' && f.type !== 'firma') return bad('invalid:type');
+            for (const k of ['name', 'email', 'arrival', 'departure']) if (!f[k]) return bad('required:' + k);
+            if (f.type === 'firma' && !f.company) return bad('required:company');
+            if (!EMAIL.test(f.email)) return bad('invalid:email');
+            if (!isDate(f.arrival) || !isDate(f.departure)) return bad('invalid:date');
+            if (f.departure < f.arrival) return bad('invalid:departure_before_arrival');
+            const g = Number(f.guests || 1), max = f.type === 'firma' ? 3 : 8;
+            if (!Number.isInteger(g) || g < 1 || g > max) return bad('invalid:guests');
+            f.guests = String(g);
+
+            const firma = f.type === 'firma';
+            const subject = (firma ? `[Firmenanfrage] ${f.company}` : `[Buchungsanfrage] ${f.name}`) + ` ${f.arrival}–${f.departure}`;
+            const text = [
+              firma ? 'FIRMENANFRAGE (Monteure/Geschäftsreise)' : 'BUCHUNGSANFRAGE (Urlaub)', '',
+              `Name:      ${f.name}`,
+              ...(firma ? [`Firma:     ${f.company}`] : f.company ? [`Firma:     ${f.company}`] : []),
+              `E-Mail:    ${f.email}`,
+              `Telefon:   ${f.phone || '-'}`,
+              `Anreise:   ${f.arrival}`,
+              `Abreise:   ${f.departure}`,
+              `Personen:  ${f.guests}`,
+              `Sprache:   ${f.lang || '-'}`, '',
+              'Nachricht:', f.message || '-', '',
+              '-- Gesendet über das Anfrageformular auf haus-im-gruenen.com. Antworten gehen direkt an den Gast.',
+            ].join('\n');
+
+            try {
+              await ses.send(new SendEmailCommand({
+                FromEmailAddress: `=?UTF-8?B?${Buffer.from('Haus im Grünen').toString('base64')}?= <${process.env.FROM}>`,
+                Destination: { ToAddresses: [process.env.RECIPIENT] },
+                ReplyToAddresses: [f.email],
+                Content: { Simple: { Subject: { Data: subject, Charset: 'UTF-8' }, Body: { Text: { Data: text, Charset: 'UTF-8' } } } },
+              }));
+            } catch (e) {
+              console.error('SES send failed', e.name, e.message);
+              return json(500, { ok: false, error: 'send_failed' });
+            }
+            console.log('sent', f.type, f.arrival, f.departure);
+            return json(200, { ok: true });
+          };
+
+  FunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt Function.Arn
+      AuthType: NONE
+      Cors:
+        AllowOrigins: [https://haus-im-gruenen.com, https://www.haus-im-gruenen.com, http://localhost:3007]
+        AllowMethods: [POST]
+        AllowHeaders: [content-type]
+        MaxAge: 86400
+
+  UrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref Function
+      Action: lambda:InvokeFunctionUrl
+      Principal: '*'
+      FunctionUrlAuthType: NONE
+
+  InvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref Function
+      Action: lambda:InvokeFunction
+      Principal: '*'
+      InvokedViaFunctionUrl: true
+
+Outputs:
+  FunctionUrl:
+    Value: !GetAtt FunctionUrl.FunctionUrl
