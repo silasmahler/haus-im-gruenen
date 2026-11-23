@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 
+import { BrandMark, Wordmark } from '@/components/Brand'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { useSite } from '@/i18n/site'
 
@@ -44,8 +45,13 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
-        <Link href="/" className="font-display text-xl text-ink sm:text-2xl" onClick={() => setOpen(false)}>
-          Haus im Grünen
+        <Link
+          href="/"
+          className="brand-link flex items-center gap-2.5 rounded-md text-xl text-ink focus-visible:outline-2 focus-visible:outline-moss sm:text-2xl"
+          onClick={() => setOpen(false)}
+        >
+          <BrandMark className="size-9 sm:size-10" />
+          <Wordmark />
         </Link>
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
           <Link
