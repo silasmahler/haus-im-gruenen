@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { UrlaubContent } from './UrlaubContent'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/urlaub' },
   title: 'Urlaub & Umgebung – Haus im Grünen',
   description:
     'Ruhiger Urlaub im Grünen bei Neumünster: Ausflugsziele, Seen, Radwege und Restaurants in Schleswig-Holstein rund um Rendswühren.',

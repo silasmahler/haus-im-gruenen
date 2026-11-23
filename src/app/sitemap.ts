@@ -1,11 +1,21 @@
 import type { MetadataRoute } from 'next'
 
+import { SITE_URL } from '@/lib/seo'
+
 export const dynamic = 'force-static'
 
-const BASE = 'https://haus-im-gruenen.com'
-// /gaestemappe is for booked guests only (noindex), so it stays out
-const ROUTES = ['', '/ferienhaus', '/urlaub', '/firmen', '/preise', '/bewertungen', '/kontakt', '/impressum', '/datenschutz']
+// /gaestemappe (noindex) and the legal pages stay out; the legal pages remain indexable
+const ROUTES: [string, number][] = [
+  ['', 1],
+  ['/ferienhaus', 0.9],
+  ['/firmen', 0.9],
+  ['/urlaub', 0.7],
+  ['/bewertungen', 0.5],
+  ['/preise', 0.6],
+  ['/kontakt', 0.6],
+]
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return ROUTES.map((r) => ({ url: `${BASE}${r}`, changeFrequency: 'monthly', priority: r === '' ? 1 : 0.7 }))
+  const lastModified = new Date()
+  return ROUTES.map(([r, priority]) => ({ url: `${SITE_URL}${r}`, lastModified, changeFrequency: 'monthly', priority }))
 }
