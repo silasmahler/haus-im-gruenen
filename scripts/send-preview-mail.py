@@ -28,15 +28,41 @@ Damit wir starten können, brauche ich außerdem:
 Viele Grüße
 Silas
 """
+subject = "Ihre neue Website – Vorschau"
+attachments = ["willkommen-qr-code.pdf", "willkommen-qr-code-en.pdf"]
+
+# --checkliste: short follow-up listing the open items, no attachments.
+if "--checkliste" in sys.argv:
+    subject = "Website: Checkliste der offenen Punkte"
+    attachments = []
+    body = """Hallo zusammen,
+
+damit ihr nicht in der langen Mail suchen müsst, hier alles, was für den Start der neuen Website noch fehlt, als Liste zum Abhaken. Ihr könnt einfach auf diese Mail antworten, auch gern nach und nach.
+
+[ ] Logo: A, B oder C?
+    https://vorschau.haus-im-gruenen.com/brand/logo-options.html
+[ ] Gastgeber: Passt der Abschnitt mit Susanne so?
+[ ] Startbild: Passt das Gartenfoto als großes Bild oben auf der Startseite?
+[ ] Preise 2027 und Mindestaufenthalt
+[ ] Endreinigung und Nebenkosten
+[ ] zwei bis drei echte Gästebewertungen
+[ ] Impressum: Name, Anschrift, Telefon
+[ ] Fahrzeiten und Einkaufsmöglichkeiten in der Nähe
+
+Und eine Frage zum Menü: Oben auf der Seite stehen zurzeit sieben Punkte, das wirkt etwas voll. Mein Vorschlag: „Startseite“ streichen (ein Klick aufs Logo führt sowieso dorthin) und „Gästebewertungen“ erst ins Menü nehmen, wenn echte Bewertungen da sind. Bis dahin steht der Link unten auf der Seite. Seid ihr einverstanden? Ein kurzes Ja oder Nein reicht, den Rest mache ich.
+
+Viele Grüße
+Silas
+"""
 
 m = EmailMessage()
-m["Subject"] = "Ihre neue Website – Vorschau"
+m["Subject"] = subject
 m["From"] = Address("Silas Mahler", "anfrage", "haus-im-gruenen.com")
 m["To"] = "info@ambergarten.com"
 m["Reply-To"] = "info@silas-mahler.de"
 m.set_content(body)
 base = "/Users/silasmahler/Directory42/github/kreinn/haus-im-gruenen/public/"
-for f in ["willkommen-qr-code.pdf", "willkommen-qr-code-en.pdf"]:
+for f in attachments:
     m.add_attachment(open(base + f, "rb").read(), maintype="application", subtype="pdf", filename=f)
 
 raw = base64.b64encode(m.as_bytes()).decode()
