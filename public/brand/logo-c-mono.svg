@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 56" role="img" aria-label="Haus im Grünen"><title>Haus im Grünen</title><defs><mask id="m-c" maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48">
+    <clipPath id="cc"><circle cx="24" cy="24" r="22.5"/></clipPath>
+    <circle cx="24" cy="24" r="22.5" fill="#fff"/>
+    <g clip-path="url(#cc)" stroke="#000" stroke-width="1.7" fill="none" stroke-linecap="round">
+      <path d="M-2 31.5 Q24 26.5 50 31.5 M-2 37 Q24 32 50 37 M-2 42.5 Q24 37.8 50 42.5"/></g>
+    <path d="M14.5 29.2 V19.5 L24 11.5 L33.5 19.5 V29.2 Q24 27.6 14.5 29.2 Z" fill="#000"/>
+    <path d="M20.6 19.8 h6.8 v6.4 h-6.8 Z" fill="#000"/>
+    <path d="M24 19.8 v6.4 M20.6 23 h6.8" stroke="#000" stroke-width="1"/>
+    <circle cx="36.5" cy="11.5" r="2.4" fill="#000"/></mask></defs><g transform="translate(0 4)"><rect width="48" height="48" fill="currentColor" mask="url(#m-c)"/></g><text x="60" y="30" font-family="Fraunces, Georgia, serif" font-size="25" font-weight="500" fill="currentColor">Haus im Grünen</text><text x="61" y="46" font-family="Fraunces, Georgia, serif" font-style="italic" font-size="13" fill="currentColor">Rendswühren bei Neumünster</text></svg>

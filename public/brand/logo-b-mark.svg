@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="Haus im Grünen"><title>Haus im Grünen</title>
+    <circle cx="35.5" cy="24" r="9" fill="#4a6a3d"/>
+    <path d="M35.5 30 V43" stroke="#8b5b36" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M7 43 V25 L19 14.5 L31 25 V43 Z" fill="#fbf9f4" stroke="#26301f" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M24.6 19.3 V11.5 H28.6 V22.8" fill="#fbf9f4" stroke="#26301f" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M26.6 8.6 c-2.2 -1.6 2 -2.6 0 -4.8 c-1.2 -1.2 0.4 -2 1.4 -2.4" stroke="#8b5b36" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+    <path d="M16 43 V35 a3 3 0 0 1 6 0 V43" fill="none" stroke="#26301f" stroke-width="2.2"/>
+    <path d="M3 43 H45" stroke="#26301f" stroke-width="2.6" stroke-linecap="round"/></svg>
