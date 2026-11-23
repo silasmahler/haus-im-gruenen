@@ -7,8 +7,8 @@ import { useLanguage } from '@/i18n/LanguageContext'
 import { useSite } from '@/i18n/site'
 import { photo } from '@/lib/photos'
 
-// TODO(owner photo): 36 is a stand-in until the owner's dedicated intro photo arrives.
-const HERO = photo('36')
+// TODO(owner photo): 01 matches the owner's description (green garden lounge, set table, wine) – owner to confirm.
+const HERO = photo('01')
 const STRIP = ['05', '19', '02', '38'].map(photo)
 
 export function HomeContent() {

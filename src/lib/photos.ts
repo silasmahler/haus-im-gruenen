@@ -21,9 +21,9 @@ function p(id: string, category: PhotoCategory, de: string, en: string, height =
 }
 
 export const PHOTOS: Photo[] = [
-  // Placeholder hero: the owner will provide a dedicated intro photo (green garden lounge, set table, wine).
   p('36', 'garten', 'Gedeckter Tisch auf der Terrasse mit Weingläsern und Kerzen', 'Table set on the terrace with wine glasses and candles'),
   p('06', 'garten', 'Großer Garten mit Sitzgruppe vor dem Haus', 'Large garden with seating in front of the house'),
+  // Hero on / (owner to confirm it is the intended intro photo)
   p('01', 'garten', 'Gartensitzgruppe mit grünen Kissen, Wein und Blumen', 'Garden lounge with green cushions, wine and flowers'),
   p('03', 'garten', 'Sonnige Gartenwiese mit Sitzecke und Blick ins Grüne', 'Sunny lawn with a seating corner and a view of the countryside'),
   p('35', 'garten', 'Rückseite des Backsteinhauses mit Rasen in der Sonne', 'Back of the brick house with lawn in the sun', 957),

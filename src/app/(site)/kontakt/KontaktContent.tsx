@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { InquiryForm } from '@/components/InquiryForm'
 import { useSite } from '@/i18n/site'
 
-// Phase-1 stub: texts from KONZEPT section 8 + the inquiry form. Phase 2 may extend this page.
+// Texts from KONZEPT section 8; holiday form by default, company form via toggle.
 export function KontaktContent() {
   const k = useSite().kontakt
   const [variant, setVariant] = useState<'urlaub' | 'firma'>('urlaub')

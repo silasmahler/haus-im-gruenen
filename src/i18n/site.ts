@@ -129,6 +129,182 @@ const de = {
     chooseUrlaub: 'Urlaub',
     chooseFirma: 'Firmenanfrage',
   },
+  urlaub: {
+    title: 'Urlaub & Umgebung',
+    sections: [
+      {
+        title: 'Urlaub abseits von Hektik und Trubel',
+        paragraphs: [
+          'Manchmal braucht es gar nicht viel, um sich zu erholen: ein gemütliches Zuhause auf Zeit, viel Grün und die Freiheit, den Tag ganz nach den eigenen Vorstellungen zu gestalten.',
+          'Unser Ferienhaus ist ein schöner Rückzugsort für alle, die Ruhe, Natur und Unabhängigkeit schätzen.',
+          'Beginnen Sie den Morgen mit einem gemütlichen Frühstück, genießen Sie die ländliche Umgebung und lassen Sie den Abend ganz entspannt ausklingen.',
+          'Hier müssen Sie sich nicht nach Hotelzeiten richten. Sie entscheiden selbst, wie Ihr Urlaubstag aussieht.',
+        ],
+      },
+      {
+        title: 'Zeit für gemeinsame Erlebnisse',
+        paragraphs: [
+          'Ob als Paar, mit der Familie oder mit Freunden – unser Haus bietet eine schöne Grundlage für einen abwechslungsreichen Aufenthalt in Schleswig-Holstein.',
+          'Entdecken Sie die Region bei Ausflügen oder genießen Sie einfach die Ruhe und den Komfort Ihres Ferienhauses.',
+        ],
+      },
+    ],
+    lageTitle: 'Lage & Umgebung',
+    lageHeading: 'Ruhe genießen und Schleswig-Holstein entdecken',
+    lageParagraphs: [
+      'Unser Haus liegt in ruhiger, ländlicher Umgebung im Raum Neumünster.',
+      'Die grüne Umgebung lädt zum Entspannen ein und bietet einen angenehmen Ausgleich zum Alltag.',
+      'Gleichzeitig ist das Ferienhaus ein Ausgangspunkt für Unternehmungen in der Region und für berufliche Einsätze im näheren und weiteren Umfeld.',
+    ],
+    mapTitle: 'Karte',
+    mapNote:
+      'Die Karte wird von OpenStreetMap geladen. Erst nach dem Klick werden Daten (u. a. Ihre IP-Adresse) an die OpenStreetMap Foundation übertragen.',
+    mapButton: 'Karte laden',
+    mapCaption: 'Ungefähre Lage: Rendswühren, Kreis Plön, Schleswig-Holstein',
+    mapLabel: 'Karte der Umgebung von Rendswühren',
+    distancesTitle: 'Entfernungen',
+    distancesPlaceholder:
+      'Fahrzeiten und Entfernungen (z. B. Neumünster, Kiel, Plön, Ostseeküste, Autobahn) – vor Veröffentlichung prüfen.',
+    shoppingTitle: 'Einkaufen',
+    shoppingPlaceholder: 'Einkaufsmöglichkeiten in der Nähe (Supermarkt, Bäcker, Hofladen) mit Entfernung.',
+    tipsTitle: 'Ausflugsziele und Restaurants',
+    tipsIntro: 'Unsere persönlichen Empfehlungen für die Region.',
+    mapsLink: 'Karte',
+    websiteLink: 'Website',
+  },
+  firmen: {
+    title: 'Firmen & Langzeitgäste',
+    heading: 'Wohnen und Arbeiten auf Zeit',
+    claim: 'Die komfortable Alternative zum klassischen Monteurzimmer.',
+    paragraphs: [
+      'Sie suchen eine Unterkunft für Mitarbeiter, Außendienstmitarbeiter oder Projektteams im Raum Neumünster und Umgebung?',
+      'Unser vollständig ausgestattetes Ferienhaus bietet ideale Voraussetzungen für berufliche Aufenthalte – auch über mehrere Wochen oder Monate.',
+      'Ihre Mitarbeiter genießen die Vorzüge eines ganzen Hauses zur exklusiven Nutzung.',
+    ],
+    ctaTop: 'Firmenangebot anfragen',
+    comfortTitle: 'Komfort für Ihre Mitarbeiter',
+    // Order matches the icons in src/app/(site)/firmen/FirmenContent.tsx
+    comfort: [
+      {
+        title: 'Drei separate Schlafzimmer',
+        text: 'Bei einer Belegung mit bis zu drei Mitarbeitern steht jedem ein eigenes Schlafzimmer zur Verfügung. So bleibt auch bei gemeinsamen beruflichen Aufenthalten ausreichend Privatsphäre.',
+      },
+      {
+        title: 'Vollständig ausgestattete Küche',
+        text: 'Die Mitarbeiter können sich unabhängig von Restaurantöffnungszeiten selbst versorgen. Dafür stehen zahlreiche Küchengeräte zur Verfügung, darunter Backofen, Mikrowelle, Heißluftfritteuse, Cerankochfeld und Kaffeemaschine.',
+      },
+      {
+        title: 'Glasfaserinternet für mobiles Arbeiten',
+        text: 'Auch Arbeitstage am PC lassen sich bei uns gut verbringen. Der schnelle Glasfaseranschluss bietet die Voraussetzungen für berufliche Online-Tätigkeiten und Videokonferenzen.',
+      },
+      {
+        title: 'Entspannung nach Feierabend',
+        text: 'Statt eines einzelnen Zimmers steht den Mitarbeitern ein komplettes Haus mit gemütlichem Wohnbereich und Garten zur Verfügung.',
+      },
+      {
+        title: 'Praktische Ausstattung',
+        text: 'Bügeleisen und Bügelbrett stehen für die Pflege der Dienstkleidung bereit. Ein Wäscheservice kann nach Absprache gegen Aufpreis angeboten werden.',
+      },
+      { title: 'Parken direkt am Haus', text: 'Kostenfreie Parkmöglichkeiten stehen zur Verfügung.' },
+    ],
+    conditionsTitle: 'Attraktive Konditionen für längere Aufenthalte',
+    conditions: [
+      'Wir bieten Unternehmen gestaffelte Preise, abhängig von der Anzahl der Mitarbeiter und der Aufenthaltsdauer.',
+      'Das gesamte Haus wird grundsätzlich exklusiv an eine Firma beziehungsweise eine zusammengehörige Mitarbeitergruppe vermietet.',
+      'Auch längerfristige Buchungen über mehrere Wochen oder Monate sind möglich.',
+    ],
+    conditionsHighlight: 'Fragen Sie uns nach einem individuellen Firmenangebot.',
+    formTitle: 'Firmenanfrage',
+  },
+  preise: {
+    title: 'Preise & Verfügbarkeit',
+    heading: 'Ihr Aufenthalt im Haus im Grünen',
+    paragraphs: [
+      'Unsere Übernachtungspreise richten sich nach Saison, Aufenthaltsdauer und Personenzahl.',
+      'Für längere Aufenthalte und Firmenbuchungen bieten wir gesonderte Konditionen an.',
+      'Gerne informieren wir Sie über die Verfügbarkeit und erstellen Ihnen ein passendes Angebot.',
+    ],
+    tableTitle: 'Saisonpreise 2027',
+    tablePlaceholder: 'Saisonzeiträume, Preise und Mindestaufenthalte aus der Preisliste 2027.',
+    columns: ['Saison', 'Zeitraum', 'Preis pro Nacht', 'Mindestaufenthalt'],
+    seasons: ['Nebensaison', 'Zwischensaison', 'Hauptsaison'],
+    costsTitle: 'Endreinigung und weitere Kosten',
+    costsPlaceholder:
+      'Endreinigung und alle weiteren Kosten (z. B. Bettwäsche und Handtücher, ggf. Kurabgabe, Kaution) mit Betrag – werden hier transparent ausgewiesen.',
+    calendarTitle: 'Verfügbarkeit',
+    calendarNote:
+      'Ein Belegungskalender folgt. Bis dahin prüfen wir die Verfügbarkeit gern für Ihren Wunschzeitraum.',
+    bookingLabel: 'Urlaub',
+    bookingButton: 'Buchungsanfrage senden',
+    firmaLabel: 'Für Firmen',
+    firmaText: 'Gesonderte Konditionen für Firmenbuchungen und längere Aufenthalte',
+    firmaButton: 'Firmenanfrage senden',
+  },
+  bewertungen: {
+    title: 'Gästebewertungen',
+    heading: 'Das sagen unsere Gäste',
+    paragraphs: [
+      'Wir freuen uns, wenn sich unsere Gäste bei uns wohlfühlen.',
+      'Besonders schön ist es, wenn die ruhige Umgebung, die umfangreiche Ausstattung und die persönliche Betreuung in guter Erinnerung bleiben.',
+    ],
+    reviewPlaceholder: 'Echte Gästebewertung mit Quellenangabe folgt (Text unverändert, Nutzungsrechte geklärt).',
+    author: 'Name des Gastes',
+    source: 'Quelle, z. B. Airbnb',
+    date: 'Monat/Jahr',
+  },
+  impressum: {
+    title: 'Impressum',
+    heading: 'Angaben gemäß § 5 DDG',
+    provider: 'Anbieter',
+    providerPlaceholder: 'Vor- und Nachname bzw. Firmenname des Anbieters',
+    address: 'Anschrift',
+    addressPlaceholder: 'Straße und Hausnummer, PLZ und Ort (ladungsfähige Anschrift)',
+    contact: 'Kontakt',
+    contactPlaceholder: 'E-Mail-Adresse und Telefonnummer',
+    vat: 'Umsatzsteuer-ID',
+    vatPlaceholder: 'Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG – nur falls vorhanden, sonst entfällt dieser Abschnitt',
+  },
+  datenschutz: {
+    title: 'Datenschutzerklärung',
+    sections: [
+      {
+        heading: 'Verantwortlicher',
+        text: 'Verantwortlich für die Datenverarbeitung auf dieser Website ist der im Impressum genannte Anbieter.',
+      },
+      {
+        heading: 'Hosting',
+        text: 'Diese Website wird über GitHub Pages (GitHub Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA) ausgeliefert. Beim Aufruf der Seiten verarbeitet GitHub technisch notwendige Daten wie Ihre IP-Adresse, Datum und Uhrzeit sowie die aufgerufene Seite, um die Website bereitzustellen und ihre Sicherheit zu gewährleisten. Dabei können Daten in die USA übermittelt werden. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO.',
+      },
+      {
+        heading: 'Anfrageformular',
+        text: 'Wenn Sie uns über das Anfrageformular schreiben, verarbeiten wir die von Ihnen eingegebenen Daten: Name, bei Firmenanfragen Firmenname und Ansprechpartner, E-Mail-Adresse, Telefonnummer, gewünschter Reisezeitraum, Anzahl der Gäste bzw. Mitarbeiter, Ihre Nachricht sowie die gewählte Sprache. Zweck ist ausschließlich die Beantwortung Ihrer Anfrage. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Anbahnung eines Mietvertrags) sowie Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Beantwortung allgemeiner Anfragen). Die Übermittlung erfolgt über Amazon Web Services EMEA SARL (38 Avenue John F. Kennedy, L-1855 Luxemburg) als Auftragsverarbeiter: Eine Funktion in AWS Lambda nimmt die Anfrage in der Region Frankfurt (eu-central-1) entgegen und leitet sie über Amazon Simple Email Service (SES) per E-Mail an den Gastgeber weiter. Die Anfrage wird dabei nicht in einer Datenbank gespeichert; technische Protokolle ohne Kontaktdaten (Art der Anfrage, Reisezeitraum) werden nach 30 Tagen automatisch gelöscht. Wir löschen Ihre Anfrage, sobald sie erledigt ist, es sei denn, es kommt zu einer Buchung; dann gelten die gesetzlichen Aufbewahrungsfristen.',
+      },
+      {
+        heading: 'Karte (OpenStreetMap)',
+        text: 'Auf der Seite „Urlaub & Umgebung“ kann eine Karte von OpenStreetMap (OpenStreetMap Foundation, St John’s Innovation Centre, Cowley Road, Cambridge, CB4 0WS, Vereinigtes Königreich) angezeigt werden. Die Karte wird erst geladen, wenn Sie auf „Karte laden“ klicken. Erst dann werden Daten wie Ihre IP-Adresse an die OpenStreetMap Foundation übertragen. Rechtsgrundlage ist Ihre Einwilligung durch den Klick (Art. 6 Abs. 1 lit. a DSGVO). Für das Vereinigte Königreich besteht ein Angemessenheitsbeschluss der EU-Kommission.',
+      },
+      {
+        heading: 'Schriftarten',
+        text: 'Die verwendeten Schriftarten werden zusammen mit der Website von unserem eigenen Hosting ausgeliefert. Es besteht keine Verbindung zu Servern von Google oder anderen Schriftanbietern.',
+      },
+      {
+        heading: 'Lokale Speicherung',
+        text: 'Ihre Sprachwahl (Deutsch/Englisch) und, in der Gästemappe, die Bestätigung der Hausregeln werden im lokalen Speicher (localStorage) Ihres Browsers abgelegt. Diese Informationen verlassen Ihr Gerät nicht und werden nicht an uns oder Dritte übertragen.',
+      },
+      {
+        heading: 'Reichweitenmessung',
+        text: 'Sofern aktiviert, verwenden wir GoatCounter zur anonymen, cookie-freien Reichweitenmessung. Es werden keine personenbezogenen Profile erstellt.',
+      },
+      {
+        heading: 'Externe Links',
+        text: 'Die Website verlinkt auf externe Angebote, u. a. Airbnb, Google Maps (Google Ireland Limited) sowie die Webseiten empfohlener Restaurants und Ausflugsziele. Erst wenn Sie einen solchen Link anklicken, werden Sie zur jeweiligen Webseite weitergeleitet; für deren Datenschutz sind die Anbieter selbst verantwortlich.',
+      },
+      {
+        heading: 'Ihre Rechte',
+        text: 'Sie haben das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung Ihrer Daten, auf Datenübertragbarkeit sowie auf Widerspruch gegen eine Verarbeitung nach Art. 6 Abs. 1 lit. f DSGVO. Eine Einwilligung können Sie jederzeit für die Zukunft widerrufen. Außerdem können Sie sich bei einer Datenschutz-Aufsichtsbehörde beschweren, in Schleswig-Holstein beim Unabhängigen Landeszentrum für Datenschutz (ULD).',
+      },
+    ],
+  },
   form: {
     name: 'Name',
     company: 'Firmenname',
@@ -279,6 +455,180 @@ const en: SiteDict = {
     chooseLabel: 'What is your enquiry about?',
     chooseUrlaub: 'Holiday',
     chooseFirma: 'Business enquiry',
+  },
+  urlaub: {
+    title: 'Holidays & surroundings',
+    sections: [
+      {
+        title: 'A holiday away from the hustle and bustle',
+        paragraphs: [
+          'Sometimes it takes very little to unwind: a cosy home for a while, plenty of green and the freedom to spend the day just as you like.',
+          'Our holiday house is a lovely retreat for anyone who values peace, nature and independence.',
+          'Start the morning with a leisurely breakfast, enjoy the countryside and let the evening wind down in a relaxed way.',
+          'There are no hotel times to stick to here. You decide what your holiday day looks like.',
+        ],
+      },
+      {
+        title: 'Time for shared experiences',
+        paragraphs: [
+          'As a couple, with family or with friends – our house is a great base for a varied stay in Schleswig-Holstein.',
+          'Explore the region on day trips or simply enjoy the peace and comfort of your holiday house.',
+        ],
+      },
+    ],
+    lageTitle: 'Location & surroundings',
+    lageHeading: 'Enjoy the quiet and discover Schleswig-Holstein',
+    lageParagraphs: [
+      'Our house is located in quiet countryside near Neumünster.',
+      'The green surroundings invite you to relax and offer a welcome change from everyday life.',
+      'At the same time, the house is a base for trips around the region and for work assignments near and further afield.',
+    ],
+    mapTitle: 'Map',
+    mapNote:
+      'The map is loaded from OpenStreetMap. Only after you click is data (including your IP address) sent to the OpenStreetMap Foundation.',
+    mapButton: 'Load map',
+    mapCaption: 'Approximate location: Rendswühren, district of Plön, Schleswig-Holstein',
+    mapLabel: 'Map of the area around Rendswühren',
+    distancesTitle: 'Distances',
+    distancesPlaceholder:
+      'Driving times and distances (e.g. Neumünster, Kiel, Plön, Baltic coast, motorway) – to be checked before publishing.',
+    shoppingTitle: 'Shopping',
+    shoppingPlaceholder: 'Shops nearby (supermarket, bakery, farm shop) with distance.',
+    tipsTitle: 'Day trips and restaurants',
+    tipsIntro: 'Our personal recommendations for the region.',
+    mapsLink: 'Map',
+    websiteLink: 'Website',
+  },
+  firmen: {
+    title: 'Business & long stays',
+    heading: 'Living and working for a while',
+    claim: 'The comfortable alternative to the classic workers’ room.',
+    paragraphs: [
+      'Are you looking for accommodation for employees, field staff or project teams in the Neumünster area?',
+      'Our fully equipped holiday house is ideal for business stays – including stays of several weeks or months.',
+      'Your employees enjoy the benefits of an entire house for their exclusive use.',
+    ],
+    ctaTop: 'Request a company offer',
+    comfortTitle: 'Comfort for your employees',
+    comfort: [
+      {
+        title: 'Three separate bedrooms',
+        text: 'With up to three employees, everyone has a bedroom of their own. That way there is enough privacy even on a shared business stay.',
+      },
+      {
+        title: 'Fully equipped kitchen',
+        text: 'Your employees can cater for themselves regardless of restaurant opening hours. Plenty of kitchen appliances are available, including an oven, microwave, air fryer, ceramic hob and coffee machine.',
+      },
+      {
+        title: 'Fibre internet for remote work',
+        text: 'Working days at the computer are easy here too. The fast fibre connection is well suited to online work and video calls.',
+      },
+      {
+        title: 'Relaxing after work',
+        text: 'Instead of a single room, your employees have a whole house with a cosy living area and garden.',
+      },
+      {
+        title: 'Practical extras',
+        text: 'An iron and ironing board are ready for work clothes. A laundry service can be arranged for an extra charge.',
+      },
+      { title: 'Parking right by the house', text: 'Free parking is available.' },
+    ],
+    conditionsTitle: 'Attractive terms for longer stays',
+    conditions: [
+      'We offer companies tiered prices, depending on the number of employees and the length of stay.',
+      'The whole house is generally let exclusively to one company or one group of employees travelling together.',
+      'Longer bookings of several weeks or months are also possible.',
+    ],
+    conditionsHighlight: 'Ask us for an individual company offer.',
+    formTitle: 'Company enquiry',
+  },
+  preise: {
+    title: 'Prices & availability',
+    heading: 'Your stay at Haus im Grünen',
+    paragraphs: [
+      'Our nightly rates depend on the season, the length of stay and the number of guests.',
+      'We offer separate terms for longer stays and company bookings.',
+      'We will gladly let you know about availability and put together a suitable offer.',
+    ],
+    tableTitle: 'Seasonal prices 2027',
+    tablePlaceholder: 'Season periods, prices and minimum stays from the 2027 price list.',
+    columns: ['Season', 'Period', 'Price per night', 'Minimum stay'],
+    seasons: ['Low season', 'Mid season', 'High season'],
+    costsTitle: 'Final cleaning and other costs',
+    costsPlaceholder:
+      'Final cleaning and all other costs (e.g. bed linen and towels, tourist tax if applicable, deposit) with amounts – shown here transparently.',
+    calendarTitle: 'Availability',
+    calendarNote: 'An availability calendar will follow. Until then, we are happy to check your preferred dates for you.',
+    bookingLabel: 'Holiday',
+    bookingButton: 'Send a booking enquiry',
+    firmaLabel: 'For companies',
+    firmaText: 'Separate terms for company bookings and longer stays',
+    firmaButton: 'Send a company enquiry',
+  },
+  bewertungen: {
+    title: 'Guest reviews',
+    heading: 'What our guests say',
+    paragraphs: [
+      'We are delighted when our guests feel at home with us.',
+      'It is especially lovely when the quiet surroundings, the extensive amenities and the personal care are fondly remembered.',
+    ],
+    reviewPlaceholder: 'Genuine guest review with source to follow (text unchanged, usage rights cleared).',
+    author: 'Guest name',
+    source: 'Source, e.g. Airbnb',
+    date: 'Month/year',
+  },
+  impressum: {
+    title: 'Legal notice',
+    heading: 'Information pursuant to § 5 DDG (German Digital Services Act)',
+    provider: 'Provider',
+    providerPlaceholder: 'First and last name or company name of the provider',
+    address: 'Address',
+    addressPlaceholder: 'Street and number, postcode and town (address for service)',
+    contact: 'Contact',
+    contactPlaceholder: 'Email address and phone number',
+    vat: 'VAT ID',
+    vatPlaceholder: 'VAT identification number pursuant to § 27a UStG – only if available, otherwise this section is omitted',
+  },
+  datenschutz: {
+    title: 'Privacy policy',
+    sections: [
+      {
+        heading: 'Controller',
+        text: 'The controller responsible for data processing on this website is the provider named in the legal notice.',
+      },
+      {
+        heading: 'Hosting',
+        text: 'This website is served via GitHub Pages (GitHub Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA). When you visit, GitHub processes technically necessary data such as your IP address, date and time and the page requested, in order to deliver the website and keep it secure. Data may be transferred to the USA in the process. The legal basis is Art. 6(1)(f) GDPR.',
+      },
+      {
+        heading: 'Enquiry form',
+        text: 'If you write to us using the enquiry form, we process the data you enter: name, for company enquiries the company name and contact person, email address, phone number, preferred dates, number of guests or employees, your message and the language selected. The sole purpose is to answer your enquiry. The legal basis is Art. 6(1)(b) GDPR (steps prior to a rental contract) and Art. 6(1)(f) GDPR (legitimate interest in answering general enquiries). The enquiry is transmitted via Amazon Web Services EMEA SARL (38 Avenue John F. Kennedy, L-1855 Luxembourg) as processor: a function in AWS Lambda receives it in the Frankfurt region (eu-central-1) and forwards it by email to the host via Amazon Simple Email Service (SES). The enquiry is not stored in a database; technical logs without contact details (type of enquiry, dates) are deleted automatically after 30 days. We delete your enquiry once it has been dealt with, unless a booking follows; in that case statutory retention periods apply.',
+      },
+      {
+        heading: 'Map (OpenStreetMap)',
+        text: 'The “Holidays & surroundings” page can show a map from OpenStreetMap (OpenStreetMap Foundation, St John’s Innovation Centre, Cowley Road, Cambridge, CB4 0WS, United Kingdom). The map is only loaded when you click “Load map”. Only then is data such as your IP address sent to the OpenStreetMap Foundation. The legal basis is your consent given by clicking (Art. 6(1)(a) GDPR). An EU adequacy decision exists for the United Kingdom.',
+      },
+      {
+        heading: 'Fonts',
+        text: 'The fonts used are delivered together with the website from our own hosting. There is no connection to Google or any other font provider.',
+      },
+      {
+        heading: 'Local storage',
+        text: 'Your language choice (German/English) and, in the guest folder, your confirmation of the house rules are stored in your browser’s local storage (localStorage). This information never leaves your device and is not transmitted to us or any third party.',
+      },
+      {
+        heading: 'Analytics',
+        text: 'If enabled, we use GoatCounter for anonymous, cookie-free analytics. No personal profiles are created.',
+      },
+      {
+        heading: 'External links',
+        text: 'This website links to external services, including Airbnb, Google Maps (Google Ireland Limited) and the websites of recommended restaurants and destinations. You are only taken to the respective website when you click such a link; the providers themselves are responsible for its privacy practices.',
+      },
+      {
+        heading: 'Your rights',
+        text: 'You have the right to access, rectification, erasure and restriction of processing of your data, to data portability and to object to processing based on Art. 6(1)(f) GDPR. You can withdraw consent at any time with effect for the future. You can also lodge a complaint with a data protection supervisory authority; in Schleswig-Holstein this is the Unabhängiges Landeszentrum für Datenschutz (ULD).',
+      },
+    ],
   },
   form: {
     name: 'Name',
