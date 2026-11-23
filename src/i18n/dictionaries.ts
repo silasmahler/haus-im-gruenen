@@ -133,17 +133,6 @@ export interface Dictionary {
     scrollHint: string
     accept: string
   }
-  datenschutz: {
-    title: string
-    siteHeading: string
-    siteText: string
-    storageHeading: string
-    storageText: string
-    analyticsHeading: string
-    analyticsText: string
-    linksHeading: string
-    linksText: string
-  }
 }
 
 export const dictionaries: Record<Locale, Dictionary> = {
@@ -536,21 +525,6 @@ export const dictionaries: Record<Locale, Dictionary> = {
       scrollHint: '↓ Bitte bis zum Ende scrollen',
       accept: 'Ich habe die Hausregeln gelesen und akzeptiere sie',
     },
-    datenschutz: {
-      title: 'Datenschutzerklärung',
-      siteHeading: 'Diese Webseite',
-      siteText:
-        'Diese Seite dient als Gästeinformation für das Ferienhaus "Haus im Grünen" in Rendswühren. Sie enthält keine Formulare und erhebt selbst keine personenbezogenen Daten.',
-      storageHeading: 'Lokale Speicherung (Hausregeln)',
-      storageText:
-        'Beim Bestätigen der Hausregeln wird ein Zeitstempel im lokalen Speicher (localStorage) deines Browsers abgelegt, damit dir die Regeln nicht bei jedem Besuch erneut angezeigt werden. Diese Information verlässt dein Gerät nicht und wird nicht an uns oder Dritte übertragen. Ebenso wird deine Sprachwahl (Deutsch/Englisch) lokal gespeichert.',
-      analyticsHeading: 'Reichweitenmessung',
-      analyticsText:
-        'Sofern aktiviert, verwenden wir GoatCounter zur anonymen, cookie-freien Reichweitenmessung. Es werden keine personenbezogenen Profile erstellt.',
-      linksHeading: 'Externe Links',
-      linksText:
-        'Die Seite verlinkt auf externe Angebote, u. a. Airbnb, Google Maps (Google Ireland Limited) sowie auf die offiziellen Webseiten der empfohlenen Restaurants und Ausflugsziele. Beim Anklicken dieser Links wirst du zur jeweiligen externen Webseite weitergeleitet, für deren Datenschutz die Anbieter selbst verantwortlich sind. Es werden keine Kartendaten eingebettet oder im Hintergrund geladen — eine Datenübertragung an Google findet erst statt, wenn du einen solchen Link aktiv anklickst.',
-    },
   },
   en: {
     meta: {
@@ -939,21 +913,6 @@ export const dictionaries: Record<Locale, Dictionary> = {
       note: 'Please treat the house and its furnishings with care. Report any damage immediately so it can be replaced.',
       scrollHint: '↓ Please scroll to the end',
       accept: 'I have read and accept the house rules',
-    },
-    datenschutz: {
-      title: 'Privacy Policy',
-      siteHeading: 'This website',
-      siteText:
-        'This page serves as guest information for the holiday home "Haus im Grünen" in Rendswühren. It contains no forms and does not itself collect any personal data.',
-      storageHeading: 'Local storage (house rules)',
-      storageText:
-        'When you confirm the house rules, a timestamp is stored in your browser\u2019s local storage (localStorage) so the rules aren\u2019t shown again on every visit. This information never leaves your device and is not transmitted to us or any third party. Your language choice (German/English) is stored locally in the same way.',
-      analyticsHeading: 'Analytics',
-      analyticsText:
-        'If enabled, we use GoatCounter for anonymous, cookie-free analytics. No personal profiles are created.',
-      linksHeading: 'External links',
-      linksText:
-        'This site links to external services, including Airbnb, Google Maps (Google Ireland Limited) and the official websites of the recommended restaurants and destinations. Clicking these links takes you to the respective external website, which is responsible for its own privacy practices. No map data is embedded or loaded in the background — data is only transmitted to Google once you actively click such a link.',
     },
   },
 }
