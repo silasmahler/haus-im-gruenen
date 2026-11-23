@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 
+import { Hosts } from '@/components/Hosts'
 import { InquiryForm } from '@/components/InquiryForm'
 import { useSite } from '@/i18n/site'
 
@@ -18,6 +19,8 @@ export function KontaktContent() {
           {t}
         </p>
       ))}
+
+      <Hosts className="mt-10 rounded-lg bg-sage-light/60 p-5 sm:p-6" />
 
       <fieldset className="mt-10">
         <legend className="text-sm font-medium text-ink">{k.chooseLabel}</legend>

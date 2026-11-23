@@ -60,6 +60,7 @@ export function InquiryForm({ variant }: { variant: 'urlaub' | 'firma' }) {
       <div role="status" className="rounded-lg border border-sage bg-sage-light px-5 py-6">
         <p className="font-display text-xl text-ink">{f.successTitle}</p>
         <p className="mt-1 text-ink-soft">{f.successText}</p>
+        <p className="mt-3 font-hand text-2xl text-wood">{f.successSignoff}</p>
       </div>
     )
   }

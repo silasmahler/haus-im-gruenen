@@ -5,7 +5,7 @@ import { FirmenContent } from './FirmenContent'
 export const metadata: Metadata = {
   title: 'Firmen & Langzeitgäste – Haus im Grünen',
   description:
-    'Komfortable Firmenunterkunft im Raum Neumünster: ganzes Haus für bis zu drei Mitarbeiter, drei Schlafzimmer, Glasfaserinternet, Küche und Parkplatz. Auch für mehrere Wochen oder Monate.',
+    'Komfortable Firmenunterkunft in Rendswühren bei Neumünster: ganzes Haus für bis zu drei Mitarbeiter, drei Schlafzimmer, Glasfaserinternet, Küche und Parkplatz. Auch für mehrere Wochen oder Monate.',
 }
 
 export default function FirmenPage() {

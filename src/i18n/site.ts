@@ -23,12 +23,24 @@ const de = {
   },
   footer: {
     tagline: 'Mehr als eine Unterkunft. Ein Zuhause auf Zeit.',
-    region: 'Ferienhaus im Raum Neumünster, Schleswig-Holstein',
+    region: 'Ferienhaus in Rendswühren bei Neumünster, Schleswig-Holstein',
+    madeWith: 'Gepflegt mit Gartenschere und Kaminholz.',
     imprint: 'Impressum',
     privacy: 'Datenschutz',
     guestbook: 'Gästemappe für gebuchte Gäste',
   },
   placeholder: 'Platzhalter',
+  hosts: {
+    title: 'Ihre Gastgeber',
+    photoAlt: 'Foto der Gastgeber folgt',
+    request: 'Bitte ein Foto der Gastgeber (gern im Garten), die Vornamen und einen persönlichen Satz liefern, z. B. warum Sie das Haus lieben oder wie Sie für Ihre Gäste da sind.',
+  },
+  notFound: {
+    title: 'Hier wächst noch nichts.',
+    text: 'Diese Seite gibt es nicht (oder nicht mehr). Der Garten ist trotzdem geöffnet.',
+    home: 'Zur Startseite',
+    contact: 'Anfrage senden',
+  },
   gallery: {
     open: 'Foto vergrößern',
     close: 'Schließen',
@@ -39,6 +51,7 @@ const de = {
   home: {
     guestbookNotice: 'Bereits gebucht?',
     guestbookLink: 'Zur Gästemappe',
+    place: 'Rendswühren bei Neumünster · Schleswig-Holstein',
     title: 'Haus im Grünen',
     claim: 'Ankommen. Wohlfühlen. Durchatmen.',
     lead: 'Ihr Ferienhaus für erholsame Urlaubstage und komfortable berufliche Aufenthalte in Schleswig-Holstein.',
@@ -325,6 +338,7 @@ const de = {
     sending: 'Wird gesendet …',
     successTitle: 'Vielen Dank für Ihre Anfrage!',
     successText: 'Wir melden uns schnellstmöglich bei Ihnen.',
+    successSignoff: 'Bis bald im Grünen.',
     errorText:
       'Ihre Anfrage konnte leider nicht gesendet werden. Bitte versuchen Sie es später noch einmal.',
     unavailableText:
@@ -351,12 +365,24 @@ const en: SiteDict = {
   },
   footer: {
     tagline: 'More than a place to stay. A home for a while.',
-    region: 'Holiday house near Neumünster, Schleswig-Holstein',
+    region: 'Holiday house in Rendswühren near Neumünster, Schleswig-Holstein',
+    madeWith: 'Looked after with garden shears and firewood.',
     imprint: 'Legal notice',
     privacy: 'Privacy',
     guestbook: 'Guest folder for booked guests',
   },
   placeholder: 'Placeholder',
+  hosts: {
+    title: 'Your hosts',
+    photoAlt: 'Photo of the hosts to follow',
+    request: 'Please provide a photo of the hosts (ideally in the garden), your first names and one personal sentence, e.g. why you love the house or how you look after your guests.',
+  },
+  notFound: {
+    title: 'Nothing growing here yet.',
+    text: 'This page does not exist (or no longer does). The garden is open all the same.',
+    home: 'Back to the home page',
+    contact: 'Send an enquiry',
+  },
   gallery: {
     open: 'Enlarge photo',
     close: 'Close',
@@ -367,6 +393,7 @@ const en: SiteDict = {
   home: {
     guestbookNotice: 'Already booked?',
     guestbookLink: 'Go to the guest folder',
+    place: 'Rendswühren near Neumünster · Schleswig-Holstein',
     title: 'Haus im Grünen',
     claim: 'Arrive. Feel at home. Breathe.',
     lead: 'Your holiday house for restful holidays and comfortable business stays in Schleswig-Holstein.',
@@ -650,6 +677,7 @@ const en: SiteDict = {
     sending: 'Sending …',
     successTitle: 'Thank you for your enquiry!',
     successText: 'We will get back to you as soon as possible.',
+    successSignoff: 'See you soon in the green.',
     errorText: 'Unfortunately your enquiry could not be sent. Please try again later.',
     unavailableText: 'The enquiry form is not switched on yet. Please try again shortly.',
   },

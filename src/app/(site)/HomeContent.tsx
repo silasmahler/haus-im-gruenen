@@ -3,6 +3,8 @@
 import { ArrowRight, BookOpen } from 'lucide-react'
 import Link from 'next/link'
 
+import { HandNote, HedgeDivider } from '@/components/Brand'
+import { Hosts } from '@/components/Hosts'
 import { useLanguage } from '@/i18n/LanguageContext'
 import { useSite } from '@/i18n/site'
 import { photo } from '@/lib/photos'
@@ -45,7 +47,8 @@ export function HomeContent() {
       />
 
       <section className="mx-auto max-w-3xl px-4 pt-14 pb-4 sm:px-6 sm:pt-20">
-        <h1 className="font-display text-5xl text-ink sm:text-6xl">{h.title}</h1>
+        <p className="text-sm tracking-wide text-moss">{h.place}</p>
+        <h1 className="mt-2 font-display text-5xl text-ink sm:text-6xl">{h.title}</h1>
         <p className="mt-4 font-display text-2xl text-moss italic">{h.claim}</p>
         <p className="mt-8 text-xl leading-relaxed text-ink">{h.lead}</p>
         {h.paragraphs.map((t) => (
@@ -53,8 +56,12 @@ export function HomeContent() {
             {t}
           </p>
         ))}
-        <p className="mt-10 border-l-2 border-wood pl-5 font-display text-2xl text-ink italic">{h.quote}</p>
+        <Quote text={h.quote} />
       </section>
+
+      <HedgeDivider className="mt-14" width="max-w-3xl" />
+
+      <Hosts className="mx-auto mt-10 max-w-3xl px-4 sm:px-6" />
 
       <section className="mx-auto grid max-w-6xl gap-6 px-4 pt-14 sm:px-6 md:grid-cols-2 md:gap-8">
         {cards.map((c) => (
@@ -99,5 +106,22 @@ export function HomeContent() {
         </div>
       </section>
     </>
+  )
+}
+
+// Owner text stays verbatim; only the "home for a while" half gets the handwritten accent.
+function Quote({ text }: { text: string }) {
+  const [before, after] = text.split(' – ')
+  return (
+    <p className="mt-10 border-l-2 border-wood pl-5 font-display text-2xl text-ink italic">
+      {after ? (
+        <>
+          {before} –{' '}
+          <HandNote className="text-[1.65em] leading-none not-italic">{after}</HandNote>
+        </>
+      ) : (
+        text
+      )}
+    </p>
   )
 }
