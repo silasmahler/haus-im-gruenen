@@ -20,9 +20,11 @@ const de = {
     mainNav: 'Hauptnavigation',
     guestbook: 'Gästemappe',
     guestbookHint: 'Für gebuchte Gäste',
+    cta: 'Jetzt anfragen',
+    skip: 'Zum Inhalt springen',
   },
   footer: {
-    tagline: 'Mehr als eine Unterkunft. Ein Zuhause auf Zeit.',
+    tagline: 'Mehr als eine Unterkunft – ein Zuhause auf Zeit.',
     region: 'Ferienhaus in Rendswühren bei Neumünster, Schleswig-Holstein',
     madeWith: 'Gepflegt mit Gartenschere und Kaminholz.',
     imprint: 'Impressum',
@@ -47,6 +49,7 @@ const de = {
     prev: 'Vorheriges Foto',
     next: 'Nächstes Foto',
     counter: (i: number, n: number) => `Foto ${i} von ${n}`,
+    keys: 'Pfeiltasten: blättern · Esc: schließen',
   },
   home: {
     guestbookNotice: 'Bereits gebucht?',
@@ -54,6 +57,8 @@ const de = {
     place: 'Rendswühren bei Neumünster · Schleswig-Holstein',
     title: 'Haus im Grünen',
     claim: 'Ankommen. Wohlfühlen. Durchatmen.',
+    heroUrlaub: 'Urlaub planen',
+    heroFirmen: 'Für Firmen',
     lead: 'Ihr Ferienhaus für erholsame Urlaubstage und komfortable berufliche Aufenthalte in Schleswig-Holstein.',
     paragraphs: [
       'Genießen Sie die Ruhe der ländlichen Umgebung und den Komfort eines vollständig ausgestatteten Hauses, das Ihnen während Ihres Aufenthalts ganz allein zur Verfügung steht.',
@@ -137,10 +142,13 @@ const de = {
       'Schreiben Sie uns gerne und teilen Sie uns Ihren gewünschten Reisezeitraum sowie die Anzahl der Gäste mit.',
       'Wir freuen uns auf Ihre Anfrage und melden uns schnellstmöglich bei Ihnen.',
     ],
-    closing: 'Haus im Grünen – Mehr als eine Unterkunft. Ein Zuhause auf Zeit.',
+    closing: 'Haus im Grünen: Mehr als eine Unterkunft – ein Zuhause auf Zeit.',
     chooseLabel: 'Worum geht es?',
-    chooseUrlaub: 'Urlaub',
-    chooseFirma: 'Firmenanfrage',
+    chooseUrlaub: 'Urlaub / privat',
+    chooseFirma: 'Firma / Mitarbeiter',
+    directTitle: 'Lieber direkt?',
+    directPlaceholder: 'E-Mail-Adresse und Telefonnummer für den direkten Kontakt (gleiche Angaben wie im Impressum).',
+    switched: (v: string) => `Formular für ${v} angezeigt. Ihre Eingaben bleiben erhalten.`,
   },
   urlaub: {
     title: 'Urlaub & Umgebung',
@@ -238,6 +246,9 @@ const de = {
       'Gerne informieren wir Sie über die Verfügbarkeit und erstellen Ihnen ein passendes Angebot.',
     ],
     tableTitle: 'Saisonpreise 2027',
+    onRequest: 'Preise auf Anfrage – wir schicken Ihnen gern ein Angebot für Ihren Zeitraum.',
+    onRequestButton: 'Angebot anfragen',
+    costsPublic: 'Alle Kosten nennen wir Ihnen transparent mit Ihrem Angebot.',
     tablePlaceholder: 'Saisonzeiträume, Preise und Mindestaufenthalte aus der Preisliste 2027.',
     columns: ['Saison', 'Zeitraum', 'Preis pro Nacht', 'Mindestaufenthalt'],
     seasons: ['Nebensaison', 'Zwischensaison', 'Hauptsaison'],
@@ -279,12 +290,16 @@ const de = {
   },
   datenschutz: {
     title: 'Datenschutzerklärung',
+    // Used instead of the GitHub Pages text when built as preview (NEXT_PUBLIC_PREVIEW=1)
+    hostingPreview:
+      'Diese Vorschau der Website wird über AWS Amplify von Amazon Web Services EMEA SARL (38 Avenue John F. Kennedy, L-1855 Luxemburg) in der Region Frankfurt (eu-central-1) ausgeliefert. Beim Aufruf der Seiten verarbeitet AWS technisch notwendige Daten wie Ihre IP-Adresse, Datum und Uhrzeit sowie die aufgerufene Seite, um die Website bereitzustellen und ihre Sicherheit zu gewährleisten. Die Auslieferung kann über das weltweite Netz von Amazon CloudFront erfolgen; dabei können Daten auch in Drittländer wie die USA übermittelt werden. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO.',
     sections: [
       {
         heading: 'Verantwortlicher',
         text: 'Verantwortlich für die Datenverarbeitung auf dieser Website ist der im Impressum genannte Anbieter.',
       },
       {
+        id: 'hosting',
         heading: 'Hosting',
         text: 'Diese Website wird über GitHub Pages (GitHub Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA) ausgeliefert. Beim Aufruf der Seiten verarbeitet GitHub technisch notwendige Daten wie Ihre IP-Adresse, Datum und Uhrzeit sowie die aufgerufene Seite, um die Website bereitzustellen und ihre Sicherheit zu gewährleisten. Dabei können Daten in die USA übermittelt werden. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO.',
       },
@@ -305,6 +320,7 @@ const de = {
         text: 'Ihre Sprachwahl (Deutsch/Englisch) und, in der Gästemappe, die Bestätigung der Hausregeln werden im lokalen Speicher (localStorage) Ihres Browsers abgelegt. Diese Informationen verlassen Ihr Gerät nicht und werden nicht an uns oder Dritte übertragen.',
       },
       {
+        id: 'analytics',
         heading: 'Reichweitenmessung',
         text: 'Sofern aktiviert, verwenden wir GoatCounter zur anonymen, cookie-freien Reichweitenmessung. Es werden keine personenbezogenen Profile erstellt.',
       },
@@ -339,6 +355,10 @@ const de = {
     successTitle: 'Vielen Dank für Ihre Anfrage!',
     successText: 'Wir melden uns schnellstmöglich bei Ihnen.',
     successSignoff: 'Bis bald im Grünen.',
+    homeLink: 'Zurück zur Startseite',
+    requiredHint: 'Mit * markierte Felder sind Pflichtfelder.',
+    noObligation: 'Ihre Anfrage ist unverbindlich und kostenlos.',
+    nights: (n: number) => (n === 1 ? '1 Nacht' : `${n} Nächte`),
     errorText:
       'Ihre Anfrage konnte leider nicht gesendet werden. Bitte versuchen Sie es später noch einmal.',
     unavailableText:
@@ -360,16 +380,18 @@ const en: SiteDict = {
     menuOpen: 'Open menu',
     menuClose: 'Close menu',
     mainNav: 'Main navigation',
-    guestbook: 'Guest folder',
+    guestbook: 'Guest guide',
     guestbookHint: 'For booked guests',
+    cta: 'Enquire now',
+    skip: 'Skip to content',
   },
   footer: {
-    tagline: 'More than a place to stay. A home for a while.',
+    tagline: 'More than a place to stay – a home away from home.',
     region: 'Holiday house in Rendswühren near Neumünster, Schleswig-Holstein',
     madeWith: 'Looked after with garden shears and firewood.',
     imprint: 'Legal notice',
     privacy: 'Privacy',
-    guestbook: 'Guest folder for booked guests',
+    guestbook: 'Guest guide for booked guests',
   },
   placeholder: 'Placeholder',
   hosts: {
@@ -379,7 +401,7 @@ const en: SiteDict = {
   },
   notFound: {
     title: 'Nothing growing here yet.',
-    text: 'This page does not exist (or no longer does). The garden is open all the same.',
+    text: 'This page doesn’t exist (or no longer does). The garden is open all the same.',
     home: 'Back to the home page',
     contact: 'Send an enquiry',
   },
@@ -389,19 +411,22 @@ const en: SiteDict = {
     prev: 'Previous photo',
     next: 'Next photo',
     counter: (i: number, n: number) => `Photo ${i} of ${n}`,
+    keys: 'Arrow keys: browse · Esc: close',
   },
   home: {
     guestbookNotice: 'Already booked?',
-    guestbookLink: 'Go to the guest folder',
+    guestbookLink: 'Open the guest guide',
     place: 'Rendswühren near Neumünster · Schleswig-Holstein',
     title: 'Haus im Grünen',
-    claim: 'Arrive. Feel at home. Breathe.',
+    claim: 'Arrive. Unwind. Breathe.',
+    heroUrlaub: 'Plan your holiday',
+    heroFirmen: 'For companies',
     lead: 'Your holiday house for restful holidays and comfortable business stays in Schleswig-Holstein.',
     paragraphs: [
       'Enjoy the quiet of the countryside and the comfort of a fully equipped house that is yours alone for the whole of your stay.',
-      'Whether it is a family holiday, a short break from everyday life or a business stay of several weeks – our house gives you plenty of space, privacy and the freedom to spend your day exactly as you like.',
+      'Whether it’s a family holiday, a short break from everyday life or a business stay of several weeks – our house gives you plenty of space, privacy and the freedom to spend your day exactly as you like.',
     ],
-    quote: 'More than a place to stay – a home for a while.',
+    quote: 'More than a place to stay – a home away from home.',
     urlaub: {
       title: 'Holidays & relaxation',
       text: 'Discover our cosy holiday house, the spacious garden and everything you need for a restful stay.',
@@ -427,15 +452,15 @@ const en: SiteDict = {
         paragraphs: [
           'Our lovingly furnished holiday house offers you the comfort and independence of a home of your own.',
           'Three separate bedrooms, a cosy living area with a wood-burning stove, a well-equipped kitchen and a spacious garden make sure you feel at home from the very first day.',
-          'Whether you want to spend time together or retreat for a while – you will find the right spot here.',
+          'Whether you want to spend time together or retreat for a while – you’ll find the right spot here.',
         ],
       },
       {
         title: 'Cook just like at home',
         paragraphs: [
           'Our kitchen leaves little to be desired.',
-          'Besides a ceramic hob, oven, microwave and fridge-freezer, you will find an air fryer, a coffee machine and a blender, among other things.',
-          'Whether it is a leisurely breakfast, a quick bite in between or dinner together – you can cater for yourselves exactly as you like.',
+          'Besides a ceramic hob, oven, microwave and fridge-freezer, you’ll also find an air fryer, a coffee machine and a blender.',
+          'Whether it’s a leisurely breakfast, a quick bite in between or dinner together – you can cater for yourselves exactly as you like.',
         ],
       },
       {
@@ -449,7 +474,7 @@ const en: SiteDict = {
       {
         title: 'Well connected – even in the countryside',
         paragraphs: [
-          'Thanks to our fast fibre connection, you do not have to do without powerful internet, even in the countryside.',
+          'Thanks to our fast fibre connection, you don’t have to do without fast internet, even in the countryside.',
           'Video calls, remote work or a cosy streaming night – here, relaxation and digital needs go together well.',
         ],
       },
@@ -478,10 +503,13 @@ const en: SiteDict = {
       'Just write to us and let us know your preferred dates and the number of guests.',
       'We look forward to your enquiry and will get back to you as soon as possible.',
     ],
-    closing: 'Haus im Grünen – More than a place to stay. A home for a while.',
+    closing: 'Haus im Grünen: More than a place to stay – a home away from home.',
     chooseLabel: 'What is your enquiry about?',
-    chooseUrlaub: 'Holiday',
-    chooseFirma: 'Business enquiry',
+    chooseUrlaub: 'Holiday / private',
+    chooseFirma: 'Business / staff',
+    directTitle: 'Prefer to get in touch directly?',
+    directPlaceholder: 'E-mail address and phone number for direct contact (same details as in the legal notice).',
+    switched: (v: string) => `Showing the form for ${v}. What you have entered is kept.`,
   },
   urlaub: {
     title: 'Holidays & surroundings',
@@ -489,7 +517,7 @@ const en: SiteDict = {
       {
         title: 'A holiday away from the hustle and bustle',
         paragraphs: [
-          'Sometimes it takes very little to unwind: a cosy home for a while, plenty of green and the freedom to spend the day just as you like.',
+          'Sometimes it takes very little to unwind: a cosy home away from home, plenty of green and the freedom to spend the day just as you like.',
           'Our holiday house is a lovely retreat for anyone who values peace, nature and independence.',
           'Start the morning with a leisurely breakfast, enjoy the countryside and let the evening wind down in a relaxed way.',
           'There are no hotel times to stick to here. You decide what your holiday day looks like.',
@@ -529,7 +557,7 @@ const en: SiteDict = {
   firmen: {
     title: 'Business & long stays',
     heading: 'Living and working for a while',
-    claim: 'The comfortable alternative to the classic workers’ room.',
+    claim: 'A comfortable alternative to standard contractor accommodation.',
     paragraphs: [
       'Are you looking for accommodation for employees, field staff or project teams in the Neumünster area?',
       'Our fully equipped holiday house is ideal for business stays – including stays of several weeks or months.',
@@ -540,7 +568,7 @@ const en: SiteDict = {
     comfort: [
       {
         title: 'Three separate bedrooms',
-        text: 'With up to three employees, everyone has a bedroom of their own. That way there is enough privacy even on a shared business stay.',
+        text: 'With up to three employees, everyone has a bedroom of their own. That way there’s enough privacy even on a shared business stay.',
       },
       {
         title: 'Fully equipped kitchen',
@@ -578,6 +606,9 @@ const en: SiteDict = {
       'We will gladly let you know about availability and put together a suitable offer.',
     ],
     tableTitle: 'Seasonal prices 2027',
+    onRequest: 'Prices on request – we’ll gladly send you an offer for your dates.',
+    onRequestButton: 'Request an offer',
+    costsPublic: 'We’ll list all costs transparently in your offer.',
     tablePlaceholder: 'Season periods, prices and minimum stays from the 2027 price list.',
     columns: ['Season', 'Period', 'Price per night', 'Minimum stay'],
     seasons: ['Low season', 'Mid season', 'High season'],
@@ -585,7 +616,7 @@ const en: SiteDict = {
     costsPlaceholder:
       'Final cleaning and all other costs (e.g. bed linen and towels, tourist tax if applicable, deposit) with amounts – shown here transparently.',
     calendarTitle: 'Availability',
-    calendarNote: 'An availability calendar will follow. Until then, we are happy to check your preferred dates for you.',
+    calendarNote: 'An availability calendar will follow. Until then, we’re happy to check your preferred dates for you.',
     bookingLabel: 'Holiday',
     bookingButton: 'Send a booking enquiry',
     firmaLabel: 'For companies',
@@ -618,12 +649,15 @@ const en: SiteDict = {
   },
   datenschutz: {
     title: 'Privacy policy',
+    hostingPreview:
+      'This preview of the website is served via AWS Amplify by Amazon Web Services EMEA SARL (38 Avenue John F. Kennedy, L-1855 Luxembourg) in the Frankfurt region (eu-central-1). When you visit, AWS processes technically necessary data such as your IP address, date and time and the page requested, in order to deliver the website and keep it secure. Delivery may run through Amazon CloudFront’s global network, so data may also be transferred to third countries such as the USA. The legal basis is Art. 6(1)(f) GDPR.',
     sections: [
       {
         heading: 'Controller',
         text: 'The controller responsible for data processing on this website is the provider named in the legal notice.',
       },
       {
+        id: 'hosting',
         heading: 'Hosting',
         text: 'This website is served via GitHub Pages (GitHub Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA). When you visit, GitHub processes technically necessary data such as your IP address, date and time and the page requested, in order to deliver the website and keep it secure. Data may be transferred to the USA in the process. The legal basis is Art. 6(1)(f) GDPR.',
       },
@@ -641,9 +675,10 @@ const en: SiteDict = {
       },
       {
         heading: 'Local storage',
-        text: 'Your language choice (German/English) and, in the guest folder, your confirmation of the house rules are stored in your browser’s local storage (localStorage). This information never leaves your device and is not transmitted to us or any third party.',
+        text: 'Your language choice (German/English) and, in the guest guide, your confirmation of the house rules are stored in your browser’s local storage (localStorage). This information never leaves your device and is not transmitted to us or any third party.',
       },
       {
+        id: 'analytics',
         heading: 'Analytics',
         text: 'If enabled, we use GoatCounter for anonymous, cookie-free analytics. No personal profiles are created.',
       },
@@ -678,6 +713,10 @@ const en: SiteDict = {
     successTitle: 'Thank you for your enquiry!',
     successText: 'We will get back to you as soon as possible.',
     successSignoff: 'See you soon in the green.',
+    homeLink: 'Back to the home page',
+    requiredHint: 'Fields marked * are required.',
+    noObligation: 'Your enquiry is free and without obligation.',
+    nights: (n: number) => (n === 1 ? '1 night' : `${n} nights`),
     errorText: 'Unfortunately your enquiry could not be sent. Please try again later.',
     unavailableText: 'The enquiry form is not switched on yet. Please try again shortly.',
   },

@@ -2,6 +2,7 @@
 
 import { ArrowDown, BedDouble, CarFront, CookingPot, Shirt, Sofa, Wifi } from 'lucide-react'
 
+import { Picture } from '@/components/Picture'
 import { InquiryForm } from '@/components/InquiryForm'
 import { useLanguage } from '@/i18n/LanguageContext'
 import { useSite } from '@/i18n/site'
@@ -20,7 +21,7 @@ export function FirmenContent() {
     <>
       <section className="mx-auto grid max-w-6xl items-center gap-8 px-4 pt-14 sm:px-6 sm:pt-20 md:grid-cols-2 md:gap-14">
         <div>
-          <p className="text-sm font-medium text-moss">{f.title}</p>
+          <p className="text-sm font-medium text-wood">{f.title}</p>
           <h1 className="mt-2 font-display text-4xl text-ink sm:text-5xl">{f.heading}</h1>
           <p className="mt-4 font-display text-2xl text-moss italic">{f.claim}</p>
           {f.paragraphs.map((t) => (
@@ -33,22 +34,35 @@ export function FirmenContent() {
             <ArrowDown className="size-4" aria-hidden />
           </a>
         </div>
-        <img src={HERO.src} alt={HERO.alt[locale]} className="aspect-[4/3] w-full rounded-lg object-cover" />
+        <Picture photo={HERO} alt={HERO.alt[locale]} priority sizes="(min-width: 768px) 50vw, 100vw" className="aspect-[4/3] w-full rounded-lg object-cover" />
       </section>
 
-      <section className="mt-20 bg-cream py-16 sm:py-20">
+      <ul className="mx-auto mt-16 grid max-w-6xl grid-cols-3 gap-2 px-4 sm:gap-3 sm:px-6">
+        {STRIP.map((p) => (
+          <li key={p.id}>
+            <Picture
+              photo={p}
+              alt={p.alt[locale]}
+              sizes="33vw"
+              className="aspect-[4/3] w-full rounded-lg object-cover ring-1 ring-ink/5"
+            />
+          </li>
+        ))}
+      </ul>
+
+      <section className="mt-16 bg-cream py-16 sm:py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <h2 className="font-display text-3xl text-ink sm:text-4xl">{f.comfortTitle}</h2>
-          <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
             {f.comfort.map((c, i) => {
               const Icon = COMFORT_ICONS[i]
               return (
-                <li key={c.title} className="rounded-lg border border-line bg-paper p-6">
-                  <span className="flex size-11 items-center justify-center rounded-full bg-sage-light text-moss">
+                <li key={c.title}>
+                  <span className="flex size-9 items-center justify-center rounded-full bg-sage-light text-moss">
                     <Icon className="size-5" strokeWidth={1.75} aria-hidden />
                   </span>
-                  <h3 className="mt-4 font-display text-xl text-ink">{c.title}</h3>
-                  <p className="mt-2 text-ink-soft">{c.text}</p>
+                  <h3 className="mt-3 font-display text-xl text-ink">{c.title}</h3>
+                  <p className="mt-2 max-w-[65ch] text-ink-soft">{c.text}</p>
                 </li>
               )
             })}
@@ -56,13 +70,6 @@ export function FirmenContent() {
         </div>
       </section>
 
-      <ul className="mx-auto mt-16 grid max-w-6xl grid-cols-3 gap-2 px-4 sm:gap-3 sm:px-6">
-        {STRIP.map((p) => (
-          <li key={p.id}>
-            <img src={p.thumb} alt={p.alt[locale]} loading="lazy" className="aspect-[4/3] w-full rounded-md object-cover" />
-          </li>
-        ))}
-      </ul>
 
       <section className="mx-auto max-w-3xl px-4 pt-16 sm:px-6">
         <h2 className="font-display text-3xl text-ink sm:text-4xl">{f.conditionsTitle}</h2>

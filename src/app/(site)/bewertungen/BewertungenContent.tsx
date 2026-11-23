@@ -11,7 +11,7 @@ export function BewertungenContent() {
   return (
     <div className="mx-auto max-w-6xl px-4 pt-14 sm:px-6 sm:pt-20">
       <div className="max-w-3xl">
-        <p className="text-sm font-medium text-moss">{b.title}</p>
+        <p className="text-sm font-medium text-wood">{b.title}</p>
         <h1 className="mt-2 font-display text-4xl text-ink sm:text-5xl">{b.heading}</h1>
         {b.paragraphs.map((t) => (
           <p key={t} className="mt-4 text-lg leading-relaxed text-ink-soft">

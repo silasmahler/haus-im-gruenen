@@ -1,8 +1,10 @@
 'use client'
 
 import { ExternalLink, MapPin } from 'lucide-react'
+import Link from 'next/link'
 import { useState } from 'react'
 
+import { Picture } from '@/components/Picture'
 import { Placeholder } from '@/components/Placeholder'
 import { useLanguage } from '@/i18n/LanguageContext'
 import { useSite } from '@/i18n/site'
@@ -20,7 +22,8 @@ function mapsSearchUrl(query: string) {
 
 export function UrlaubContent() {
   const { locale, t } = useLanguage()
-  const u = useSite().urlaub
+  const site = useSite()
+  const u = site.urlaub
   const [mapLoaded, setMapLoaded] = useState(false)
 
   return (
@@ -34,10 +37,11 @@ export function UrlaubContent() {
           const img = SECTION_PHOTOS[i]
           return (
             <section key={sec.title} className="grid items-center gap-8 md:grid-cols-2 md:gap-14">
-              <img
-                src={img.src}
+              <Picture
+                photo={img}
                 alt={img.alt[locale]}
-                loading={i === 0 ? undefined : 'lazy'}
+                priority={i === 0}
+                sizes="(min-width: 768px) 50vw, 100vw"
                 className={`aspect-[4/3] w-full rounded-lg object-cover ${i % 2 ? 'md:order-2' : ''}`}
               />
               <div>
@@ -55,7 +59,7 @@ export function UrlaubContent() {
 
       <section className="mt-24 bg-cream py-16 sm:py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <p className="text-sm font-medium text-moss">{u.lageTitle}</p>
+          <p className="text-sm font-medium text-wood">{u.lageTitle}</p>
           <h2 className="mt-2 font-display text-3xl text-ink sm:text-4xl">{u.lageHeading}</h2>
           <div className="mt-8 grid gap-10 md:grid-cols-2 md:gap-14">
             <div>
@@ -66,7 +70,7 @@ export function UrlaubContent() {
               ))}
               <div className="mt-8 grid grid-cols-2 gap-3">
                 {LAGE_PHOTOS.map((img) => (
-                  <img key={img.id} src={img.thumb} alt={img.alt[locale]} loading="lazy" className="aspect-[4/3] w-full rounded-md object-cover" />
+                  <Picture key={img.id} photo={img} alt={img.alt[locale]} sizes="(min-width: 768px) 25vw, 50vw" className="aspect-[4/3] w-full rounded-lg object-cover" />
                 ))}
               </div>
             </div>
@@ -136,6 +140,15 @@ export function UrlaubContent() {
               </ul>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pt-20 sm:px-6">
+        <div className="flex flex-col items-start gap-6 rounded-lg border border-line px-6 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-10">
+          <p className="font-display text-2xl text-ink">{site.ferienhaus.ctaText}</p>
+          <Link href="/kontakt" className="site-btn shrink-0">
+            {site.ferienhaus.ctaButton}
+          </Link>
         </div>
       </section>
     </>

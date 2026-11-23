@@ -57,12 +57,20 @@ export function SiteHeader() {
           <Link
             href="/gaestemappe"
             title={s.nav.guestbookHint}
-            className="hidden items-center gap-1.5 rounded-md px-2 py-1 text-sm text-ink-soft hover:text-ink sm:flex"
+            className="hidden items-center gap-1.5 rounded-md px-2 py-1 text-sm text-ink-soft hover:text-ink md:flex"
           >
             <BookOpen className="size-4" aria-hidden />
             {s.nav.guestbook}
+            <span className="sr-only"> ({s.nav.guestbookHint})</span>
           </Link>
           <LanguageSwitcher />
+          <Link
+            href="/kontakt"
+            onClick={() => setOpen(false)}
+            className="rounded-md bg-moss px-3 py-2 text-sm font-medium whitespace-nowrap text-paper transition-colors hover:bg-moss-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-moss sm:px-4"
+          >
+            {s.nav.cta}
+          </Link>
           <button
             type="button"
             onClick={() => setOpen(!open)}
@@ -77,7 +85,7 @@ export function SiteHeader() {
       </div>
 
       <nav aria-label={s.nav.mainNav} className="hidden border-t border-line/70 lg:block">
-        <ul className="mx-auto flex max-w-6xl flex-wrap justify-center px-4 text-sm sm:px-6">{links}</ul>
+        <ul className="mx-auto flex max-w-6xl flex-wrap justify-center px-4 text-[0.9375rem] sm:px-6">{links}</ul>
       </nav>
 
       {open && (

@@ -5,6 +5,7 @@ import Link from 'next/link'
 
 import { HandNote, HedgeDivider } from '@/components/Brand'
 import { Hosts } from '@/components/Hosts'
+import { Picture } from '@/components/Picture'
 import { useLanguage } from '@/i18n/LanguageContext'
 import { useSite } from '@/i18n/site'
 import { photo } from '@/lib/photos'
@@ -37,19 +38,37 @@ export function HomeContent() {
         </p>
       </div>
 
-      <img
-        src={HERO.src}
-        alt={HERO.alt[locale]}
-        width={HERO.width}
-        height={HERO.height}
-        fetchPriority="high"
-        className="block aspect-[4/3] w-full object-cover sm:aspect-[16/9] lg:aspect-auto lg:h-[76vh]"
-      />
+      {/* On desktop the title sits on the photo; on mobile it follows below it */}
+      <div className="relative">
+        <Picture
+          photo={HERO}
+          alt={HERO.alt[locale]}
+          priority
+          className="block aspect-[4/3] w-full object-cover object-[50%_60%] sm:aspect-[16/9] lg:aspect-auto lg:h-[min(72vh,760px)]"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 hidden bg-gradient-to-t from-ink/70 via-ink/25 to-transparent lg:block"
+        />
+        <div className="mx-auto max-w-3xl px-4 pt-14 sm:px-6 sm:pt-20 lg:absolute lg:inset-x-0 lg:bottom-0 lg:max-w-6xl lg:pt-0 lg:pb-14">
+          <p className="text-sm font-medium tracking-wide text-wood lg:text-cream">{h.place}</p>
+          <h1 className="mt-2 font-display text-5xl text-ink sm:text-6xl lg:text-7xl lg:text-paper">{h.title}</h1>
+          <p className="mt-4 font-display text-2xl text-moss italic lg:text-3xl lg:text-sage-light">{h.claim}</p>
+          <div className="mt-8 hidden gap-3 lg:flex">
+            <Link href="/ferienhaus" className="site-btn">
+              {h.heroUrlaub}
+            </Link>
+            <Link
+              href="/firmen"
+              className="inline-flex items-center gap-2 rounded-md border border-paper/80 px-5 py-3 font-medium text-paper transition-colors hover:bg-paper/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper"
+            >
+              {h.heroFirmen}
+            </Link>
+          </div>
+        </div>
+      </div>
 
-      <section className="mx-auto max-w-3xl px-4 pt-14 pb-4 sm:px-6 sm:pt-20">
-        <p className="text-sm tracking-wide text-moss">{h.place}</p>
-        <h1 className="mt-2 font-display text-5xl text-ink sm:text-6xl">{h.title}</h1>
-        <p className="mt-4 font-display text-2xl text-moss italic">{h.claim}</p>
+      <section className="mx-auto max-w-3xl px-4 pb-4 sm:px-6 lg:pt-16">
         <p className="mt-8 text-xl leading-relaxed text-ink">{h.lead}</p>
         {h.paragraphs.map((t) => (
           <p key={t} className="mt-5 text-lg leading-relaxed text-ink-soft">
@@ -66,7 +85,12 @@ export function HomeContent() {
       <section className="mx-auto grid max-w-6xl gap-6 px-4 pt-14 sm:px-6 md:grid-cols-2 md:gap-8">
         {cards.map((c) => (
           <article key={c.href} className="flex flex-col overflow-hidden rounded-lg border border-line bg-cream">
-            <img src={c.img.thumb} alt={c.img.alt[locale]} loading="lazy" className="aspect-[3/2] w-full object-cover" />
+            <Picture
+              photo={c.img}
+              alt={c.img.alt[locale]}
+              sizes="(min-width: 768px) 50vw, 100vw"
+              className="aspect-[3/2] w-full object-cover"
+            />
             <div className="flex flex-1 flex-col p-6 sm:p-8">
               <h2 className="font-display text-3xl text-ink">{c.title}</h2>
               <p className="mt-3 flex-1 text-ink-soft">{c.text}</p>
@@ -90,7 +114,12 @@ export function HomeContent() {
         <ul className="mt-6 grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4">
           {STRIP.map((p) => (
             <li key={p.id}>
-              <img src={p.thumb} alt={p.alt[locale]} loading="lazy" className="aspect-[4/3] w-full rounded-md object-cover" />
+              <Picture
+                photo={p}
+                alt={p.alt[locale]}
+                sizes="(min-width: 768px) 25vw, 50vw"
+                className="aspect-[4/3] w-full rounded-lg object-cover ring-1 ring-ink/5"
+              />
             </li>
           ))}
         </ul>

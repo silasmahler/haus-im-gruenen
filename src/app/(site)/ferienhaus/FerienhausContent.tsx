@@ -5,6 +5,7 @@ import Link from 'next/link'
 
 import { Gallery } from '@/components/Gallery'
 import { useLanguage } from '@/i18n/LanguageContext'
+import { Picture } from '@/components/Picture'
 import { useSite } from '@/i18n/site'
 import { PHOTOS, photo } from '@/lib/photos'
 
@@ -28,10 +29,11 @@ export function FerienhausContent() {
           const img = SECTION_PHOTOS[i]
           return (
             <section key={sec.title} className="grid items-center gap-8 md:grid-cols-2 md:gap-14">
-              <img
-                src={img.src}
+              <Picture
+                photo={img}
                 alt={img.alt[locale]}
-                loading={i === 0 ? undefined : 'lazy'}
+                priority={i === 0}
+                sizes="(min-width: 768px) 50vw, 100vw"
                 className={`aspect-[4/3] w-full rounded-lg object-cover ${i % 2 ? 'md:order-2' : ''}`}
               />
               <div>
@@ -55,7 +57,7 @@ export function FerienhausContent() {
               const Icon = AMENITY_ICONS[i]
               return (
                 <li key={item} className="flex items-start gap-4">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-sage-light text-moss">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-sage-light text-moss">
                     <Icon className="size-5" strokeWidth={1.75} aria-hidden />
                   </span>
                   <span className="pt-2 text-ink">{item}</span>

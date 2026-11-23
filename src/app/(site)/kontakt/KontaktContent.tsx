@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Hosts } from '@/components/Hosts'
+import { Placeholder } from '@/components/Placeholder'
 import { InquiryForm } from '@/components/InquiryForm'
 import { useSite } from '@/i18n/site'
 
@@ -10,6 +11,17 @@ import { useSite } from '@/i18n/site'
 export function KontaktContent() {
   const k = useSite().kontakt
   const [variant, setVariant] = useState<'urlaub' | 'firma'>('urlaub')
+  const [notice, setNotice] = useState('')
+
+  // /kontakt?typ=firma preselects the company form (links from /firmen and /preise).
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('typ') === 'firma') setVariant('firma')
+  }, [])
+
+  function choose(v: 'urlaub' | 'firma') {
+    setVariant(v)
+    setNotice(k.switched(v === 'urlaub' ? k.chooseUrlaub : k.chooseFirma))
+  }
 
   return (
     <div className="mx-auto max-w-3xl px-4 pt-14 sm:px-6 sm:pt-20">
@@ -37,7 +49,7 @@ export function KontaktContent() {
                 name="variant"
                 value={v}
                 checked={variant === v}
-                onChange={() => setVariant(v)}
+                onChange={() => choose(v)}
                 className="sr-only"
               />
               {v === 'urlaub' ? k.chooseUrlaub : k.chooseFirma}
@@ -46,9 +58,21 @@ export function KontaktContent() {
         </div>
       </fieldset>
 
-      <div className="mt-8 rounded-lg border border-line bg-cream p-5 sm:p-8">
-        <InquiryForm key={variant} variant={variant} />
+      <p aria-live="polite" className="sr-only">
+        {notice}
+      </p>
+
+      <div id="anfrage" className="mt-8 rounded-lg border border-line bg-cream p-5 sm:p-8">
+        <InquiryForm variant={variant} />
       </div>
+
+      {/* Direct e-mail/phone come from the same owner data as the Impressum, still missing */}
+      <section className="mt-8 rounded-lg border border-line p-5 sm:p-6">
+        <h2 className="font-display text-xl text-ink">{k.directTitle}</h2>
+        <div className="mt-3">
+          <Placeholder>{k.directPlaceholder}</Placeholder>
+        </div>
+      </section>
 
       <p className="mt-10 font-display text-xl text-ink italic">{k.closing}</p>
     </div>

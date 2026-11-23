@@ -11,7 +11,7 @@ export function PreiseContent() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 pt-14 sm:px-6 sm:pt-20">
-      <p className="text-sm font-medium text-moss">{p.title}</p>
+      <p className="text-sm font-medium text-wood">{p.title}</p>
       <h1 className="mt-2 font-display text-4xl text-ink sm:text-5xl">{p.heading}</h1>
       {p.paragraphs.map((t) => (
         <p key={t} className="mt-4 text-lg leading-relaxed text-ink-soft">
@@ -27,17 +27,17 @@ export function PreiseContent() {
           </span>
           <span className="mt-3 flex items-center gap-2 font-display text-2xl text-ink">
             {p.bookingButton}
-            <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" aria-hidden />
+            <ArrowRight className="size-5 motion-safe:transition-transform motion-safe:group-hover:translate-x-1" aria-hidden />
           </span>
         </Link>
-        <Link href="/firmen#anfrage" className="group flex flex-col rounded-lg border border-wood/50 bg-cream-deep/60 p-6 hover:border-wood">
+        <Link href="/kontakt?typ=firma" className="group flex flex-col rounded-lg border border-line bg-paper p-6 hover:border-wood">
           <span className="flex items-center gap-2 text-sm font-medium text-wood">
             <Briefcase className="size-4" aria-hidden />
             {p.firmaLabel}
           </span>
           <span className="mt-3 flex items-center gap-2 font-display text-2xl text-ink">
             {p.firmaButton}
-            <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" aria-hidden />
+            <ArrowRight className="size-5 motion-safe:transition-transform motion-safe:group-hover:translate-x-1" aria-hidden />
           </span>
           <span className="mt-2 text-sm text-ink-soft">{p.firmaText}</span>
         </Link>
@@ -45,42 +45,22 @@ export function PreiseContent() {
 
       <section className="pt-16">
         <h2 className="font-display text-3xl text-ink">{p.tableTitle}</h2>
-        <div className="mt-4">
-          <Placeholder>{p.tablePlaceholder}</Placeholder>
+        {/* The season table returns once the 2027 price list is in; empty rows only look unfinished */}
+        <div className="mt-4 rounded-lg bg-sage-light p-6">
+          <p className="text-lg text-ink">{p.onRequest}</p>
+          <Link href="/kontakt" className="site-btn mt-5">
+            {p.onRequestButton}
+          </Link>
         </div>
-        <div className="mt-4 overflow-x-auto rounded-lg border border-line">
-          <table className="w-full min-w-[32rem] text-left text-sm">
-            <thead className="bg-cream text-ink">
-              <tr>
-                {p.columns.map((c) => (
-                  <th key={c} scope="col" className="px-4 py-3 font-medium">
-                    {c}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="text-ink-soft">
-              {p.seasons.map((s) => (
-                <tr key={s} className="border-t border-line">
-                  <th scope="row" className="px-4 py-3 font-medium text-ink">
-                    {s}
-                  </th>
-                  {p.columns.slice(1).map((c) => (
-                    <td key={c} className="px-4 py-3">
-                      …
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-3">
+          <Placeholder>{p.tablePlaceholder}</Placeholder>
         </div>
       </section>
 
       <section className="pt-14">
         <h2 className="font-display text-3xl text-ink">{p.costsTitle}</h2>
         <div className="mt-4">
-          <Placeholder>{p.costsPlaceholder}</Placeholder>
+          <Placeholder publicText={p.costsPublic}>{p.costsPlaceholder}</Placeholder>
         </div>
       </section>
 
