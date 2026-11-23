@@ -102,7 +102,7 @@ const HAUSREGELN_ICONS: React.ReactNode[][] = [
 const SHOW_TOUR = false
 const warmTour = () => void import('@/tour/buildScene')
 
-export default function Page() {
+export function GaestemappeContent() {
   const { t } = useLanguage()
 
   return (
