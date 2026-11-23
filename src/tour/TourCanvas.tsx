@@ -122,7 +122,7 @@ export default function TourCanvas() {
   const failed = phase === 'error' || phase === 'nowebgl'
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-[var(--color-brand-950)] text-white [--tour-chips-h:64px]">
+    <div className="fixed inset-0 overflow-hidden bg-[var(--color-ink)] text-white [--tour-chips-h:64px]">
       <h1 className="sr-only">{p.title}</h1>
       {/* overlay before the canvas in DOM order: Tab reaches Back / modes / rooms first, the canvas last */}
       {api && phase === 'ready' && (
@@ -135,9 +135,9 @@ export default function TourCanvas() {
       )}
 
       {phase === 'idle' && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-6 bg-[var(--color-brand-950)] px-6 text-center">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-6 bg-[var(--color-ink)] px-6 text-center">
           <TopBar backLabel={p.back} />
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-brand-500)]">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-moss)]">
             <Home className="h-7 w-7" aria-hidden />
           </div>
           <div className="max-w-sm">
@@ -150,7 +150,7 @@ export default function TourCanvas() {
             onPointerEnter={warm}
             onFocus={warm}
             onTouchStart={warm}
-            className="min-h-11 rounded-full bg-[var(--color-brand-500)] px-6 py-2.5 text-base font-semibold text-white hover:opacity-90"
+            className="min-h-11 rounded-full bg-[var(--color-moss)] px-6 py-2.5 text-base font-semibold text-white hover:opacity-90"
           >
             {p.start}
           </button>
@@ -168,12 +168,12 @@ export default function TourCanvas() {
 
       {phase === 'loading' && (
         <div
-          className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-6 bg-[var(--color-brand-950)] px-6 text-center"
+          className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-6 bg-[var(--color-ink)] px-6 text-center"
           role="status"
           aria-live="polite"
         >
           <TopBar backLabel={p.back} />
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-brand-500)]">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-moss)]">
             <Home className="h-7 w-7" aria-hidden />
           </div>
           <div>
@@ -189,7 +189,7 @@ export default function TourCanvas() {
             className="h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-white/20"
           >
             <div
-              className="h-full rounded-full bg-[var(--color-brand-300)] transition-[width] duration-300 ease-out motion-reduce:transition-none"
+              className="h-full rounded-full bg-[var(--color-sage)] transition-[width] duration-300 ease-out motion-reduce:transition-none"
               style={{ width: `${Math.round(progress.pct * 100)}%` }}
             />
           </div>
@@ -197,7 +197,7 @@ export default function TourCanvas() {
       )}
 
       {failed && (
-        <div className="absolute inset-0 z-10 overflow-y-auto bg-[var(--color-brand-950)]">
+        <div className="absolute inset-0 z-10 overflow-y-auto bg-[var(--color-ink)]">
           <TopBar backLabel={p.back} />
           <div className="mx-auto flex min-h-full max-w-2xl flex-col items-center justify-center gap-4 px-4 pb-8 pt-16 text-center">
             <h2 className="text-lg font-semibold">{phase === 'nowebgl' ? p.noWebglTitle : p.error}</h2>
@@ -206,7 +206,7 @@ export default function TourCanvas() {
               <button
                 type="button"
                 onClick={() => setAttempt((a) => a + 1)}
-                className="rounded-full bg-[var(--color-brand-500)] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90"
+                className="rounded-full bg-[var(--color-moss)] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90"
               >
                 {p.retry}
               </button>

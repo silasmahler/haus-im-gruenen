@@ -16,7 +16,7 @@ import {
   Flame,
   AlarmCheck,
   ShowerHead,
-  Home,
+  ArrowLeft,
   ExternalLink,
   Bike,
   Waves,
@@ -26,11 +26,14 @@ import {
 
 import Link from 'next/link'
 
+import { BrandMark, HedgeDivider, Wordmark } from '@/components/Brand'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { RulesAcceptance } from '@/components/RulesAcceptance'
+import { SiteFooter } from '@/components/SiteFooter'
 import { SiteQrCode } from '@/components/SiteQrCode'
 import { WifiCard } from '@/components/WifiCard'
 import { useLanguage } from '@/i18n/LanguageContext'
+import { useSite } from '@/i18n/site'
 
 const AIRBNB_URL = 'https://www.airbnb.de/rooms/1697314718712995655'
 const SITE_URL = 'https://haus-im-gruenen.com/gaestemappe'
@@ -66,12 +69,7 @@ const PHOTOS = [
   },
 ]
 
-const AUSFLUGSZIELE_ICONS = [
-  { icon: <Utensils />, color: 'rose' as const },
-  { icon: <Baby />, color: 'amber' as const },
-  { icon: <Waves />, color: 'blue' as const },
-  { icon: <Bike />, color: 'green' as const },
-]
+const AUSFLUGSZIELE_ICONS = [<Utensils key="food" />, <Baby key="kids" />, <Waves key="water" />, <Bike key="bike" />]
 
 const HAUSREGELN_ICONS: React.ReactNode[][] = [
   [<Clock key="ci" />, <Clock key="co" />],
@@ -104,65 +102,67 @@ const warmTour = () => void import('@/tour/buildScene')
 
 export function GaestemappeContent() {
   const { t } = useLanguage()
+  const s = useSite()
+  const h2 = 'font-display text-3xl text-ink'
+  const textLink = 'underline underline-offset-4 hover:text-moss-dark focus-visible:outline-2 focus-visible:outline-moss'
 
   return (
-    <>
+    <div className="flex min-h-screen flex-col bg-paper text-ink">
       <RulesAcceptance />
 
-      <header className="sticky top-0 z-40 border-b border-[var(--color-brand-200)] bg-[var(--brand-foam)]/90 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur">
         <div className="mx-auto flex max-w-2xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-brand-500)] text-white">
-            <Home className="h-4 w-4" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm leading-none font-semibold text-[var(--brand-ink)]">
-              Haus im Grünen
-            </p>
-            <p className="truncate text-xs text-[var(--brand-ink-soft)]">
-              {t.header.subtitle}
-            </p>
-          </div>
-          <div className="ml-auto flex shrink-0 basis-full items-center justify-end gap-2 sm:basis-auto sm:justify-normal">
+          <Link
+            href="/"
+            className="brand-link flex min-w-0 items-center gap-2.5 rounded-md text-xl text-ink focus-visible:outline-2 focus-visible:outline-moss"
+          >
+            <BrandMark className="size-9" />
+            <span className="min-w-0">
+              <Wordmark className="block leading-tight" />
+              <span className="block text-xs text-ink-soft">{t.header.subtitle}</span>
+            </span>
+          </Link>
+          <div className="ml-auto flex shrink-0 items-center gap-2">
             <LanguageSwitcher />
             <a
               href={AIRBNB_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 rounded-full bg-[var(--color-brand-500)] px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-white transition-opacity hover:opacity-90"
+              className="site-btn !px-3 !py-2 text-sm whitespace-nowrap"
             >
               {t.header.bookNow}
-              <ExternalLink className="h-3 w-3" />
+              <ExternalLink className="size-3.5" aria-hidden />
             </a>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-2xl space-y-10 px-4 py-8">
+      <main className="mx-auto w-full max-w-2xl flex-1 space-y-10 px-4 pt-4 pb-4 sm:space-y-14 sm:pt-6">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 rounded-md text-sm text-ink-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-moss"
+        >
+          <ArrowLeft className="size-4" aria-hidden />
+          {s.nav.home}
+        </Link>
+
         {/* Hero */}
-        <section className="text-center">
-          <span className="brand-pill mb-4 inline-flex">
-            <span>🌿</span> {t.hero.pill}
-          </span>
-          <h1 className="text-3xl font-bold text-[var(--brand-ink)]">
+        <section className="!mt-6 text-center">
+          <p className="text-sm tracking-wide text-moss">{t.hero.pill}</p>
+          <h1 className="mt-2 font-display text-[2.125rem] leading-tight text-ink sm:text-5xl">
             {t.hero.title1}
             <br />
-            <span className="text-[var(--color-brand-600)]">
-              {t.hero.title2}
-            </span>
+            <span className="text-moss italic">{t.hero.title2}</span>
           </h1>
-          <p className="mt-3 text-base text-[var(--brand-ink-soft)]">
-            {t.hero.subtitle}
-          </p>
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
+          <p className="mt-3 text-base leading-relaxed text-ink-soft sm:mt-4 sm:text-lg">{t.hero.subtitle}</p>
+          <ul className="mt-5 flex flex-wrap justify-center gap-2">
             {t.hero.tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full border border-[var(--color-brand-200)] bg-[var(--color-brand-50)] px-3 py-1 text-xs font-medium text-[var(--color-brand-700)]"
-              >
+              <li key={tag} className="rounded-full bg-sage-light px-3 py-1 text-sm text-moss-dark">
                 {tag}
-              </span>
+              </li>
             ))}
-          </div>
+          </ul>
+          <HedgeDivider className="mt-8 !px-0 sm:mt-10" width="max-w-md" />
         </section>
 
         {/* 3D-Rundgang Teaser */}
@@ -173,7 +173,7 @@ export function GaestemappeContent() {
               onPointerEnter={warmTour}
               onFocus={warmTour}
               onTouchStart={warmTour}
-              className="group flex items-center gap-4 overflow-hidden rounded-2xl border border-[var(--color-brand-200)] bg-[var(--color-brand-50)] p-3 transition-shadow hover:shadow-[var(--brand-shadow-medium)] sm:gap-5 sm:p-4"
+              className="group flex items-center gap-4 overflow-hidden rounded-lg border border-line bg-cream p-3 transition-colors hover:bg-cream-deep sm:gap-5 sm:p-4"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -182,22 +182,17 @@ export function GaestemappeContent() {
                 width={1000}
                 height={911}
                 loading="lazy"
-                className="h-24 w-24 shrink-0 rounded-xl bg-white object-contain sm:h-28 sm:w-28"
+                className="size-24 shrink-0 rounded-md bg-paper object-contain sm:size-28"
               />
               <div className="min-w-0">
-                <span className="brand-pill mb-1 inline-flex">
-                  <Box className="h-3 w-3" aria-hidden /> {t.tour.teaser.pill}
-                </span>
-                <h2
-                  id="tour-teaser-heading"
-                  className="text-lg font-bold text-[var(--brand-ink)]"
-                >
+                <p className="mb-1 inline-flex items-center gap-1.5 text-sm text-moss">
+                  <Box className="size-4" aria-hidden /> {t.tour.teaser.pill}
+                </p>
+                <h2 id="tour-teaser-heading" className="font-display text-2xl text-ink">
                   {t.tour.teaser.heading}
                 </h2>
-                <p className="mt-0.5 text-sm text-[var(--brand-ink-soft)]">
-                  {t.tour.teaser.text}
-                </p>
-                <span className="mt-2 inline-block text-sm font-semibold text-[var(--color-brand-600)] group-hover:underline">
+                <p className="mt-1 text-sm text-ink-soft">{t.tour.teaser.text}</p>
+                <span className="mt-2 inline-block text-sm font-medium text-moss group-hover:underline">
                   {t.tour.teaser.button} →
                 </span>
               </div>
@@ -208,34 +203,25 @@ export function GaestemappeContent() {
         {/* Fotogalerie */}
         <section id="galerie">
           <div className="grid grid-cols-2 gap-2">
-            {/* Erstes Bild groß über die volle Breite */}
-            <div className="col-span-2 overflow-hidden rounded-xl">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={PHOTOS[0].src}
-                alt={PHOTOS[0].alt}
-                className="h-56 w-full object-cover sm:h-72"
-              />
-            </div>
-            {/* Restliche Bilder im 2er-Grid */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={PHOTOS[0].src}
+              alt={PHOTOS[0].alt}
+              className="col-span-2 h-56 w-full rounded-lg object-cover sm:h-72"
+            />
             {PHOTOS.slice(1).map((photo) => (
-              <div key={photo.src} className="overflow-hidden rounded-xl">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={photo.src}
-                  alt={photo.alt}
-                  className="h-36 w-full object-cover sm:h-44"
-                />
-              </div>
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={photo.src}
+                src={photo.src}
+                alt={photo.alt}
+                loading="lazy"
+                className="h-36 w-full rounded-lg object-cover sm:h-44"
+              />
             ))}
           </div>
-          <p className="mt-2 text-right text-xs text-[var(--brand-ink-soft)]">
-            <a
-              href={AIRBNB_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline underline-offset-2 hover:text-[var(--color-brand-600)]"
-            >
+          <p className="mt-3 text-right text-sm text-moss">
+            <a href={AIRBNB_URL} target="_blank" rel="noopener noreferrer" className={textLink}>
               {t.gallery.viewAll}
             </a>
           </p>
@@ -243,8 +229,10 @@ export function GaestemappeContent() {
 
         {/* WLAN */}
         <section id="wlan">
-          <h2 className="mb-3 text-xl font-bold text-[var(--brand-ink)]">
-            <Wifi className="mr-2 inline-block h-5 w-5 text-[var(--color-brand-500)]" />
+          <h2 className={`${h2} mb-5 flex items-center gap-3`}>
+            <IconBadge>
+              <Wifi />
+            </IconBadge>
             {t.wlan.heading}
           </h2>
           <WifiCard />
@@ -252,10 +240,8 @@ export function GaestemappeContent() {
 
         {/* Hausregeln */}
         <section id="hausregeln">
-          <h2 className="mb-3 text-xl font-bold text-[var(--brand-ink)]">
-            {t.hausregeln.heading}
-          </h2>
-          <div className="brand-card divide-y divide-[var(--color-brand-100)]">
+          <h2 className={`${h2} mb-5`}>{t.hausregeln.heading}</h2>
+          <div className="divide-y divide-line rounded-lg border border-line bg-cream">
             {t.hausregeln.groups.map((group, groupIndex) => (
               <RuleGroup key={group.title} title={group.title}>
                 {group.items.map((item, itemIndex) => (
@@ -273,52 +259,27 @@ export function GaestemappeContent() {
 
         {/* Preise */}
         <section id="preise">
-          <h2 className="mb-3 text-xl font-bold text-[var(--brand-ink)]">
-            {t.preise.heading}
-          </h2>
-          <div className="brand-card overflow-hidden">
-            <div className="bg-[var(--color-brand-600)] px-5 py-4 text-white">
-              <p className="text-sm font-medium opacity-80">
-                {t.preise.cleaningFee}
-              </p>
-              <p className="text-3xl font-bold">45 €</p>
-              <p className="mt-1 text-xs opacity-70">
-                {t.preise.cleaningIncludes}
-              </p>
+          <h2 className={`${h2} mb-5`}>{t.preise.heading}</h2>
+          <div className="overflow-hidden rounded-lg border border-line bg-cream">
+            <div className="bg-moss px-5 py-5 text-paper">
+              <p className="text-sm">{t.preise.cleaningFee}</p>
+              <p className="font-display text-4xl">45 €</p>
+              <p className="mt-1 text-sm text-paper/85">{t.preise.cleaningIncludes}</p>
             </div>
-            <div className="divide-y divide-[var(--color-brand-100)] px-5">
-              <PriceItem
-                label={t.preise.bedding}
-                price={t.preise.beddingPrice}
-                detail={t.preise.beddingDetail}
-              />
-              <PriceItem
-                label={t.preise.extraBedding}
-                price={t.preise.extraBeddingPrice}
-              />
-              <PriceItem
-                label={t.preise.firewood}
-                price={t.preise.firewoodPrice}
-                detail={t.preise.firewoodDetail}
-              />
-              <PriceItem
-                label={t.preise.grillPackage}
-                price={t.preise.grillPrice}
-                detail={t.preise.grillDetail}
-              />
+            <div className="divide-y divide-line px-5">
+              <PriceItem label={t.preise.bedding} price={t.preise.beddingPrice} detail={t.preise.beddingDetail} />
+              <PriceItem label={t.preise.extraBedding} price={t.preise.extraBeddingPrice} />
+              <PriceItem label={t.preise.firewood} price={t.preise.firewoodPrice} detail={t.preise.firewoodDetail} />
+              <PriceItem label={t.preise.grillPackage} price={t.preise.grillPrice} detail={t.preise.grillDetail} />
             </div>
           </div>
-          <p className="mt-3 text-xs text-[var(--brand-ink-soft)]">
-            {t.preise.note}
-          </p>
+          <p className="mt-3 text-sm text-ink-soft">{t.preise.note}</p>
         </section>
 
         {/* Ausstattung */}
         <section id="ausstattung">
-          <h2 className="mb-3 text-xl font-bold text-[var(--brand-ink)]">
-            {t.ausstattung.heading}
-          </h2>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <h2 className={`${h2} mb-6`}>{t.ausstattung.heading}</h2>
+          <ul className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
             {[
               <Wifi key="wifi" />,
               <Utensils key="kitchen" />,
@@ -327,171 +288,96 @@ export function GaestemappeContent() {
               <Car key="carport" />,
               <Users key="highchair" />,
             ].map((icon, index) => (
-              <div
-                key={t.ausstattung.items[index]}
-                className="brand-card-green flex items-center gap-2.5 px-3 py-2.5"
-              >
-                <span className="shrink-0 text-[var(--color-brand-600)]">
-                  {icon}
-                </span>
-                <span className="text-xs font-medium text-[var(--brand-ink)]">
-                  {t.ausstattung.items[index]}
-                </span>
-              </div>
+              <li key={t.ausstattung.items[index]} className="flex items-center gap-4">
+                <IconBadge>{icon}</IconBadge>
+                <span className="text-ink">{t.ausstattung.items[index]}</span>
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
 
         {/* Ausflugsziele & persönliche Empfehlungen */}
         <section id="ausflugsziele">
-          <h2 className="mb-1 text-xl font-bold text-[var(--brand-ink)]">
-            {t.ausflugsziele.heading}
-          </h2>
-          <p className="mb-4 text-sm text-[var(--brand-ink-soft)]">
-            {t.ausflugsziele.intro}
-          </p>
-
-          <div className="space-y-6">
+          <h2 className={h2}>{t.ausflugsziele.heading}</h2>
+          <p className="mt-3 mb-6 text-base leading-relaxed text-ink-soft sm:mb-8 sm:text-lg">{t.ausflugsziele.intro}</p>
+          <div className="space-y-8 sm:space-y-10">
             {t.ausflugsziele.groups.map((group, index) => (
-              <ActivityGroup
-                key={group.title}
-                icon={AUSFLUGSZIELE_ICONS[index].icon}
-                title={group.title}
-                color={AUSFLUGSZIELE_ICONS[index].color}
-                items={group.items}
-              />
+              <ActivityGroup key={group.title} icon={AUSFLUGSZIELE_ICONS[index]} title={group.title} items={group.items} />
             ))}
           </div>
         </section>
-      </main>
 
-      <footer className="mt-8 border-t border-[var(--color-brand-200)] bg-[var(--color-brand-50)] py-6">
-        <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 px-4 text-center text-xs text-[var(--brand-ink-soft)]">
+        {/* QR + Gastgeber */}
+        <section className="flex flex-col items-center gap-4 rounded-lg border border-line bg-cream px-6 py-8 text-center text-sm text-ink-soft">
           <SiteQrCode url={SITE_URL} />
-          <p>
+          <p className="text-base">
             {t.footer.hostPrefix}
-            <strong>{t.footer.hostName}</strong>
+            <strong className="font-medium text-ink">{t.footer.hostName}</strong>
             {t.footer.hostSuffix}
           </p>
-          <p className="mt-1">
-            <a
-              href={AIRBNB_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline underline-offset-2 hover:text-[var(--color-brand-600)]"
-            >
+          <p className="text-moss">
+            <a href={AIRBNB_URL} target="_blank" rel="noopener noreferrer" className={textLink}>
               {t.footer.listing}
             </a>
-            {' · '}
-            <a
-              href="/datenschutz"
-              className="underline underline-offset-2 hover:text-[var(--color-brand-600)]"
-            >
+            <span className="text-ink-soft">{' · '}</span>
+            <Link href="/datenschutz" className={textLink}>
               {t.footer.privacy}
-            </a>
+            </Link>
           </p>
-        </div>
-      </footer>
-    </>
-  )
-}
+        </section>
+      </main>
 
-function RuleGroup({
-  title,
-  children,
-}: {
-  title: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="px-5 py-4">
-      <p className="mb-3 text-xs font-semibold tracking-widest text-[var(--color-brand-500)] uppercase">
-        {title}
-      </p>
-      <div className="space-y-3">{children}</div>
+      <SiteFooter />
     </div>
   )
 }
 
-function RuleItem({
-  icon,
-  label,
-  detail,
-}: {
-  icon: React.ReactNode
-  label: string
-  detail?: string
-}) {
+// Same round sage badge as the amenity icons on /ferienhaus.
+function IconBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      className="flex size-10 shrink-0 items-center justify-center rounded-full bg-sage-light text-moss [&>svg]:size-5 [&>svg]:stroke-[1.75]"
+      aria-hidden
+    >
+      {children}
+    </span>
+  )
+}
+
+function RuleGroup({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="px-5 py-5">
+      <h3 className="mb-4 font-display text-xl text-ink">{title}</h3>
+      <div className="space-y-4">{children}</div>
+    </div>
+  )
+}
+
+function RuleItem({ icon, label, detail }: { icon: React.ReactNode; label: string; detail?: string }) {
   return (
     <div className="flex gap-3">
-      <span className="mt-0.5 shrink-0 text-[var(--color-brand-500)] [&>svg]:h-4 [&>svg]:w-4">
+      <span className="mt-0.5 shrink-0 text-moss [&>svg]:size-5 [&>svg]:stroke-[1.75]" aria-hidden>
         {icon}
       </span>
       <div>
-        <p className="text-sm font-medium text-[var(--brand-ink)]">{label}</p>
-        {detail && (
-          <p className="mt-0.5 text-xs text-[var(--brand-ink-soft)]">
-            {detail}
-          </p>
-        )}
+        <p className="font-medium text-ink">{label}</p>
+        {detail && <p className="mt-0.5 text-sm text-ink-soft">{detail}</p>}
       </div>
     </div>
   )
 }
 
-function PriceItem({
-  label,
-  price,
-  detail,
-}: {
-  label: string
-  price: string
-  detail?: string
-}) {
+function PriceItem({ label, price, detail }: { label: string; price: string; detail?: string }) {
   return (
-    <div className="flex items-start justify-between gap-4 py-3">
+    <div className="flex items-start justify-between gap-4 py-4">
       <div>
-        <p className="text-sm font-medium text-[var(--brand-ink)]">{label}</p>
-        {detail && (
-          <p className="mt-0.5 text-xs text-[var(--brand-ink-soft)]">
-            {detail}
-          </p>
-        )}
+        <p className="font-medium text-ink">{label}</p>
+        {detail && <p className="mt-0.5 text-sm text-ink-soft">{detail}</p>}
       </div>
-      <span className="shrink-0 text-sm font-bold text-[var(--color-brand-600)]">
-        {price}
-      </span>
+      <span className="shrink-0 font-display text-lg text-moss-dark">{price}</span>
     </div>
   )
 }
-
-const COLOR_MAP = {
-  amber: {
-    pill: 'bg-amber-50 border-amber-200 text-amber-700',
-    icon: 'text-amber-500',
-    dot: 'bg-amber-400',
-  },
-  blue: {
-    pill: 'bg-sky-50 border-sky-200 text-sky-700',
-    icon: 'text-sky-500',
-    dot: 'bg-sky-400',
-  },
-  green: {
-    pill: 'bg-[var(--color-brand-50)] border-[var(--color-brand-200)] text-[var(--color-brand-700)]',
-    icon: 'text-[var(--color-brand-500)]',
-    dot: 'bg-[var(--color-brand-400)]',
-  },
-  purple: {
-    pill: 'bg-violet-50 border-violet-200 text-violet-700',
-    icon: 'text-violet-500',
-    dot: 'bg-violet-400',
-  },
-  rose: {
-    pill: 'bg-rose-50 border-rose-200 text-rose-700',
-    icon: 'text-rose-500',
-    dot: 'bg-rose-400',
-  },
-} as const
 
 function mapsSearchUrl(query: string) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
@@ -500,72 +386,46 @@ function mapsSearchUrl(query: string) {
 function ActivityGroup({
   icon,
   title,
-  color,
   items,
 }: {
   icon: React.ReactNode
   title: string
-  color: keyof typeof COLOR_MAP
-  items: {
-    name: string
-    distance: string
-    detail: string
-    mapsQuery?: string
-    website?: string
-  }[]
+  items: { name: string; distance: string; detail: string; mapsQuery?: string; website?: string }[]
 }) {
-  const c = COLOR_MAP[color]
+  const link = 'underline underline-offset-4 hover:text-moss-dark focus-visible:outline-2 focus-visible:outline-moss'
   return (
     <div>
-      <div
-        className={`mb-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${c.pill}`}
-      >
-        <span className={`[&>svg]:h-3.5 [&>svg]:w-3.5 ${c.icon}`}>{icon}</span>
+      <h3 className="mb-4 flex items-center gap-3 font-display text-2xl text-ink">
+        <IconBadge>{icon}</IconBadge>
         {title}
-      </div>
-      <div className="space-y-3">
+      </h3>
+      <ul className="space-y-4 border-l-2 border-sage pl-5 sm:ml-5">
         {items.map((item) => (
-          <div key={item.name} className="flex gap-3">
-            <div
-              className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${c.dot}`}
-            />
-            <div>
-              <div className="flex flex-wrap items-baseline gap-x-2">
-                {item.mapsQuery ? (
-                  <a
-                    href={mapsSearchUrl(item.mapsQuery)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm font-semibold text-[var(--brand-ink)] underline underline-offset-2 hover:text-[var(--color-brand-600)]"
-                  >
-                    {item.name}
-                  </a>
-                ) : (
-                  <span className="text-sm font-semibold text-[var(--brand-ink)]">
-                    {item.name}
-                  </span>
-                )}
-                <span className="text-xs text-[var(--brand-ink-soft)]">
-                  {item.distance}
-                </span>
-                {item.website && (
-                  <a
-                    href={item.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-[var(--brand-ink-soft)] underline underline-offset-2 hover:text-[var(--color-brand-600)]"
-                  >
-                    Website
-                  </a>
-                )}
-              </div>
-              <p className="mt-0.5 text-xs text-[var(--brand-ink-soft)]">
-                {item.detail}
-              </p>
+          <li key={item.name}>
+            <div className="flex flex-wrap items-baseline gap-x-2">
+              {item.mapsQuery ? (
+                <a
+                  href={mapsSearchUrl(item.mapsQuery)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`font-medium text-ink ${link}`}
+                >
+                  {item.name}
+                </a>
+              ) : (
+                <span className="font-medium text-ink">{item.name}</span>
+              )}
+              <span className="text-sm text-ink-soft">{item.distance}</span>
+              {item.website && (
+                <a href={item.website} target="_blank" rel="noopener noreferrer" className={`text-sm text-moss ${link}`}>
+                  Website
+                </a>
+              )}
             </div>
-          </div>
+            <p className="mt-0.5 text-sm text-ink-soft">{item.detail}</p>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   )
 }

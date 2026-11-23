@@ -13,6 +13,7 @@ import {
   Zap,
 } from 'lucide-react'
 
+import { BrandMark } from '@/components/Brand'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { useLanguage } from '@/i18n/LanguageContext'
 
@@ -62,20 +63,23 @@ export function RulesAcceptance() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/60 sm:items-center"
       role="dialog"
       aria-modal="true"
       aria-label={t.rules.title}
     >
-      <div className="brand-card flex max-h-[90dvh] w-full max-w-lg flex-col rounded-b-none sm:rounded-2xl">
+      <div className="flex max-h-[90dvh] w-full max-w-lg flex-col rounded-t-lg border border-line bg-paper text-ink shadow-xl sm:rounded-lg">
         {/* Header */}
-        <div className="shrink-0 border-b border-[var(--color-brand-100)] px-5 py-4">
+        <div className="shrink-0 border-b border-line px-5 py-4">
           <div className="mb-2 flex items-center justify-between">
-            <p className="brand-pill">🏡 {t.hero.pill}</p>
+            <p className="flex items-center gap-2 text-sm tracking-wide text-moss">
+              <BrandMark className="size-7" />
+              {t.hero.pill}
+            </p>
             <LanguageSwitcher />
           </div>
-          <h2 className="text-xl font-bold text-[var(--brand-ink)]">{t.rules.title}</h2>
-          <p className="mt-1 text-xs text-[var(--brand-ink-soft)]">{t.rules.subtitle}</p>
+          <h2 className="font-display text-2xl text-ink">{t.rules.title}</h2>
+          <p className="mt-1 text-sm text-ink-soft">{t.rules.subtitle}</p>
         </div>
 
         {/* Scrollable rules */}
@@ -87,7 +91,7 @@ export function RulesAcceptance() {
             setScrolled(el.scrollTop + el.clientHeight >= el.scrollHeight - 40)
           }}
         >
-          <div className="space-y-5 text-sm">
+          <div className="space-y-6">
             {t.rules.sections.map((section, sectionIndex) => (
               <RuleSection key={section.title} title={section.title}>
                 {section.items.map((item, itemIndex) => (
@@ -100,23 +104,24 @@ export function RulesAcceptance() {
               </RuleSection>
             ))}
 
-            <p className="rounded-lg bg-[var(--color-brand-50)] p-3 text-xs text-[var(--brand-ink-soft)]">
+            <p className="rounded-md bg-cream p-3 text-sm text-ink-soft">
               {t.rules.note}
             </p>
           </div>
         </div>
 
         {/* CTA */}
-        <div className="shrink-0 border-t border-[var(--color-brand-100)] px-5 py-4">
+        <div className="shrink-0 border-t border-line px-5 py-4">
           {!scrolled && (
-            <p className="mb-2 text-center text-xs text-[var(--brand-ink-soft)]">
+            <p className="mb-2 text-center text-sm text-ink-soft">
               {t.rules.scrollHint}
             </p>
           )}
           <button
             onClick={accept}
             disabled={!scrolled}
-            className="w-full rounded-xl bg-[var(--color-brand-600)] px-4 py-3.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 active:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
+            type="button"
+            className="site-btn w-full justify-center disabled:cursor-not-allowed disabled:bg-moss disabled:opacity-45"
           >
             {t.rules.accept}
           </button>
@@ -135,10 +140,10 @@ function RuleSection({
 }) {
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--color-brand-500)]">
+      <h3 className="mb-3 font-display text-lg text-ink">
         {title}
-      </p>
-      <div className="space-y-2">{children}</div>
+      </h3>
+      <div className="space-y-2.5">{children}</div>
     </div>
   )
 }
@@ -146,10 +151,10 @@ function RuleSection({
 function Rule({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <div className="flex gap-2.5">
-      <span className="mt-0.5 shrink-0 text-[var(--color-brand-500)] [&>svg]:h-3.5 [&>svg]:w-3.5">
+      <span className="mt-0.5 shrink-0 text-moss [&>svg]:size-4 [&>svg]:stroke-[1.75]" aria-hidden="true">
         {icon}
       </span>
-      <span className="text-[var(--brand-ink)]">{text}</span>
+      <span className="text-ink">{text}</span>
     </div>
   )
 }

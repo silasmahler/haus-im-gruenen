@@ -12,10 +12,10 @@ import { FOOTPRINT, openings, walls, type Pt, type Room, type RoomId } from './p
 
 /** Overlay: mode switch, room chips (roving arrow keys), minimap, joystick, help dialog, aria-live room announcements. */
 
-const glass = 'pointer-events-auto bg-brand-950/60 text-white backdrop-blur-md ring-1 ring-white/15'
+const glass = 'pointer-events-auto bg-ink/60 text-white backdrop-blur-md ring-1 ring-white/15'
 const btn = 'inline-flex h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white'
 const idle = 'hover:bg-white/15'
-const on = 'bg-white text-brand-900'
+const on = 'bg-white text-ink'
 
 const PAD = 0.3
 const VIEWBOX = `${-PAD} ${-PAD} ${FOOTPRINT.x1 + 2 * PAD} ${FOOTPRINT.z1 + 2 * PAD}`
@@ -42,8 +42,8 @@ const MiniMap = memo(function MiniMap({ rooms, current, label, onPick, marker }:
       ))}
       {ticks.map((k, i) => <line key={i} {...k} stroke="#fff" strokeWidth={0.2} strokeLinecap="butt" />)}
       <g ref={marker}>
-        <path d="M0,0 L-1.53,-2.1 A2.6,2.6 0 0 1 1.53,-2.1 Z" fill="var(--color-brand-400)" fillOpacity={0.55} />
-        <circle r={0.34} fill="var(--color-brand-500)" stroke="#fff" strokeWidth={0.12} />
+        <path d="M0,0 L-1.53,-2.1 A2.6,2.6 0 0 1 1.53,-2.1 Z" fill="var(--color-sage)" fillOpacity={0.55} />
+        <circle r={0.34} fill="var(--color-moss)" stroke="#fff" strokeWidth={0.12} />
       </g>
     </svg>
   )
@@ -73,7 +73,7 @@ function Joystick({ ctrl, label, onActive }: { ctrl: TourControls; label: string
   }
   return (
     <div ref={base} aria-hidden="true" title={label}
-      className={`pointer-events-auto absolute bottom-[84px] left-3 h-[108px] w-[108px] touch-none rounded-full bg-brand-950/35 ring-1 ring-white/25 backdrop-blur-sm transition-opacity duration-300 ${held ? 'opacity-100' : 'opacity-40'}`}
+      className={`pointer-events-auto absolute bottom-[84px] left-3 h-[108px] w-[108px] touch-none rounded-full bg-ink/35 ring-1 ring-white/25 backdrop-blur-sm transition-opacity duration-300 ${held ? 'opacity-100' : 'opacity-40'}`}
       onPointerDown={(e) => { active.current = e.pointerId; setHeld(true); onActive(true); try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* synthetic pointer */ } move(e) }}
       onPointerMove={(e) => { if (e.pointerId === active.current) move(e) }}
       onPointerUp={end} onPointerCancel={end} onLostPointerCapture={end}>
@@ -100,7 +100,7 @@ function Help({ onClose, bob, onBob }: { onClose: () => void; bob: boolean; onBo
     <div className="pointer-events-auto absolute inset-0 z-30 flex items-center justify-center bg-black/55 p-4 pt-20 sm:pt-4" onClick={onClose}>
       <div ref={box} role="dialog" aria-modal="true" aria-labelledby="tour-help-title" onKeyDown={trap} data-tour-nokeys
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-full w-full max-w-md flex-col rounded-2xl bg-brand-950/90 p-5 text-white shadow-2xl ring-1 ring-white/15 backdrop-blur-md">
+        className="flex max-h-full w-full max-w-md flex-col rounded-2xl bg-ink/90 p-5 text-white shadow-2xl ring-1 ring-white/15 backdrop-blur-md">
         <div className="mb-3 flex items-center justify-between">
           <h2 id="tour-help-title" className="text-lg font-semibold">{u.helpTitle}</h2>
           <button ref={closeBtn} className={`${btn} ${idle} px-0!`} onClick={onClose} aria-label={u.helpClose}>
@@ -119,10 +119,10 @@ function Help({ onClose, bob, onBob }: { onClose: () => void; bob: boolean; onBo
         <p className="mt-3 text-sm text-white/85">{u.helpTouch}</p>
         </div>
         <label className="mt-3 flex min-h-11 items-center gap-3 text-sm">
-          <input type="checkbox" checked={bob} onChange={(e) => onBob(e.target.checked)} className="h-5 w-5 accent-[var(--color-brand-400)]" />
+          <input type="checkbox" checked={bob} onChange={(e) => onBob(e.target.checked)} className="h-5 w-5 accent-[var(--color-sage)]" />
           {u.bob}
         </label>
-        <button className={`${btn} mt-3 w-full bg-white text-brand-900`} onClick={onClose}>{u.helpClose}</button>
+        <button className={`${btn} mt-3 w-full bg-white text-ink`} onClick={onClose}>{u.helpClose}</button>
       </div>
     </div>
   )
@@ -255,7 +255,7 @@ export function TourUI({ api }: { api: TourApi }) {
   return (
     <div className={`pointer-events-none absolute inset-0 select-none ${helpOpen ? 'z-30' : 'z-10'}`}>
       {/* inset box-shadows do not paint on a canvas, so the keyboard-focus ring is an overlay */}
-      {focused && <div data-tour-focus className="absolute inset-0 border-4 border-brand-500 shadow-[inset_0_0_0_2px_#fff]" aria-hidden="true" />}
+      {focused && <div data-tour-focus className="absolute inset-0 border-4 border-moss shadow-[inset_0_0_0_2px_#fff]" aria-hidden="true" />}
       <div ref={fadeEl} className="absolute inset-0 bg-black opacity-0" />
       <p id="tour-ui-desc" className="sr-only">{u.canvasDescription}</p>
       <p className="sr-only" role="status" aria-live="polite">
@@ -325,7 +325,7 @@ export function TourUI({ api }: { api: TourApi }) {
             {api.rooms.map((r) => (
               <button key={r.id} onClick={(e) => pickRoom(r.id, e)} aria-current={r.id === room ? 'true' : undefined}
                 tabIndex={r.id === room ? 0 : -1}
-                className={`${glass} ${btn} snap-center ${r.id === room ? 'bg-white! text-brand-900!' : idle}`}>
+                className={`${glass} ${btn} snap-center ${r.id === room ? 'bg-white! text-ink!' : idle}`}>
                 {label(r)}
               </button>
             ))}

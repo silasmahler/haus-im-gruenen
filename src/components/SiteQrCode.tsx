@@ -19,7 +19,7 @@ export function SiteQrCode({ url }: { url: string }) {
       {
         width: 128,
         margin: 1,
-        color: { dark: '#164e3d', light: '#ffffff' },
+        color: { dark: '#26301f', light: '#fbf9f4' },
       },
       (error) => {
         if (!error) setReady(true)
@@ -30,10 +30,10 @@ export function SiteQrCode({ url }: { url: string }) {
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-xl border border-[var(--color-brand-200)] bg-white p-2">
+      <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-lg border border-line bg-paper p-2">
         <canvas ref={canvasRef} className={ready ? '' : 'hidden'} />
       </div>
-      <p className="text-xs text-[var(--brand-ink-soft)]">{t.footer.scanHint}</p>
+      <p className="text-sm text-ink-soft">{t.footer.scanHint}</p>
     </div>
   )
 }

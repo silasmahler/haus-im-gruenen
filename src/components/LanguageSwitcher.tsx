@@ -3,26 +3,30 @@
 import { useLanguage } from '@/i18n/LanguageContext'
 import type { Locale } from '@/i18n/dictionaries'
 
-const OPTIONS: { code: Locale; label: string }[] = [
-  { code: 'de', label: 'DE' },
-  { code: 'en', label: 'EN' },
+const OPTIONS: { code: Locale; label: string; name: string }[] = [
+  { code: 'de', label: 'DE', name: 'Deutsch' },
+  { code: 'en', label: 'EN', name: 'English' },
 ]
 
 export function LanguageSwitcher() {
   const { locale, setLocale } = useLanguage()
 
   return (
-    <div className="flex items-center overflow-hidden rounded-full border border-[var(--color-brand-200)] text-xs font-semibold">
-      {OPTIONS.map(({ code, label }) => (
+    <div
+      role="group"
+      aria-label={locale === 'de' ? 'Sprache' : 'Language'}
+      className="flex items-center rounded-md border border-line p-0.5 text-sm font-medium"
+    >
+      {OPTIONS.map(({ code, label, name }) => (
         <button
           key={code}
           type="button"
-          onClick={() => setLocale(code)}
+          lang={code}
+          aria-label={name}
           aria-pressed={locale === code}
-          className={`px-2.5 py-1 transition-colors ${
-            locale === code
-              ? 'bg-[var(--color-brand-500)] text-white'
-              : 'bg-transparent text-[var(--brand-ink-soft)] hover:bg-[var(--color-brand-50)]'
+          onClick={() => setLocale(code)}
+          className={`min-h-9 min-w-9 rounded px-3 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-moss ${
+            locale === code ? 'bg-moss text-paper' : 'text-ink-soft hover:bg-cream-deep hover:text-ink'
           }`}
         >
           {label}

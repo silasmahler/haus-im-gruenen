@@ -23,24 +23,24 @@ export function WifiCard() {
 
   if (!accepted) {
     return (
-      <div className="flex items-center gap-3 rounded-2xl border border-[var(--color-brand-200)] bg-[var(--color-brand-50)] px-5 py-5">
-        <Lock className="h-5 w-5 shrink-0 text-[var(--color-brand-400)]" />
-        <p className="text-sm text-[var(--brand-ink-soft)]">{t.wlan.locked}</p>
+      <div className="flex items-center gap-3 rounded-lg border border-line bg-cream px-5 py-5">
+        <Lock className="size-5 shrink-0 text-moss" strokeWidth={1.75} aria-hidden />
+        <p className="text-ink-soft">{t.wlan.locked}</p>
       </div>
     )
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--color-brand-300)]/40 bg-[var(--color-brand-600)] text-white shadow-lg">
+    <div className="overflow-hidden rounded-lg bg-moss text-paper">
       <div className="flex items-start gap-4 px-5 py-5">
-        <Wifi className="mt-0.5 h-5 w-5 shrink-0 opacity-80" />
+        <Wifi className="mt-0.5 size-5 shrink-0" strokeWidth={1.75} aria-hidden />
         <div>
-          <p className="text-sm font-semibold opacity-90">
-            {t.wlan.passwordLabel} <span className="font-normal opacity-70">· {t.wlan.speedSuffix}</span>
+          <p className="font-medium">
+            {t.wlan.passwordLabel} <span className="font-normal text-paper/85">· {t.wlan.speedSuffix}</span>
           </p>
           <div className="mt-2 flex items-start gap-2">
-            <MapPin className="mt-0.5 h-4 w-4 shrink-0 opacity-70" />
-            <p className="text-sm leading-relaxed">
+            <MapPin className="mt-1 size-4 shrink-0 text-paper/85" aria-hidden />
+            <p className="leading-relaxed">
               {t.wlan.passwordPrefix}
               <strong>{t.wlan.passwordBold}</strong>
               {t.wlan.passwordSuffix}
