@@ -59,6 +59,24 @@
   --color-neutral-800: oklch(25.0% 0.010 135);
   --color-neutral-900: oklch(17.0% 0.007 138);
   --color-neutral-950: oklch(11.0% 0.004 140);
+
+  /* ─── Website (marketing pages): garden greens, cream, warm wood ── */
+  --color-paper:      #fbf9f4;
+  --color-cream:      #f5f0e5;
+  --color-cream-deep: #ebe3d2;
+  --color-line:       #ddd3bf;
+  --color-ink:        #26301f;
+  --color-ink-soft:   #59634f;
+  --color-moss:       #4a6a3d;
+  --color-moss-dark:  #354f2b;
+  --color-sage:       #c7d2b3;
+  --color-sage-light: #e5ebd9;
+  --color-wood:       #8b5b36;
+  --color-wood-light: #d9c3a2;
+}
+
+@theme inline {
+  --font-display: var(--font-fraunces), Georgia, serif;
 }
 
 :root {
@@ -146,4 +164,19 @@
       transparent
     );
   }
+
+  /* Website buttons (marketing pages) */
+  .site-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-md);
+    background: var(--color-moss);
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    color: var(--color-paper);
+    transition: background-color 150ms;
+  }
+  .site-btn:hover { background: var(--color-moss-dark); }
+  .site-btn:focus-visible { outline: 2px solid var(--color-moss); outline-offset: 2px; }
 }
