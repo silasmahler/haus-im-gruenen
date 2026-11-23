@@ -131,7 +131,7 @@ Resources:
       TargetFunctionArn: !GetAtt Function.Arn
       AuthType: NONE
       Cors:
-        AllowOrigins: [https://haus-im-gruenen.com, https://www.haus-im-gruenen.com, https://vorschau.haus-im-gruenen.com, http://localhost:3007]
+        AllowOrigins: [https://haus-im-gruenen.com, https://www.haus-im-gruenen.com, https://vorschau.haus-im-gruenen.com, https://main.d2tgnt3qldutrv.amplifyapp.com, http://localhost:3007]
         AllowMethods: [POST]
         AllowHeaders: [content-type]
         MaxAge: 86400
