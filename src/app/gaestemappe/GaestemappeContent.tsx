@@ -33,7 +33,7 @@ import { WifiCard } from '@/components/WifiCard'
 import { useLanguage } from '@/i18n/LanguageContext'
 
 const AIRBNB_URL = 'https://www.airbnb.de/rooms/1697314718712995655'
-const SITE_URL = 'https://haus-im-gruenen.com'
+const SITE_URL = 'https://haus-im-gruenen.com/gaestemappe'
 
 const PHOTOS = [
   {

@@ -10,7 +10,7 @@ import PDFDocument from 'pdfkit'
 import QRCode from 'qrcode'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const SITE_URL = 'https://haus-im-gruenen.com'
+const SITE_URL = 'https://haus-im-gruenen.com/gaestemappe'
 const OUT_DIR = path.join(__dirname, '..', 'public')
 
 const BRAND_DARK = '#164e3d'
