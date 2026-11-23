@@ -30,14 +30,18 @@ export function Gallery({ photos }: { photos: Photo[] }) {
               aria-label={`${s.gallery.open}: ${photo.alt[locale]}`}
               className="block aspect-[4/3] w-full overflow-hidden rounded-md bg-cream-deep focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-moss"
             >
-              <img
-                src={photo.thumb}
-                alt=""
-                loading="lazy"
-                width={720}
-                height={Math.round((photo.height / photo.width) * 720)}
-                className="size-full object-cover transition-transform duration-500 hover:scale-[1.03]"
-              />
+              <picture>
+                {photo.thumbWebp && <source type="image/webp" srcSet={photo.thumbWebp} />}
+                <img
+                  src={photo.thumb}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  width={720}
+                  height={Math.round((photo.height / photo.width) * 720)}
+                  className="size-full object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:hover:scale-[1.03]"
+                />
+              </picture>
             </button>
           </li>
         ))}
@@ -45,7 +49,7 @@ export function Gallery({ photos }: { photos: Photo[] }) {
 
       <dialog
         ref={dialog}
-        aria-label={current.alt[locale]}
+        aria-labelledby="lightbox-caption"
         onKeyDown={(e) => {
           if (e.key === 'ArrowRight') go(1)
           if (e.key === 'ArrowLeft') go(-1)
@@ -54,39 +58,57 @@ export function Gallery({ photos }: { photos: Photo[] }) {
       >
         {/* Clicking the dark backdrop around the photo closes the lightbox */}
         <div
-          className="flex h-full flex-col items-center justify-center gap-3 p-4"
+          className="relative flex h-full flex-col items-center justify-center gap-3 p-4"
           onClick={(e) => e.target === e.currentTarget && dialog.current?.close()}
         >
-          <img
-            src={current.src}
-            alt={current.alt[locale]}
-            className="max-h-[80dvh] max-w-full rounded-md object-contain"
-          />
-          <p className="text-center text-sm text-cream">
+          <div className="absolute top-4 right-4">
+            {/* autoFocus: the native dialog moves focus here when opened */}
+            <LightboxButton label={s.gallery.close} onClick={() => dialog.current?.close()} autoFocus>
+              <X className="size-5" />
+            </LightboxButton>
+          </div>
+          <picture>
+            {current.webp && <source type="image/webp" srcSet={current.webp} />}
+            <img
+              src={current.src}
+              alt={current.alt[locale]}
+              className="max-h-[78dvh] max-w-full rounded-md object-contain"
+            />
+          </picture>
+          <p id="lightbox-caption" aria-live="polite" className="text-center text-sm text-cream">
             {current.alt[locale]} <span className="text-sage">· {s.gallery.counter(index + 1, photos.length)}</span>
           </p>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <LightboxButton label={s.gallery.prev} onClick={() => go(-1)}>
               <ChevronLeft className="size-5" />
-            </LightboxButton>
-            <LightboxButton label={s.gallery.close} onClick={() => dialog.current?.close()}>
-              <X className="size-5" />
             </LightboxButton>
             <LightboxButton label={s.gallery.next} onClick={() => go(1)}>
               <ChevronRight className="size-5" />
             </LightboxButton>
           </div>
+          <p className="hidden text-xs text-sage sm:block">{s.gallery.keys}</p>
         </div>
       </dialog>
     </>
   )
 }
 
-function LightboxButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
+function LightboxButton({
+  label,
+  onClick,
+  autoFocus,
+  children,
+}: {
+  label: string
+  onClick: () => void
+  autoFocus?: boolean
+  children: React.ReactNode
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
+      autoFocus={autoFocus}
       aria-label={label}
       className="rounded-full bg-paper/10 p-3 text-cream hover:bg-paper/20 focus-visible:outline-2 focus-visible:outline-cream"
     >

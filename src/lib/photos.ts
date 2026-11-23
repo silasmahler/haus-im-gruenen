@@ -2,6 +2,7 @@
 // Originals: tour-refs/fotos/. To add one:
 //   magick tour-refs/fotos/NN.jpg -resize '1440x1440>' -strip -sampling-factor 4:2:0 -interlace Plane -quality 72 public/fotos/NN.jpg
 //   magick tour-refs/fotos/NN.jpg -resize '720x720>' -strip -sampling-factor 4:2:0 -interlace Plane -quality 68 public/fotos/thumb/NN.jpg
+//   node scripts/optimize-images.mjs   (WebP copies next to both JPEGs)
 // then add an entry below.
 
 export type PhotoCategory = 'garten' | 'wohnen' | 'kueche' | 'schlafen' | 'bad' | 'arbeiten' | 'kinder'
@@ -10,6 +11,8 @@ export interface Photo {
   id: string
   src: string
   thumb: string
+  webp: string
+  thumbWebp: string
   width: number
   height: number
   alt: { de: string; en: string }
@@ -17,7 +20,17 @@ export interface Photo {
 }
 
 function p(id: string, category: PhotoCategory, de: string, en: string, height = 1080): Photo {
-  return { id, src: `/fotos/${id}.jpg`, thumb: `/fotos/thumb/${id}.jpg`, width: 1440, height, alt: { de, en }, category }
+  return {
+    id,
+    src: `/fotos/${id}.jpg`,
+    thumb: `/fotos/thumb/${id}.jpg`,
+    webp: `/fotos/${id}.webp`,
+    thumbWebp: `/fotos/thumb/${id}.webp`,
+    width: 1440,
+    height,
+    alt: { de, en },
+    category,
+  }
 }
 
 export const PHOTOS: Photo[] = [
