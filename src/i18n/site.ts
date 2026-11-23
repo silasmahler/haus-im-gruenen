@@ -32,10 +32,13 @@ const de = {
     guestbook: 'Gästemappe für gebuchte Gäste',
   },
   placeholder: 'Platzhalter',
+  // Taken from the host profile on Airbnb (airbnb.de/rooms/1697314718712995655), wording verbatim.
   hosts: {
-    title: 'Ihre Gastgeber',
-    photoAlt: 'Foto der Gastgeber folgt',
-    request: 'Bitte ein Foto der Gastgeber (gern im Garten), die Vornamen und einen persönlichen Satz liefern, z. B. warum Sie das Haus lieben oder wie Sie für Ihre Gäste da sind.',
+    title: 'Ihre Gastgeberin',
+    name: 'Susanne',
+    photoAlt: 'Susanne, Gastgeberin vom Haus im Grünen',
+    about: '„Ich heiße Susanne und wohne seit über 30 Jahren in diesem Dorf. Ursprünglich bin ich nur der Liebe wegen hier gelandet. Mein Mann, Horst, bewirtschaftet hier einen Bauernhof, daher war ein Leben in der Stadt keine Option. Ich bin froh darüber, denn im Grünen lebt es sich entspannt und schön.“',
+    passions: 'Wofür ich mich begeistere: Möbel-Upcycling, mein Hund, Malerei',
   },
   notFound: {
     title: 'Hier wächst noch nichts.',
@@ -395,9 +398,11 @@ const en: SiteDict = {
   },
   placeholder: 'Placeholder',
   hosts: {
-    title: 'Your hosts',
-    photoAlt: 'Photo of the hosts to follow',
-    request: 'Please provide a photo of the hosts (ideally in the garden), your first names and one personal sentence, e.g. why you love the house or how you look after your guests.',
+    title: 'Your host',
+    name: 'Susanne',
+    photoAlt: 'Susanne, host of Haus im Grünen',
+    about: "“My name is Susanne and I've lived in this village for more than 30 years. I originally came here for love. My husband Horst runs a farm here, so city life was never an option. I'm glad about that, because life in the countryside is relaxed and lovely.”",
+    passions: "What I'm passionate about: upcycling furniture, my dog, painting",
   },
   notFound: {
     title: 'Nothing growing here yet.',

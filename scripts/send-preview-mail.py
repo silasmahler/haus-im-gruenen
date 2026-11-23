@@ -16,7 +16,7 @@ Im Anhang sind die neuen QR-Code-Karten für das Haus (Deutsch und Englisch). Bi
 Zwei Fragen an euch:
 1. Logo: Ich habe drei Vorschläge gemacht. Welcher gefällt euch am besten, A, B oder C?
    https://vorschau.haus-im-gruenen.com/brand/logo-options.html
-2. Über euch: Gäste buchen gern bei Menschen. Schickt mir bitte ein Foto von euch, eure Vornamen und einen persönlichen Satz, z. B. warum ihr das Haus vermietet.
+2. Über euch: Für „Ihre Gastgeberin“ auf der Startseite habe ich Susannes Foto und Text aus dem Airbnb-Profil übernommen. Passt das so? Sollen weitere Vornamen dazu, z. B. Horst?
 
 Damit wir starten können, brauche ich außerdem:
 - Passt das Gartenfoto (grüne Lounge mit Weinflasche) als großes Startbild?
