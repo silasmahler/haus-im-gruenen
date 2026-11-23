@@ -1,0 +1,44 @@
+import json, subprocess, sys, base64
+from email.message import EmailMessage
+from email.headerregistry import Address
+
+body = """Hallo zusammen,
+
+die neue Website ist fertig und kann angeschaut werden:
+https://vorschau.haus-im-gruenen.com
+
+Das ist erst eine Vorschau, die alte Seite bleibt bis zum Start online. Schaut gern auch am Handy rein und sagt mir, was ihr ändern möchtet.
+
+Anfragen über die Website kommen per E-Mail an mail@ambergarten.com. Die Anfrage mit „TEST“ von heute könnt ihr löschen.
+
+Im Anhang sind die neuen QR-Code-Karten für das Haus. Bitte erst austauschen, wenn die neue Seite online ist.
+
+Damit wir starten können, brauche ich noch:
+- Passt das Gartenfoto (grüne Lounge mit Weinflasche) als großes Startbild?
+- Preise 2027, Mindestaufenthalt und Endreinigung
+- zwei bis drei echte Gästebewertungen
+- Name, Anschrift und Telefon fürs Impressum
+
+Viele Grüße
+Silas
+"""
+
+m = EmailMessage()
+m["Subject"] = "Ihre neue Website – Vorschau"
+m["From"] = Address("Silas Mahler", "anfrage", "haus-im-gruenen.com")
+m["To"] = "info@ambergarten.com"
+m["Reply-To"] = "info@silas-mahler.de"
+m.set_content(body)
+base = "/Users/silasmahler/Directory42/github/kreinn/haus-im-gruenen/public/"
+for f in ["willkommen-qr-code.pdf", "willkommen-qr-code-en.pdf"]:
+    m.add_attachment(open(base + f, "rb").read(), maintype="application", subtype="pdf", filename=f)
+
+raw = base64.b64encode(m.as_bytes()).decode()
+dest = {"ToAddresses": ["info@ambergarten.com"], "BccAddresses": ["info@silas-mahler.de"]}
+if "--dry" in sys.argv:
+    print(m.as_string()[:600]); sys.exit()
+out = subprocess.run(["aws", "sesv2", "send-email", "--region", "eu-central-1",
+    "--from-email-address", "anfrage@haus-im-gruenen.com",
+    "--destination", json.dumps(dest),
+    "--content", json.dumps({"Raw": {"Data": raw}})], capture_output=True, text=True)
+print(out.stdout, out.stderr)
