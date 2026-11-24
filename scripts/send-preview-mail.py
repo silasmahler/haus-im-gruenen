@@ -2,6 +2,20 @@ import json, subprocess, sys, base64
 from email.message import EmailMessage
 from email.headerregistry import Address
 
+USAGE = """Aufruf: send-preview-mail.py [--checkliste] [--senden]
+
+Ohne --senden wird nur eine Vorschau ausgegeben (Empfänger, Betreff, Text, Anhänge), es wird nichts gesendet.
+
+  --checkliste  Kurze Mail mit der Checkliste der offenen Punkte (ohne Anhänge)
+  --senden      Mail wirklich über SES senden
+  --dry         Vorschau (Standard, nur aus Kompatibilität)
+  --help, -h    Diese Hilfe
+"""
+args = sys.argv[1:]
+if any(a not in ("--checkliste", "--senden", "--dry") for a in args):
+    print(USAGE, file=sys.stderr); sys.exit(2)
+send = "--senden" in args and "--dry" not in args
+
 body = """Hallo zusammen,
 
 die neue Website ist fertig und kann angeschaut werden:
@@ -67,7 +81,8 @@ for f in attachments:
 
 raw = base64.b64encode(m.as_bytes()).decode()
 dest = {"ToAddresses": ["info@ambergarten.com"], "BccAddresses": ["info@silas-mahler.de"]}
-if "--dry" in sys.argv:
+if not send:
+    print("VORSCHAU – nichts gesendet. Zum Senden --senden anhängen.\n")
     print("Subject:", m["Subject"]); print("From:", m["From"]); print("To:", m["To"]); print("Bcc:", dest["BccAddresses"]); print("Reply-To:", m["Reply-To"])
     print("Attachments:", [a.get_filename() for a in m.iter_attachments()])
     print(); print(body); sys.exit()
