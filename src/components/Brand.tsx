@@ -36,7 +36,7 @@ export function BrandLockup({ alt = 'Haus im Grünen', className = 'w-60' }: { a
   )
 }
 
-// Framed sign "Haus im Grünen – Ferienhaus • Rendswühren" (Banner.png), 5.5:1.
+// Framed sign "Haus im Grünen – Ferienhaus • Rendswühren" (Banner.png, unchanged incl. white background), 3:1.
 export function BrandBanner({ alt, className = '' }: { alt: string; className?: string }) {
   return (
     <img
@@ -44,7 +44,7 @@ export function BrandBanner({ alt, className = '' }: { alt: string; className?: 
       srcSet={`${BRAND}/banner-640.webp 640w, ${BRAND}/banner-1280.webp 1280w, ${BRAND}/banner-1920.webp 1920w`}
       sizes="(min-width: 672px) 640px, 100vw"
       width={1280}
-      height={233}
+      height={427}
       alt={alt}
       decoding="async"
       className={`h-auto w-full ${className}`}
