@@ -8,6 +8,12 @@ Parameters:
   SenderDomain:
     Type: String
     Default: haus-im-gruenen.com
+  FeedbackRecipient:
+    Type: String
+    Default: info@silas-mahler.de
+  FeedbackReplyTo:
+    Type: String
+    Default: mail@ambergarten.com
 
 Resources:
   LogGroup:
@@ -54,6 +60,8 @@ Resources:
       Environment:
         Variables:
           RECIPIENT: !Ref Recipient
+          FEEDBACK_RECIPIENT: !Ref FeedbackRecipient
+          FEEDBACK_REPLY_TO: !Ref FeedbackReplyTo
           FROM: !Sub 'anfrage@${SenderDomain}'
       Tags: [{ Key: Project, Value: haus-im-gruenen }]
       Code:
@@ -66,13 +74,55 @@ Resources:
           const EMAIL = /^[^\s@<>",;]+@[^\s@<>",;]+\.[^\s@<>",;]{2,}$/;
           const isDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(Date.parse(s + 'T00:00:00Z')) && new Date(s + 'T00:00:00Z').toISOString().slice(0, 10) === s;
 
+          const send = (to, replyTo, subject, text) => ses.send(new SendEmailCommand({
+            FromEmailAddress: `=?UTF-8?B?${Buffer.from('Haus im Grünen').toString('base64')}?= <${process.env.FROM}>`,
+            Destination: { ToAddresses: [to] },
+            ReplyToAddresses: [replyTo],
+            Content: { Simple: { Subject: { Data: subject, Charset: 'UTF-8' }, Body: { Text: { Data: text, Charset: 'UTF-8' } } } },
+          }));
+
+          // Owner vote on the website preview (/abstimmung) -> mail to Silas.
+          const FB_CHOICES = [['host', 'Gastgeber-Abschnitt mit Susanne'], ['hero', 'Startbild (Gartenfoto)'], ['menu', 'Menü kürzen (7 -> 5 Punkte)']];
+          const FB_TEXTS = [['prices', 'Preise 2027 und Mindestaufenthalt'], ['cleaning', 'Endreinigung und Nebenkosten'], ['reviews', 'Gästebewertungen'],
+            ['imprint', 'Impressum (Name, Anschrift, Telefon)'], ['travel', 'Fahrzeiten und Einkaufsmöglichkeiten'], ['other', 'Sonst noch etwas']];
+          const feedback = async (b) => {
+            if (clean(b.website)) return json(200, { ok: true }); // honeypot
+            const txt = (v) => String(v ?? '').replace(/\r\n?/g, '\n').trim();
+            const lines = ['ABSTIMMUNG WEBSITE', ''];
+            for (const [k, label] of FB_CHOICES) {
+              const v = clean(b[k]);
+              if (v && v !== 'ja' && v !== 'nein') return bad('invalid:' + k);
+              const note = txt(b[k + '_note']);
+              if (note.length > 2000) return bad('too_long:' + k + '_note');
+              lines.push(`${label}: ${v ? v.toUpperCase() : '(keine Antwort)'}`);
+              if (note) lines.push('  Anmerkung:', ...note.split('\n').map((l) => '  ' + l));
+              lines.push('');
+            }
+            for (const [k, label] of FB_TEXTS) {
+              const v = txt(b[k]);
+              if (v.length > 4000) return bad('too_long:' + k);
+              lines.push(`== ${label} ==`, v || '(leer)', '');
+            }
+            lines.push('-- Gesendet über die Abstimmungsseite (/abstimmung). Antworten gehen an Susanne (' + process.env.FEEDBACK_REPLY_TO + ').');
+            try {
+              await send(process.env.FEEDBACK_RECIPIENT, process.env.FEEDBACK_REPLY_TO, 'Abstimmung Website: Antwort von Susanne', lines.join('\n'));
+            } catch (e) {
+              console.error('SES send failed', e.name, e.message);
+              return json(500, { ok: false, error: 'send_failed' });
+            }
+            console.log('sent feedback');
+            return json(200, { ok: true });
+          };
+
           exports.handler = async (event) => {
             if (event.requestContext?.http?.method !== 'POST') return json(405, { ok: false, error: 'method' });
             const raw = event.isBase64Encoded ? Buffer.from(event.body || '', 'base64').toString('utf8') : event.body || '';
-            if (Buffer.byteLength(raw) > 10240) return json(413, { ok: false, error: 'too_large' });
+            if (Buffer.byteLength(raw) > 32768) return json(413, { ok: false, error: 'too_large' });
             let b;
             try { b = JSON.parse(raw); } catch { return bad('invalid_json'); }
             if (!b || typeof b !== 'object' || Array.isArray(b)) return bad('invalid_json');
+            if (b.type === 'feedback') return feedback(b);
+            if (Buffer.byteLength(raw) > 10240) return json(413, { ok: false, error: 'too_large' });
             if (clean(b.website)) return json(200, { ok: true }); // honeypot
 
             const f = {};
