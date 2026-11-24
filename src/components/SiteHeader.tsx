@@ -50,7 +50,7 @@ export function SiteHeader() {
           className="brand-link flex items-center gap-2.5 rounded-md text-xl text-ink focus-visible:outline-2 focus-visible:outline-moss sm:text-2xl"
           onClick={() => setOpen(false)}
         >
-          <BrandMark className="size-9 sm:size-10" />
+          <BrandMark className="h-9 sm:h-10" />
           <Wordmark />
         </Link>
         <div className="ml-auto flex items-center gap-2 sm:gap-3">

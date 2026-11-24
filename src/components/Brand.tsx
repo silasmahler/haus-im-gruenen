@@ -1,25 +1,54 @@
-// Brand assets for the website. Source of truth for the mark: public/brand/logo-a-mark.svg ("Blattgiebel").
+/* eslint-disable @next/next/no-img-element */
+// Brand assets for the website, supplied by the owner (originals in docs/brand-besitzer/).
+// Optimised WebP renditions live in public/brand/besitzer/.
+const BRAND = '/brand/besitzer'
 
-export function BrandMark({ className = 'size-9' }: { className?: string }) {
+// Picture mark (Logo.png). Size it via height, e.g. "h-10"; width follows the 1.345:1 aspect ratio.
+export function BrandMark({ className = 'h-9' }: { className?: string }) {
   return (
-    <svg viewBox="0 0 48 48" className={className} aria-hidden focusable="false">
-      <path d="M12.5 23 H35.5 V44 H12.5 Z" fill="var(--color-wood)" />
-      <path d="M16.5 44 V36 a3 3 0 0 1 6 0 V44 Z" fill="var(--color-paper)" />
-      <rect x="26.5" y="29" width="5.5" height="5.5" rx="0.6" fill="var(--color-paper)" />
-      <path d="M3 26.5 C10.5 23.3 17 22.2 24 22.2 C31 22.2 37.5 23.3 45 26.5" stroke="var(--color-paper)" strokeWidth="3.2" fill="none" />
-      <path
-        d="M3 26.5 C8 16 15 8.5 24.5 4 C33 8.5 39.5 16 45 26.5 C37.5 23.3 31 22.2 24 22.2 C17 22.2 10.5 23.3 3 26.5 Z"
-        fill="var(--color-moss)"
-      />
-      <path
-        d="M24.3 7 C23.6 12 23.7 16.5 24 21 M23.9 18.4 L17.5 14.6 M23.9 18.4 L30.5 14.6 M23.8 13 L19.6 10.6 M23.8 13 L28.2 10.6"
-        stroke="var(--color-paper)"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        fill="none"
-      />
-      <path className="brand-stalk" d="M24.5 4.2 C25 2 26.8 0.9 29 1.4" stroke="var(--color-moss)" strokeWidth="1.7" strokeLinecap="round" fill="none" />
-    </svg>
+    <img
+      src={`${BRAND}/logo-96.webp`}
+      srcSet={`${BRAND}/logo-48.webp 65w, ${BRAND}/logo-96.webp 129w, ${BRAND}/logo-144.webp 194w`}
+      sizes="65px"
+      width={129}
+      height={96}
+      alt=""
+      aria-hidden
+      decoding="async"
+      className={`w-auto shrink-0 ${className}`}
+    />
+  )
+}
+
+// Mark with lettering (Logo-mit-Schriftzug.png), 2.36:1.
+export function BrandLockup({ alt = 'Haus im Grünen', className = 'w-60' }: { alt?: string; className?: string }) {
+  return (
+    <img
+      src={`${BRAND}/logo-schriftzug-480.webp`}
+      srcSet={`${BRAND}/logo-schriftzug-240.webp 240w, ${BRAND}/logo-schriftzug-480.webp 480w, ${BRAND}/logo-schriftzug-720.webp 720w`}
+      sizes="240px"
+      width={480}
+      height={203}
+      alt={alt}
+      decoding="async"
+      className={`h-auto ${className}`}
+    />
+  )
+}
+
+// Framed sign "Haus im Grünen – Ferienhaus • Rendswühren" (Banner.png), 5.5:1.
+export function BrandBanner({ alt, className = '' }: { alt: string; className?: string }) {
+  return (
+    <img
+      src={`${BRAND}/banner-1280.webp`}
+      srcSet={`${BRAND}/banner-640.webp 640w, ${BRAND}/banner-1280.webp 1280w, ${BRAND}/banner-1920.webp 1920w`}
+      sizes="(min-width: 672px) 640px, 100vw"
+      width={1280}
+      height={233}
+      alt={alt}
+      decoding="async"
+      className={`h-auto w-full ${className}`}
+    />
   )
 }
 
@@ -46,7 +75,7 @@ export function HedgeDivider({ className = '', width = 'max-w-6xl' }: { classNam
           strokeLinejoin="round"
         />
       </svg>
-      <BrandMark className="size-8 shrink-0" />
+      <BrandMark className="h-8" />
       <svg viewBox="0 0 400 22" preserveAspectRatio="xMinYMax slice" className="h-6 min-w-0 flex-1">
         <path d="M0 19 C100 21 160 17 220 18.5 S340 20 400 18" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
         <path d="M60 18.5 V13" stroke="var(--color-wood)" strokeWidth="1.6" strokeLinecap="round" />

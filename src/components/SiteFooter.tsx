@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 
-import { BrandMark, HedgeDivider, Wordmark } from '@/components/Brand'
+import { BrandLockup, HedgeDivider } from '@/components/Brand'
 import { useSite } from '@/i18n/site'
 
 export function SiteFooter() {
@@ -15,9 +15,8 @@ export function SiteFooter() {
       <div className="border-t border-line bg-cream">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-2">
           <div>
-            <p className="flex items-center gap-3 text-2xl text-ink">
-              <BrandMark className="size-11" />
-              <Wordmark />
+            <p>
+              <BrandLockup className="w-52" />
             </p>
             <p className="mt-2 text-ink-soft">{s.footer.tagline}</p>
             <p className="mt-1 text-sm text-ink-soft">{s.footer.region}</p>

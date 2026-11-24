@@ -73,7 +73,7 @@ export function RulesAcceptance() {
         <div className="shrink-0 border-b border-line px-5 py-4">
           <div className="mb-2 flex items-center justify-between">
             <p className="flex items-center gap-2 text-sm tracking-wide text-moss">
-              <BrandMark className="size-7" />
+              <BrandMark className="h-7" />
               {t.hero.pill}
             </p>
             <LanguageSwitcher />

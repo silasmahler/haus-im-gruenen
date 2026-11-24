@@ -112,9 +112,6 @@
 @layer components {
   /* Logo: soft, slightly wonky Fraunces; the leaf stalk nods on hover */
   .brand-wordmark { font-variation-settings: 'SOFT' 100, 'WONK' 1; font-weight: 500; letter-spacing: -0.01em; }
-  .brand-stalk { transform-box: fill-box; transform-origin: 0% 100%; transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1); }
-  .brand-link:hover .brand-stalk { transform: rotate(-18deg); }
-  @media (prefers-reduced-motion: reduce) { .brand-stalk { transition: none; } .brand-link:hover .brand-stalk { transform: none; } }
 
   /* Website buttons (marketing pages) */
   .site-btn {

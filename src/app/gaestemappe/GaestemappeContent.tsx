@@ -26,7 +26,7 @@ import {
 
 import Link from 'next/link'
 
-import { BrandMark, HedgeDivider, Wordmark } from '@/components/Brand'
+import { BrandBanner, BrandMark, HedgeDivider, Wordmark } from '@/components/Brand'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { RulesAcceptance } from '@/components/RulesAcceptance'
 import { SiteFooter } from '@/components/SiteFooter'
@@ -116,7 +116,7 @@ export function GaestemappeContent() {
             href="/"
             className="brand-link flex min-w-0 items-center gap-2.5 rounded-md text-xl text-ink focus-visible:outline-2 focus-visible:outline-moss"
           >
-            <BrandMark className="size-9" />
+            <BrandMark className="h-9" />
             <span className="min-w-0">
               <Wordmark className="block leading-tight" />
               <span className="block text-xs text-ink-soft">{t.header.subtitle}</span>
@@ -148,6 +148,7 @@ export function GaestemappeContent() {
 
         {/* Hero */}
         <section className="!mt-6 text-center">
+          <BrandBanner alt="Haus im Grünen – Ferienhaus • Rendswühren" className="mx-auto mb-6 max-w-xl" />
           <p className="text-sm tracking-wide text-moss">{t.hero.pill}</p>
           <h1 className="mt-2 font-display text-[2.125rem] leading-tight text-ink sm:text-5xl">
             {t.hero.title1}
