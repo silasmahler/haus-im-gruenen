@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowRight, Briefcase, CalendarDays, Sun } from 'lucide-react'
+import { ArrowRight, Briefcase, Sun } from 'lucide-react'
 import Link from 'next/link'
 
 import { Placeholder } from '@/components/Placeholder'
@@ -43,16 +43,10 @@ export function PreiseContent() {
         </Link>
       </div>
 
+      {/* Prices and calendar wait for the booking tool decision; until then only the owner's missing data is marked */}
       <section className="pt-16">
         <h2 className="font-display text-3xl text-ink">{p.tableTitle}</h2>
-        {/* The season table returns once the 2027 price list is in; empty rows only look unfinished */}
-        <div className="mt-4 rounded-lg bg-sage-light p-6">
-          <p className="text-lg text-ink">{p.onRequest}</p>
-          <Link href="/kontakt" className="site-btn mt-5">
-            {p.onRequestButton}
-          </Link>
-        </div>
-        <div className="mt-3">
+        <div className="mt-4">
           <Placeholder>{p.tablePlaceholder}</Placeholder>
         </div>
       </section>
@@ -62,17 +56,6 @@ export function PreiseContent() {
         <div className="mt-4">
           <Placeholder publicText={p.costsPublic}>{p.costsPlaceholder}</Placeholder>
         </div>
-      </section>
-
-      <section className="pt-14">
-        <h2 className="flex items-center gap-3 font-display text-3xl text-ink">
-          <CalendarDays className="size-7 text-moss" strokeWidth={1.75} aria-hidden />
-          {p.calendarTitle}
-        </h2>
-        <p className="mt-4 text-lg text-ink-soft">{p.calendarNote}</p>
-        <Link href="/kontakt" className="site-btn mt-6">
-          {p.bookingButton}
-        </Link>
       </section>
     </div>
   )

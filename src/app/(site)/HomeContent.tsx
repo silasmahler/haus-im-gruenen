@@ -10,7 +10,7 @@ import { useLanguage } from '@/i18n/LanguageContext'
 import { useSite } from '@/i18n/site'
 import { photo } from '@/lib/photos'
 
-// TODO(owner photo): 01 matches the owner's description (green garden lounge, set table, wine) – owner to confirm.
+// Owner's intro photo: green garden lounge, set table, wine bottle (KONZEPT 1).
 const HERO = photo('01')
 const STRIP = ['05', '19', '02', '38'].map(photo)
 
@@ -38,37 +38,18 @@ export function HomeContent() {
         </p>
       </div>
 
-      {/* On desktop the title sits on the photo; on mobile it follows below it */}
-      <div className="relative">
-        <Picture
-          photo={HERO}
-          alt={HERO.alt[locale]}
-          priority
-          className="block aspect-[4/3] w-full object-cover object-[50%_60%] sm:aspect-[16/9] lg:aspect-auto lg:h-[min(72vh,760px)]"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 hidden bg-gradient-to-t from-ink/70 via-ink/25 to-transparent lg:block"
-        />
-        <div className="mx-auto max-w-3xl px-4 pt-14 sm:px-6 sm:pt-20 lg:absolute lg:inset-x-0 lg:bottom-0 lg:max-w-6xl lg:pt-0 lg:pb-14">
-          <p className="text-sm font-medium tracking-wide text-wood lg:text-cream">{h.place}</p>
-          <h1 className="mt-2 font-display text-5xl text-ink sm:text-6xl lg:text-7xl lg:text-paper">{h.title}</h1>
-          <p className="mt-4 font-display text-2xl text-moss italic lg:text-3xl lg:text-sage-light">{h.claim}</p>
-          <div className="mt-8 hidden gap-3 lg:flex">
-            <Link href="/ferienhaus" className="site-btn">
-              {h.heroUrlaub}
-            </Link>
-            <Link
-              href="/firmen"
-              className="inline-flex items-center gap-2 rounded-md border border-paper/80 px-5 py-3 font-medium text-paper transition-colors hover:bg-paper/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper"
-            >
-              {h.heroFirmen}
-            </Link>
-          </div>
-        </div>
-      </div>
+      {/* KONZEPT 1: photo across the full width, title and intro below it so the photo stays uncovered */}
+      <Picture
+        photo={HERO}
+        alt={HERO.alt[locale]}
+        priority
+        className="block aspect-[4/3] w-full object-cover object-[50%_60%] sm:aspect-[16/9] lg:aspect-auto lg:h-[min(78vh,820px)]"
+      />
 
-      <section className="mx-auto max-w-3xl px-4 pb-4 sm:px-6 lg:pt-16">
+      <section className="mx-auto max-w-3xl px-4 pt-12 pb-4 sm:px-6 sm:pt-16">
+        <p className="text-sm font-medium tracking-wide text-wood">{h.place}</p>
+        <h1 className="mt-2 font-display text-5xl text-ink sm:text-6xl lg:text-7xl">{h.title}</h1>
+        <p className="mt-4 font-display text-2xl text-moss italic lg:text-3xl">{h.claim}</p>
         <p className="mt-8 text-xl leading-relaxed text-ink">{h.lead}</p>
         {h.paragraphs.map((t) => (
           <p key={t} className="mt-5 text-lg leading-relaxed text-ink-soft">
@@ -78,11 +59,8 @@ export function HomeContent() {
         <Quote text={h.quote} />
       </section>
 
-      <HedgeDivider className="mt-14" width="max-w-3xl" />
-
-      <Hosts className="mx-auto mt-10 max-w-3xl px-4 sm:px-6" />
-
-      <section className="mx-auto grid max-w-6xl gap-6 px-4 pt-14 sm:px-6 md:grid-cols-2 md:gap-8">
+      {/* Two equal choices directly below the intro */}
+      <section className="mx-auto grid max-w-6xl gap-6 px-4 pt-10 sm:px-6 md:grid-cols-2 md:gap-8">
         {cards.map((c) => (
           <article key={c.href} className="flex flex-col overflow-hidden rounded-lg border border-line bg-cream">
             <Picture
@@ -102,6 +80,10 @@ export function HomeContent() {
           </article>
         ))}
       </section>
+
+      <HedgeDivider className="mt-20" width="max-w-3xl" />
+
+      <Hosts className="mx-auto mt-10 max-w-3xl px-4 sm:px-6" />
 
       <section className="mx-auto max-w-6xl px-4 pt-20 sm:px-6">
         <div className="flex flex-wrap items-baseline justify-between gap-3">

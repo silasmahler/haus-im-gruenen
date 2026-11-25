@@ -5,15 +5,11 @@ import { useState } from 'react'
 
 import { BrandMark, Wordmark } from '@/components/Brand'
 import { Hosts } from '@/components/Hosts'
-import { Picture } from '@/components/Picture'
-import { useSite } from '@/i18n/site'
-import { photo } from '@/lib/photos'
 
-// POSTs { type: 'feedback', host, host_note, hero, hero_note, menu, prices, cleaning, reviews, imprint, travel, other, website }
+// POSTs { type: 'feedback', host, host_note, prices, cleaning, reviews, imprint, travel, other, website }
 // to the inquiry Lambda, which mails it to Silas (see infra/inquiry.yaml). All fields optional, `website` is a honeypot.
 // Own variable so the preview can collect feedback while its booking form stays inactive.
 const INQUIRY_URL = process.env.NEXT_PUBLIC_FEEDBACK_URL || process.env.NEXT_PUBLIC_INQUIRY_URL
-const HERO = photo('01')
 
 type Status = 'idle' | 'sending' | 'success' | 'error'
 
@@ -29,7 +25,6 @@ const TEXTS = [
 ] as const
 
 export function AbstimmungContent() {
-  const nav = useSite().nav
   const [status, setStatus] = useState<Status>('idle')
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -52,9 +47,6 @@ export function AbstimmungContent() {
     }
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
-
-  const current = [nav.home, nav.ferienhaus, nav.urlaub, nav.firmen, nav.preise, nav.bewertungen, nav.kontakt]
-  const proposal = [nav.ferienhaus, nav.urlaub, nav.firmen, nav.preise, nav.kontakt]
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -92,28 +84,7 @@ export function AbstimmungContent() {
                 <Note name="host_note" />
               </Question>
 
-              <Question n={2} title="Startbild: Passt das Gartenfoto als großes Bild oben auf der Startseite?">
-                <Frame flush>
-                  <Picture photo={HERO} alt={HERO.alt.de} sizes="(min-width: 768px) 720px, 100vw" className="block aspect-[16/9] w-full object-cover object-[50%_60%]" />
-                </Frame>
-                <YesNo name="hero" />
-                <Note name="hero_note" />
-              </Question>
-
-              <Question n={3} title="Menü: Sieben Punkte auf fünf kürzen?">
-                <p className="text-ink-soft">
-                  Oben auf der Seite stehen zurzeit sieben Punkte, das wirkt etwas voll. Vorschlag: „Startseite“
-                  streichen (ein Klick aufs Logo führt sowieso dorthin) und „Gästebewertungen“ erst ins Menü nehmen,
-                  wenn echte Bewertungen da sind. Bis dahin steht der Link unten auf der Seite.
-                </p>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <MenuMock label="Jetzt (7 Punkte)" items={current} />
-                  <MenuMock label="Vorschlag (5 Punkte)" items={proposal} footer={nav.bewertungen} />
-                </div>
-                <YesNo name="menu" />
-              </Question>
-
-              <Question n={4} title="Was noch fehlt">
+              <Question n={2} title="Was noch fehlt">
                 <p className="text-ink-soft">Diese Angaben brauchen wir für den Start. Ich übernehme sie so, wie ihr sie schreibt.</p>
                 {TEXTS.map(([name, title, hint]) => (
                   <label key={name} className="block">
@@ -124,7 +95,7 @@ export function AbstimmungContent() {
                 ))}
               </Question>
 
-              <Question n={5} title="Sonst noch etwas?">
+              <Question n={3} title="Sonst noch etwas?">
                 <label className="block">
                   <span className="sr-only">Sonst noch etwas</span>
                   <textarea name="other" rows={5} maxLength={4000} className={input} />
@@ -205,23 +176,5 @@ function Note({ name }: { name: string }) {
       <span className="text-sm font-medium">Anmerkung (freiwillig)</span>
       <textarea name={name} rows={3} maxLength={2000} className={input} />
     </label>
-  )
-}
-
-function MenuMock({ label, items, footer }: { label: string; items: string[]; footer?: string }) {
-  return (
-    <figure className="overflow-hidden rounded-lg border border-line bg-white text-sm shadow-sm">
-      <figcaption className="border-b border-line bg-cream-deep px-4 py-2 font-medium">{label}</figcaption>
-      <ul className="flex flex-wrap gap-x-3 gap-y-1.5 px-4 py-3 text-ink-soft">
-        {items.map((t) => (
-          <li key={t}>{t}</li>
-        ))}
-      </ul>
-      {footer && (
-        <p className="border-t border-dashed border-line px-4 py-2 text-xs text-ink-soft">
-          Unten auf der Seite: <span className="text-ink">{footer}</span>
-        </p>
-      )}
-    </figure>
   )
 }
