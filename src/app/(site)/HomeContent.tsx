@@ -36,15 +36,15 @@ export function HomeContent() {
         </p>
       </div>
 
-      {/* Whole photo in its natural 4:3, never wider than its 1440px source or taller than ~78vh;
-          title and intro below it so the photo stays uncovered */}
-      <div className="mx-auto w-full max-w-[min(64rem,104vh)] sm:px-6 sm:pt-6">
+      {/* Whole photo in its natural 4:3, never wider than 64rem and never taller than the space
+          below the sticky header and notice bar, so the full motif is visible on the first screen */}
+      <div className="w-full sm:px-6 sm:pt-6">
         <Picture
           photo={HERO}
           alt={HERO.alt[locale]}
           priority
-          sizes="(min-width: 640px) min(64rem, 104vh), 100vw"
-          className="block h-auto w-full sm:rounded-lg"
+          sizes="(min-width: 640px) min(64rem, calc((100svh - 12rem) * 4 / 3)), min(100vw, calc((100svh - 10.5rem) * 4 / 3))"
+          className="mx-auto block h-auto w-full max-w-[min(100%,max(18rem,calc((100svh-10.5rem)*4/3)))] sm:max-w-[min(100%,64rem,max(24rem,calc((100svh-12rem)*4/3)))] sm:rounded-lg"
         />
       </div>
 
