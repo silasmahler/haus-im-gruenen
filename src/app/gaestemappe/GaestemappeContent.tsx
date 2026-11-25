@@ -17,7 +17,6 @@ import {
   AlarmCheck,
   ShowerHead,
   ArrowLeft,
-  ExternalLink,
   Bike,
   Waves,
   Baby,
@@ -35,7 +34,6 @@ import { WifiCard } from '@/components/WifiCard'
 import { useLanguage } from '@/i18n/LanguageContext'
 import { useSite } from '@/i18n/site'
 
-const AIRBNB_URL = 'https://www.airbnb.de/rooms/1697314718712995655'
 const SITE_URL = 'https://haus-im-gruenen.com/gaestemappe'
 
 const PHOTOS = [
@@ -124,15 +122,9 @@ export function GaestemappeContent() {
           </Link>
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <LanguageSwitcher />
-            <a
-              href={AIRBNB_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="site-btn !px-3 !py-2 text-sm whitespace-nowrap"
-            >
+            <Link href="/kontakt" className="site-btn !px-3 !py-2 text-sm whitespace-nowrap">
               {t.header.bookNow}
-              <ExternalLink className="size-3.5" aria-hidden />
-            </a>
+            </Link>
           </div>
         </div>
       </header>
@@ -222,9 +214,9 @@ export function GaestemappeContent() {
             ))}
           </div>
           <p className="mt-3 text-right text-sm text-moss">
-            <a href={AIRBNB_URL} target="_blank" rel="noopener noreferrer" className={textLink}>
+            <Link href="/ferienhaus" className={textLink}>
               {t.gallery.viewAll}
-            </a>
+            </Link>
           </p>
         </section>
 
@@ -317,9 +309,9 @@ export function GaestemappeContent() {
             {t.footer.hostSuffix}
           </p>
           <p className="text-moss">
-            <a href={AIRBNB_URL} target="_blank" rel="noopener noreferrer" className={textLink}>
+            <Link href="/" className={textLink}>
               {t.footer.listing}
-            </a>
+            </Link>
             <span className="text-ink-soft">{' · '}</span>
             <Link href="/datenschutz" className={textLink}>
               {t.footer.privacy}

@@ -43,8 +43,20 @@ export function PreiseContent() {
         </Link>
       </div>
 
-      {/* Prices and calendar wait for the booking tool decision; until then only the owner's missing data is marked */}
       <section className="pt-16">
+        <h2 className="font-display text-3xl text-ink">{p.stayTitle}</h2>
+        <ul className="mt-4 space-y-2 text-lg leading-relaxed text-ink-soft">
+          {p.stayRules.map((r) => (
+            <li key={r} className="flex gap-3">
+              <span className="mt-3 size-1.5 shrink-0 rounded-full bg-moss" aria-hidden />
+              {r}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* Prices follow from the owner later; no price calendar yet */}
+      <section className="pt-14">
         <h2 className="font-display text-3xl text-ink">{p.tableTitle}</h2>
         <div className="mt-4">
           <Placeholder>{p.tablePlaceholder}</Placeholder>

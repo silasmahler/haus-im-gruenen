@@ -32,7 +32,7 @@ const de = {
     guestbook: 'Gästemappe für gebuchte Gäste',
   },
   placeholder: 'Platzhalter',
-  // Taken from the host profile on Airbnb (airbnb.de/rooms/1697314718712995655), wording verbatim.
+  // Host text supplied by the owner, wording verbatim.
   hosts: {
     title: 'Ihre Gastgeberin',
     name: 'Susanne',
@@ -246,9 +246,15 @@ const de = {
       'Für längere Aufenthalte und Firmenbuchungen bieten wir gesonderte Konditionen an.',
       'Gerne informieren wir Sie über die Verfügbarkeit und erstellen Ihnen ein passendes Angebot.',
     ],
-    tableTitle: 'Saisonpreise 2027',
+    stayTitle: 'Mindestaufenthalt',
+    stayRules: [
+      'Einzelnächte sind nicht buchbar.',
+      'Der Mindestaufenthalt beträgt 3 bis 5 Nächte, je nach Ferienzeit und Feiertagen.',
+      'Die Preise variieren je nach Zeitraum.',
+    ],
+    tableTitle: 'Preise',
     costsPublic: 'Alle Kosten nennen wir Ihnen transparent mit Ihrem Angebot.',
-    tablePlaceholder: 'Saisonzeiträume, Preise und Mindestaufenthalte aus der Preisliste 2027.',
+    tablePlaceholder: 'Preise je Zeitraum und genaue Mindestaufenthalte folgen von der Gastgeberin.',
     costsTitle: 'Endreinigung und weitere Kosten',
     costsPlaceholder:
       'Endreinigung und alle weiteren Kosten (z. B. Bettwäsche und Handtücher, ggf. Kurabgabe, Kaution) mit Betrag – werden hier transparent ausgewiesen.',
@@ -267,7 +273,7 @@ const de = {
     ],
     reviewPlaceholder: 'Echte Gästebewertung mit Quellenangabe folgt (Text unverändert, Nutzungsrechte geklärt).',
     author: 'Name des Gastes',
-    source: 'Quelle, z. B. Airbnb',
+    source: 'Quelle',
     date: 'Monat/Jahr',
   },
   impressum: {
@@ -320,7 +326,7 @@ const de = {
       },
       {
         heading: 'Externe Links',
-        text: 'Die Website verlinkt auf externe Angebote, u. a. Airbnb, Google Maps (Google Ireland Limited) sowie die Webseiten empfohlener Restaurants und Ausflugsziele. Erst wenn Sie einen solchen Link anklicken, werden Sie zur jeweiligen Webseite weitergeleitet; für deren Datenschutz sind die Anbieter selbst verantwortlich.',
+        text: 'Die Website verlinkt auf externe Angebote, u. a. Google Maps (Google Ireland Limited) sowie die Webseiten empfohlener Restaurants und Ausflugsziele. Erst wenn Sie einen solchen Link anklicken, werden Sie zur jeweiligen Webseite weitergeleitet; für deren Datenschutz sind die Anbieter selbst verantwortlich.',
       },
       {
         heading: 'Ihre Rechte',
@@ -599,9 +605,15 @@ const en: SiteDict = {
       'We offer separate terms for longer stays and company bookings.',
       'We will gladly let you know about availability and put together a suitable offer.',
     ],
-    tableTitle: 'Seasonal prices 2027',
+    stayTitle: 'Minimum stay',
+    stayRules: [
+      'Single nights cannot be booked.',
+      'The minimum stay is 3 to 5 nights, depending on school holidays and public holidays.',
+      'Prices vary depending on the period.',
+    ],
+    tableTitle: 'Prices',
     costsPublic: 'We’ll list all costs transparently in your offer.',
-    tablePlaceholder: 'Season periods, prices and minimum stays from the 2027 price list.',
+    tablePlaceholder: 'Prices per period and exact minimum stays will follow from the host.',
     costsTitle: 'Final cleaning and other costs',
     costsPlaceholder:
       'Final cleaning and all other costs (e.g. bed linen and towels, tourist tax if applicable, deposit) with amounts – shown here transparently.',
@@ -620,7 +632,7 @@ const en: SiteDict = {
     ],
     reviewPlaceholder: 'Genuine guest review with source to follow (text unchanged, usage rights cleared).',
     author: 'Guest name',
-    source: 'Source, e.g. Airbnb',
+    source: 'Source',
     date: 'Month/year',
   },
   impressum: {
@@ -672,7 +684,7 @@ const en: SiteDict = {
       },
       {
         heading: 'External links',
-        text: 'This website links to external services, including Airbnb, Google Maps (Google Ireland Limited) and the websites of recommended restaurants and destinations. You are only taken to the respective website when you click such a link; the providers themselves are responsible for its privacy practices.',
+        text: 'This website links to external services, including Google Maps (Google Ireland Limited) and the websites of recommended restaurants and destinations. You are only taken to the respective website when you click such a link; the providers themselves are responsible for its privacy practices.',
       },
       {
         heading: 'Your rights',

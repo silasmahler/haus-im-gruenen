@@ -151,7 +151,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
         'Genieße die Ruhe, frische Landluft und den Blick übers Feld in Rendswühren, Schleswig-Holstein.',
       tags: ['104 m²', '5 Gäste', '3 Schlafzimmer', 'Garten', 'Kamin', 'WLAN 200 Mbit/s'],
     },
-    gallery: { viewAll: 'Alle Fotos auf Airbnb ansehen →' },
+    gallery: { viewAll: 'Alle Fotos ansehen →' },
     wlan: {
       heading: 'WLAN',
       locked:
@@ -236,7 +236,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
       grillPackage: 'Grillpaket',
       grillPrice: '20 €',
       grillDetail: 'Grill, Grillkohle & Anzünder',
-      note: 'Alle Preise zzgl. der Airbnb-Nächtepreise. Zusätzliche Buchungen bitte über Airbnb anfragen.',
+      note: 'Alle Preise zzgl. der Übernachtungspreise. Zusätzliche Buchungen bitte über die Website anfragen.',
     },
     ausstattung: {
       heading: 'Ausstattung',
@@ -481,7 +481,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
       hostPrefix: 'Gastgeberin: ',
       hostName: 'Susanne',
       hostSuffix: ' · Rendswühren, Schleswig-Holstein',
-      listing: 'Inserat auf Airbnb ansehen',
+      listing: 'Zur Website des Hauses',
       privacy: 'Datenschutz',
       scanHint: 'Seite scannen & teilen',
     },
@@ -541,7 +541,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
         'Enjoy the peace and quiet, fresh country air and views across the fields in Rendswühren, Schleswig-Holstein.',
       tags: ['104 m²', '5 guests', '3 bedrooms', 'Garden', 'Fireplace', 'WiFi 200 Mbit/s'],
     },
-    gallery: { viewAll: 'See all photos on Airbnb →' },
+    gallery: { viewAll: 'See all photos →' },
     wlan: {
       heading: 'WiFi',
       locked:
@@ -626,7 +626,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
       grillPackage: 'BBQ package',
       grillPrice: '€20',
       grillDetail: 'Grill, charcoal & firelighters',
-      note: 'All prices are in addition to the Airbnb nightly rate. Please request any extras directly via Airbnb.',
+      note: 'All prices are in addition to the nightly rate. Please request any extras via the website.',
     },
     ausstattung: {
       heading: 'Amenities',
@@ -871,7 +871,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
       hostPrefix: 'Host: ',
       hostName: 'Susanne',
       hostSuffix: ' · Rendswühren, Schleswig-Holstein',
-      listing: 'View listing on Airbnb',
+      listing: 'Visit the house website',
       privacy: 'Privacy policy',
       scanHint: 'Scan & share this page',
     },
