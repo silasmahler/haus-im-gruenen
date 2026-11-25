@@ -1,16 +1,16 @@
 'use client'
 
-import { ArrowRight, BookOpen } from 'lucide-react'
+import { ArrowRight, BookOpen, Briefcase, Car, Flame, Home, Sun, Trees, Users, Wifi } from 'lucide-react'
 import Link from 'next/link'
 
-import { HandNote, HedgeDivider } from '@/components/Brand'
+import { HedgeDivider } from '@/components/Brand'
 import { Hosts } from '@/components/Hosts'
 import { Picture } from '@/components/Picture'
 import { useLanguage } from '@/i18n/LanguageContext'
 import { useSite } from '@/i18n/site'
 import { photo } from '@/lib/photos'
 
-// Owner's intro photo: green garden lounge, set table, wine bottle (KONZEPT 1).
+// Owner's confirmed intro photo: green garden lounge, set table, wine bottle.
 const HERO = photo('01')
 const STRIP = ['05', '19', '02', '38'].map(photo)
 
@@ -19,10 +19,8 @@ export function HomeContent() {
   const s = useSite()
   const h = s.home
 
-  const cards = [
-    { ...h.urlaub, href: '/ferienhaus', img: photo('06') },
-    { ...h.firmen, href: '/firmen', img: photo('33') },
-  ]
+  // Same order as h.advantages
+  const ADVANTAGE_ICONS = [Home, Users, Wifi, Trees, Flame, Car]
 
   return (
     <>
@@ -38,7 +36,7 @@ export function HomeContent() {
         </p>
       </div>
 
-      {/* KONZEPT 1: photo across the full width, title and intro below it so the photo stays uncovered */}
+      {/* Photo across the full width, title and intro below it so the photo stays uncovered */}
       <Picture
         photo={HERO}
         alt={HERO.alt[locale]}
@@ -56,29 +54,59 @@ export function HomeContent() {
             {t}
           </p>
         ))}
-        <Quote text={h.quote} />
+
+        {/* Concept §3: two equal entry points directly below the intro */}
+        <div className="mt-10 grid gap-3 sm:grid-cols-2">
+          <Link
+            href="/urlaub"
+            className="flex items-center justify-center gap-3 rounded-lg bg-moss-dark px-6 py-4 text-lg font-medium text-white transition-colors hover:bg-moss focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-moss"
+          >
+            <Sun className="size-6" aria-hidden />
+            {h.urlaubButton}
+          </Link>
+          <Link
+            href="/firmenkunden"
+            className="flex items-center justify-center gap-3 rounded-lg bg-sage-light px-6 py-4 text-lg font-medium text-moss-dark ring-1 ring-moss/25 transition-colors hover:bg-sage/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-moss"
+          >
+            <Briefcase className="size-6" aria-hidden />
+            {h.firmenButton}
+          </Link>
+        </div>
       </section>
 
-      {/* Two equal choices directly below the intro */}
-      <section className="mx-auto grid max-w-6xl gap-6 px-4 pt-10 sm:px-6 md:grid-cols-2 md:gap-8">
-        {cards.map((c) => (
-          <article key={c.href} className="flex flex-col overflow-hidden rounded-lg border border-line bg-cream">
-            <Picture
-              photo={c.img}
-              alt={c.img.alt[locale]}
-              sizes="(min-width: 768px) 50vw, 100vw"
-              className="aspect-[3/2] w-full object-cover"
-            />
-            <div className="flex flex-1 flex-col p-6 sm:p-8">
-              <h2 className="font-display text-3xl text-ink">{c.title}</h2>
-              <p className="mt-3 flex-1 text-ink-soft">{c.text}</p>
-              <Link href={c.href} className="site-btn mt-6 self-start">
-                {c.button}
+      <section aria-label={h.advantagesLabel} className="mx-auto max-w-6xl px-4 pt-12 sm:px-6">
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {h.advantages.map((label, i) => {
+            const Icon = ADVANTAGE_ICONS[i]
+            return (
+              <li key={label} className="flex flex-col items-center gap-2 rounded-lg border border-line bg-white px-3 py-5 text-center">
+                <Icon className="size-7 text-moss" aria-hidden />
+                <span className="text-sm font-medium text-ink">{label}</span>
+              </li>
+            )
+          })}
+        </ul>
+      </section>
+
+      <section className="mx-auto max-w-3xl px-4 pt-16 sm:px-6">
+        <h2 className="font-display text-3xl text-ink sm:text-4xl">{h.introTitle}</h2>
+        <p className="mt-4 text-lg leading-relaxed text-ink-soft">{h.introText}</p>
+        <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2">
+          {(
+            [
+              ['/ferienhaus', h.links.ausstattung],
+              ['/preise', h.links.verfuegbarkeit],
+              ['/kontakt', h.links.kontakt],
+            ] as const
+          ).map(([href, label]) => (
+            <li key={href}>
+              <Link href={href} className="inline-flex items-center gap-1 text-moss underline underline-offset-4 hover:text-moss-dark">
+                {label}
                 <ArrowRight className="size-4" aria-hidden />
               </Link>
-            </div>
-          </article>
-        ))}
+            </li>
+          ))}
+        </ul>
       </section>
 
       <HedgeDivider className="mt-20" width="max-w-3xl" />
@@ -117,22 +145,5 @@ export function HomeContent() {
         </div>
       </section>
     </>
-  )
-}
-
-// Owner text stays verbatim; only the "home for a while" half gets the handwritten accent.
-function Quote({ text }: { text: string }) {
-  const [before, after] = text.split(' – ')
-  return (
-    <p className="mt-10 border-l-2 border-wood pl-5 font-display text-2xl text-ink italic">
-      {after ? (
-        <>
-          {before} –{' '}
-          <HandNote className="text-[1.65em] leading-none not-italic">{after}</HandNote>
-        </>
-      ) : (
-        text
-      )}
-    </p>
   )
 }

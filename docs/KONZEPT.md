@@ -1,5 +1,7 @@
 # Haus im Grünen – Konzept und Texte für die neue Homepage
 
+> **Überholt:** Maßgeblich ist jetzt Susannes neues Konzept in [`docs/susanne/Homepage-Konzept-Haus-im-Gruenen.md`](susanne/Homepage-Konzept-Haus-im-Gruenen.md) (Grafiken in `docs/susanne/Grafiken/`). Dieses Dokument bleibt nur als Verlauf erhalten.
+
 (Vom Hausbesitzer, 2026-11-23. Texte wörtlich übernehmen, nur Rechtschreibung korrigieren. „Hinweis für Silas“ = Umsetzungsanweisung, nicht anzeigen.)
 
 ## Ziel der Neugestaltung

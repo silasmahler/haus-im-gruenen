@@ -35,8 +35,8 @@ export const lodgingBusinessJsonLd = {
   '@type': 'LodgingBusiness',
   name: 'Haus im Grünen – Firmenunterkunft',
   description:
-    'Ganzes Haus für bis zu drei Mitarbeiter in Rendswühren bei Neumünster: drei separate Schlafzimmer, Glasfaserinternet, Küche, auch für mehrere Wochen oder Monate.',
-  url: `${SITE_URL}/firmen`,
+    'Ganzes Haus für bis zu fünf Gäste in Rendswühren bei Neumünster: drei separate Schlafzimmer, Glasfaserinternet, Küche, auch für mehrere Wochen oder Monate.',
+  url: `${SITE_URL}/firmenkunden`,
   image: images,
   address,
   audience: { '@type': 'BusinessAudience', audienceType: 'Firmen und Langzeitgäste' },

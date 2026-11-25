@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-// Brand assets for the website, supplied by the owner (originals in docs/brand-besitzer/).
+// Brand assets for the website, supplied by the owner (originals in docs/susanne/Grafiken/).
 // Optimised WebP renditions live in public/brand/besitzer/.
 const BRAND = '/brand/besitzer'
 
@@ -37,6 +37,7 @@ export function BrandLockup({ alt = 'Haus im Grünen', className = 'w-60' }: { a
 }
 
 // Framed sign "Haus im Grünen – Ferienhaus • Rendswühren" (Banner.png, unchanged incl. white background), 3:1.
+// Concept §2 variant Nr. 2, chosen by the owner (re-sent via WhatsApp, see docs/susanne/nachgereicht/).
 export function BrandBanner({ alt, className = '' }: { alt: string; className?: string }) {
   return (
     <img

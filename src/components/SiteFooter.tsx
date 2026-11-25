@@ -23,6 +23,12 @@ export function SiteFooter() {
           </div>
           <ul className="flex flex-col gap-2 text-sm text-ink-soft md:items-end">
             <li>
+              <Link href="/hausregeln" className={link}>{s.footer.houseRules}</Link>
+            </li>
+            <li>
+              <Link href="/buchungsbedingungen" className={link}>{s.footer.terms}</Link>
+            </li>
+            <li>
               <Link href="/impressum" className={link}>{s.footer.imprint}</Link>
             </li>
             <li>

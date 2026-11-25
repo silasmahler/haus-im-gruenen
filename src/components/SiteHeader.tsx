@@ -13,9 +13,9 @@ const NAV = [
   ['/', 'home'],
   ['/ferienhaus', 'ferienhaus'],
   ['/urlaub', 'urlaub'],
-  ['/firmen', 'firmen'],
+  ['/firmenkunden', 'firmen'],
   ['/preise', 'preise'],
-  ['/bewertungen', 'bewertungen'],
+  ['/umgebung', 'umgebung'],
   ['/kontakt', 'kontakt'],
 ] as const
 

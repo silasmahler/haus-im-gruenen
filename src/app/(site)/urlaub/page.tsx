@@ -4,9 +4,9 @@ import { UrlaubContent } from './UrlaubContent'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/urlaub' },
-  title: 'Urlaub & Umgebung – Haus im Grünen',
+  title: 'Urlaub & Erholung – Haus im Grünen',
   description:
-    'Ruhiger Urlaub im Grünen bei Neumünster: Ausflugsziele, Seen, Radwege und Restaurants in Schleswig-Holstein rund um Rendswühren.',
+    'Eine Auszeit im Grünen: Ferienhaus in Rendswühren bei Neumünster mit großem Garten, Kamin und viel Privatsphäre – das gesamte Haus zur alleinigen Nutzung.',
 }
 
 export default function UrlaubPage() {

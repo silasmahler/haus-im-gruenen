@@ -13,7 +13,7 @@ export function KontaktContent() {
   const [variant, setVariant] = useState<'urlaub' | 'firma'>('urlaub')
   const [notice, setNotice] = useState('')
 
-  // /kontakt?typ=firma preselects the company form (links from /firmen and /preise).
+  // /kontakt?typ=firma preselects the company form (older links; /firmenkunden has its own form).
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get('typ') === 'firma') setVariant('firma')
   }, [])

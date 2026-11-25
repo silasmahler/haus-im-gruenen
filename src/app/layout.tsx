@@ -25,7 +25,7 @@ const fontHand = Caveat({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: 'Haus im Grünen – Ferienhaus in Rendswühren bei Neumünster',
+  title: 'Ferienhaus in Rendswühren bei Neumünster | Haus im Grünen',
   description:
     'Ferienhaus mit großem Garten in Rendswühren bei Neumünster: drei Schlafzimmer, Kaminofen, voll ausgestattete Küche und Glasfaserinternet. Für Urlaubsgäste und Firmen mit Langzeitaufenthalten.',
   ...(IS_PREVIEW && { robots: { index: false, follow: false } }),

@@ -1,22 +1,14 @@
 import type { Metadata } from 'next'
 
-import { JsonLd } from '@/components/JsonLd'
-import { lodgingBusinessJsonLd } from '@/lib/seo'
+import { MovedNotice } from './MovedNotice'
 
-import { FirmenContent } from './FirmenContent'
-
+// Old URL, kept so existing links keep working
 export const metadata: Metadata = {
-  alternates: { canonical: '/firmen' },
-  title: 'Firmenunterkunft & Monteurwohnung bei Neumünster – Haus im Grünen',
-  description:
-    'Komfortable Firmenunterkunft in Rendswühren bei Neumünster: ganzes Haus für bis zu drei Mitarbeiter, drei Schlafzimmer, Glasfaserinternet, Küche und Parkplatz. Auch für mehrere Wochen oder Monate.',
+  alternates: { canonical: '/firmenkunden' },
+  title: 'Firmenkunden – Haus im Grünen',
+  robots: { index: false, follow: true },
 }
 
-export default function FirmenPage() {
-  return (
-    <>
-      <JsonLd data={lodgingBusinessJsonLd} />
-      <FirmenContent />
-    </>
-  )
+export default function FirmenRedirectPage() {
+  return <MovedNotice />
 }

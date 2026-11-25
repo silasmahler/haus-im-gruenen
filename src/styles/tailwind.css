@@ -39,7 +39,7 @@
   --radius-full: 9999px;
 
   /* ─── Website (marketing pages): garden greens, cream, warm wood ── */
-  --color-paper:      #fbf9f4;
+  --color-paper:      #ffffff; /* concept §2: white background */
   --color-cream:      #f5f0e5;
   --color-cream-deep: #ebe3d2;
   --color-line:       #ddd3bf;

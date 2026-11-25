@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/ferienhaus' },
   title: 'Das Ferienhaus – Haus im Grünen',
   description:
-    'Drei separate Schlafzimmer, Wohnbereich mit Kaminofen, voll ausgestattete Küche, großer Garten und Glasfaserinternet.',
+    'Ferienhaus in Rendswühren für bis zu fünf Personen: drei separate Schlafzimmer, Kaminofen, vollständig ausgestattete Küche, großer Garten und Glasfaserinternet.',
 }
 
 export default function FerienhausPage() {
