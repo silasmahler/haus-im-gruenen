@@ -36,13 +36,17 @@ export function HomeContent() {
         </p>
       </div>
 
-      {/* Photo across the full width, title and intro below it so the photo stays uncovered */}
-      <Picture
-        photo={HERO}
-        alt={HERO.alt[locale]}
-        priority
-        className="block aspect-[4/3] w-full object-cover object-[50%_60%] sm:aspect-[16/9] lg:aspect-auto lg:h-[min(78vh,820px)]"
-      />
+      {/* Whole photo in its natural 4:3, never wider than its 1440px source or taller than ~78vh;
+          title and intro below it so the photo stays uncovered */}
+      <div className="mx-auto w-full max-w-[min(64rem,104vh)] sm:px-6 sm:pt-6">
+        <Picture
+          photo={HERO}
+          alt={HERO.alt[locale]}
+          priority
+          sizes="(min-width: 640px) min(64rem, 104vh), 100vw"
+          className="block h-auto w-full sm:rounded-lg"
+        />
+      </div>
 
       <section className="mx-auto max-w-3xl px-4 pt-12 pb-4 sm:px-6 sm:pt-16">
         <p className="text-sm font-medium tracking-wide text-wood">{h.place}</p>
